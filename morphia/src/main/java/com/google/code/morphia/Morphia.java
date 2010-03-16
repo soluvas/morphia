@@ -16,31 +16,33 @@
 
 package com.google.code.morphia;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 import com.google.code.morphia.annotations.MongoDocument;
 import com.google.code.morphia.annotations.MongoEmbedded;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Set;
 
 /**
  *
  * @author Olafur Gauti Gudmundsson
- */
+ * @author Scott Hernandez
+ **/
+@SuppressWarnings("unchecked")
 public class Morphia {
+	private final Mapper mapper;
 
-    private final Mapper mapper;
-    private final Validator validator;
-
-    public Morphia() {
+	public Morphia() {
         this(Collections.EMPTY_SET);
     }
 
     public Morphia( Set<Class> classesToMap ) {
         this.mapper = new Mapper();
-        this.validator = new Validator();
         for (Class c : classesToMap) {
             map(c);
         }
@@ -48,10 +50,7 @@ public class Morphia {
 
     public synchronized Morphia map(Class entityClass) {
         if ( !mapper.isMapped(entityClass) ) {
-            Set<Class> validClasses = validator.validate(entityClass);
-            for (Class c : validClasses) {
-                mapper.addMappedClass(c);
-            }
+            mapper.addMappedClass(entityClass);
         }
         return this;
     }
@@ -104,8 +103,8 @@ public class Morphia {
      *
      * @return all classes that are mapped by this instance
      */
-    public Set<Class> getMappedClasses() {
-        return Collections.unmodifiableSet(mapper.getMappedClasses());
+    public Map<String, MappedClass> getMappedClasses() {
+        return new HashMap(mapper.getMappedClasses());
     }
 
     /**
@@ -120,9 +119,6 @@ public class Morphia {
     }
 
     public <T> T fromDBObject(Class<T> entityClass, BasicDBObject dbObject) {
-        if ( dbObject == null ) {
-            return null;
-        }
         if ( !entityClass.isInterface() && !mapper.isMapped(entityClass)) {
             throw new MongoMappingException("Trying to map to an unmapped class: " + entityClass.getName());
         }
@@ -147,4 +143,5 @@ public class Morphia {
             mapper.clearHistory();
         }
     }
+    public Mapper getMapper() { return this.mapper; }
 }

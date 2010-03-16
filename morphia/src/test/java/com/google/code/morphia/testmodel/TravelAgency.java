@@ -29,6 +29,7 @@ import java.util.List;
  */
 @MongoDocument
 public class TravelAgency extends AbstractMongoEntity {
+	private static final long serialVersionUID = 1L;
 
     @MongoValue
     private String name;

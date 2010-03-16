@@ -24,8 +24,9 @@ import com.google.code.morphia.annotations.MongoValue;
  * @author Olafur Gauti Gudmundsson
  */
 public class Rectangle extends AbstractMongoEntity implements Shape {
-
-    @MongoValue
+	private static final long serialVersionUID = 1L;
+	
+	@MongoValue
     private double height;
     @MongoValue
     private double width;

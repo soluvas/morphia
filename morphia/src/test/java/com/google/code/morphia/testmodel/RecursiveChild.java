@@ -26,8 +26,9 @@ import com.google.code.morphia.annotations.MongoReference;
  */
 @MongoDocument
 public class RecursiveChild extends AbstractMongoEntity {
+	private static final long serialVersionUID = 1L;
 
-    @MongoReference
+	@MongoReference
     private RecursiveParent parent;
 
     public RecursiveChild() {

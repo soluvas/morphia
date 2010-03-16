@@ -9,6 +9,7 @@ import java.io.Serializable;
  */
 @MongoEmbedded
 public class Translation implements Serializable {
+	private static final long serialVersionUID = 1L;
 
     private String title;
     private String body;

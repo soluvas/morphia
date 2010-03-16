@@ -16,10 +16,25 @@
 
 package com.google.code.morphia;
 
-import com.google.code.morphia.testmodel.Hotel;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.lang.reflect.Field;
+import java.util.Date;
+import java.util.Vector;
+
+import org.junit.Test;
+
+import com.google.code.morphia.annotations.MongoCollectionName;
+import com.google.code.morphia.annotations.MongoDocument;
+import com.google.code.morphia.annotations.MongoEmbedded;
+import com.google.code.morphia.annotations.MongoID;
 import com.google.code.morphia.testmodel.Address;
 import com.google.code.morphia.testmodel.Article;
 import com.google.code.morphia.testmodel.Circle;
+import com.google.code.morphia.testmodel.Hotel;
 import com.google.code.morphia.testmodel.PhoneNumber;
 import com.google.code.morphia.testmodel.RecursiveChild;
 import com.google.code.morphia.testmodel.RecursiveParent;
@@ -29,17 +44,107 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
-import java.util.Date;
-import java.util.Vector;
-import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
  * @author Olafur Gauti Gudmundsson
  */
+@SuppressWarnings("unchecked")
 public class TestMapping {
 
+	@MongoDocument
+	public static class MissingId {
+		String id;
+	}
+	
+	public static class MissingIdStill {
+		String id;
+	}
+	
+	@MongoDocument("no-id")
+	public static class MissingIdRenamed {
+		String id;
+	}
+	
+	@MongoEmbedded
+	public static class IdOnEmbedded {
+		@MongoID String id;
+	}
+
+	@MongoEmbedded
+	public static class CollectionNameOnEmbedded {
+		@MongoCollectionName String collName;
+	}
+	
+	@MongoEmbedded("no-id")
+	public static class RenamedEmbedded {
+		String name;
+	}
+	
+	public static class IPrintAWarning {
+		@MongoID String id;
+		NotEmbeddable ne= new NotEmbeddable();
+		String sValue = "not empty";
+	}
+	
+	public static class NotEmbeddable {
+		String noImNot;
+	}
+
+	@Test
+    public void testBadMappings() throws Exception {
+        Morphia morphia = new Morphia();
+        morphia.map(IPrintAWarning.class);
+        
+        boolean foundSValue = false;
+        for(Field f :morphia.getMappedClasses().get(IPrintAWarning.class.getName()).persistenceFields) {
+        	assertTrue("'ne' field should not be persisted!", !f.getName().equals("ne"));
+        	if (f.getName().equals("sValue")) foundSValue = true;
+        }
+        assertTrue(foundSValue);
+        
+        boolean allGood=false;
+        try {
+        	morphia.map(MissingId.class);
+        } catch (MongoMappingException e) {
+        	allGood = true;
+        }
+        assertTrue("Validation: Missing @MongoId field not not caught", allGood);
+
+        allGood = false;
+        try {
+        	morphia.map(IdOnEmbedded.class);
+        } catch (MongoMappingException e) {
+        	allGood = true;
+        }
+        assertTrue("Validation: @MongoId field on @MongoEmbedded not caught", allGood);
+
+        allGood = false;
+        try {
+        	morphia.map(RenamedEmbedded.class);
+        } catch (MongoMappingException e) {
+        	allGood = true;
+        }
+        assertTrue("Validation: @MongoEmbedded(\"name\") not caught on Class", allGood);
+
+        allGood = false;
+        try {
+        	morphia.map(MissingIdStill.class);
+        } catch (MongoMappingException e) {
+        	allGood = true;
+        }
+        assertTrue("Validation: Missing @MongoId field not not caught", allGood);
+
+        allGood = false;
+        try {
+        	morphia.map(MissingIdRenamed.class);
+        } catch (MongoMappingException e) {
+        	allGood = true;
+        }
+        assertTrue("Validation: Missing @MongoId field not not caught", allGood);
+    }
+    
+    
     @Test
     public void testBasicMapping() throws Exception {
         Mongo mongo = new Mongo();
@@ -53,7 +158,7 @@ public class TestMapping {
             morphia.map(Hotel.class);
             morphia.map(TravelAgency.class);
 
-            Hotel borg = Hotel.create();
+            Hotel borg = new Hotel();
             borg.setName("Hotel Borg");
             borg.setStars(4);
             borg.setTakesCreditCards(true);
@@ -94,7 +199,7 @@ public class TestMapping {
             BasicDBObject agencyDbObj = (BasicDBObject) morphia.toDBObject(agency);
             agencies.save(agencyDbObj);
 
-            TravelAgency agencyLoaded = morphia.fromDBObject(TravelAgency.class, (BasicDBObject)agencies.findOne(new BasicDBObject("_id", agencyDbObj.get("_id"))));
+            TravelAgency agencyLoaded = morphia.fromDBObject(TravelAgency.class, (BasicDBObject)agencies.findOne(new BasicDBObject(Mapper.ID_KEY, agencyDbObj.get(Mapper.ID_KEY))));
 
             assertEquals(agency.getName(), agencyLoaded.getName());
             assertEquals(agency.getHotels().size(), 1);
@@ -118,7 +223,7 @@ public class TestMapping {
             BasicDBObject relatedDbObj = (BasicDBObject) morphia.toDBObject(related);
             articles.save(relatedDbObj);
 
-            Article relatedLoaded = morphia.fromDBObject(Article.class, (BasicDBObject)articles.findOne(new BasicDBObject("_id", relatedDbObj.get("_id"))));
+            Article relatedLoaded = morphia.fromDBObject(Article.class, (BasicDBObject)articles.findOne(new BasicDBObject(Mapper.ID_KEY, relatedDbObj.get(Mapper.ID_KEY))));
 
             Article article = new Article();
             article.setTranslation("en", new Translation("Hello World", "Just a test"));
@@ -133,7 +238,7 @@ public class TestMapping {
             BasicDBObject articleDbObj = (BasicDBObject) morphia.toDBObject(article);
             articles.save(articleDbObj);
 
-            Article articleLoaded = morphia.fromDBObject(Article.class, (BasicDBObject)articles.findOne(new BasicDBObject("_id", articleDbObj.get("_id"))));
+            Article articleLoaded = morphia.fromDBObject(Article.class, (BasicDBObject)articles.findOne(new BasicDBObject(Mapper.ID_KEY, articleDbObj.get(Mapper.ID_KEY))));
 
             assertEquals(article.getTranslations().size(), articleLoaded.getTranslations().size());
             assertEquals(article.getTranslation("en").getTitle(), articleLoaded.getTranslation("en").getTitle());
@@ -168,8 +273,8 @@ public class TestMapping {
             BasicDBObject childDbObj = (BasicDBObject) morphia.toDBObject(child);
             stuff.save(childDbObj);
 
-            RecursiveParent parentLoaded = morphia.fromDBObject(RecursiveParent.class, (BasicDBObject)stuff.findOne(new BasicDBObject("_id", parentDbObj.get("_id"))));
-            RecursiveChild childLoaded = morphia.fromDBObject(RecursiveChild.class, (BasicDBObject)stuff.findOne(new BasicDBObject("_id", childDbObj.get("_id"))));
+            RecursiveParent parentLoaded = morphia.fromDBObject(RecursiveParent.class, (BasicDBObject)stuff.findOne(new BasicDBObject(Mapper.ID_KEY, parentDbObj.get(Mapper.ID_KEY))));
+            RecursiveChild childLoaded = morphia.fromDBObject(RecursiveChild.class, (BasicDBObject)stuff.findOne(new BasicDBObject(Mapper.ID_KEY, childDbObj.get(Mapper.ID_KEY))));
 
             parentLoaded.setChild(childLoaded);
             childLoaded.setParent(parentLoaded);
@@ -177,8 +282,8 @@ public class TestMapping {
             stuff.save(morphia.toDBObject(parentLoaded));
             stuff.save(morphia.toDBObject(childLoaded));
 
-            RecursiveParent finalParentLoaded = morphia.fromDBObject(RecursiveParent.class, (BasicDBObject)stuff.findOne(new BasicDBObject("_id", parentDbObj.get("_id"))));
-            RecursiveChild finalChildLoaded = morphia.fromDBObject(RecursiveChild.class, (BasicDBObject)stuff.findOne(new BasicDBObject("_id", childDbObj.get("_id"))));
+            RecursiveParent finalParentLoaded = morphia.fromDBObject(RecursiveParent.class, (BasicDBObject)stuff.findOne(new BasicDBObject(Mapper.ID_KEY, parentDbObj.get(Mapper.ID_KEY))));
+            RecursiveChild finalChildLoaded = morphia.fromDBObject(RecursiveChild.class, (BasicDBObject)stuff.findOne(new BasicDBObject(Mapper.ID_KEY, childDbObj.get(Mapper.ID_KEY))));
 
             assertNotNull(finalParentLoaded.getChild());
             assertNotNull(finalChildLoaded.getParent());

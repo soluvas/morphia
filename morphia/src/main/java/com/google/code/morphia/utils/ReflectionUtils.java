@@ -15,8 +15,6 @@
  */
 package com.google.code.morphia.utils;
 
-import com.google.code.morphia.annotations.MongoDocument;
-import com.google.code.morphia.annotations.MongoEmbedded;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -41,11 +39,15 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
+import com.google.code.morphia.annotations.MongoDocument;
+import com.google.code.morphia.annotations.MongoEmbedded;
+
 /**
  * Various reflection utility methods, used mainly in the Mapper.
  * 
  * @author Olafur Gauti Gudmundsson
  */
+@SuppressWarnings("unchecked")
 public class ReflectionUtils {
 
     /**
@@ -56,7 +58,7 @@ public class ReflectionUtils {
      * @param returnFinalFields specifies whether to return final fields
      * @return an array of all declared and inherited fields
      */
-    public static Field[] getDeclaredAndInheritedFields(Class type, boolean returnFinalFields) {
+	public static Field[] getDeclaredAndInheritedFields(Class type, boolean returnFinalFields) {
         List<Field> allFields = new ArrayList<Field>();
         allFields.addAll(getValidFields(type.getDeclaredFields(), returnFinalFields));
         Class parent = type.getSuperclass();
@@ -146,7 +148,8 @@ public class ReflectionUtils {
         return isPropertyType(type);
     }
 
-    private static boolean isArrayOfType(Class c, Class type) {
+    @SuppressWarnings("unused")
+	private static boolean isArrayOfType(Class c, Class type) {
         return c.isArray() && c.getComponentType() == type;
     }
 

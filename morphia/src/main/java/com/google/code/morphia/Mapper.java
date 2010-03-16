@@ -16,7 +16,21 @@
 
 package com.google.code.morphia;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
+
 import com.google.code.morphia.annotations.MongoCollectionName;
+import com.google.code.morphia.annotations.MongoDocument;
 import com.google.code.morphia.annotations.MongoEmbedded;
 import com.google.code.morphia.annotations.MongoID;
 import com.google.code.morphia.annotations.MongoReference;
@@ -28,44 +42,43 @@ import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 import com.mongodb.ObjectId;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.concurrent.CopyOnWriteArraySet;
-
 /**
  *
  * @author Olafur Gauti Gudmundsson
+ * @author Scott Hernandez
  */
+@SuppressWarnings("unchecked")
 public class Mapper {
+    private static final Logger logger = Logger.getLogger(Mapper.class.getName());
 
-    private static final String CLASS_NAME = "className";
+	private static final String CLASS_NAME = "className";
+	public static final String ID_KEY = "_id";
+	public static final String COLLECTIONNAME_KEY = "_ns";
+	
+	public static final String IGNORED_FIELDNAME = ".";
 
     /** Set of classes that have been validated for mapping by this mapper */
-    private final CopyOnWriteArraySet<Class> mappedClasses = new CopyOnWriteArraySet<Class>();
-
+    private final ConcurrentHashMap<String,MappedClass> mappedClasses = new ConcurrentHashMap<String, MappedClass>();
+    
     private final ThreadLocal<Map<String, Object>> history = new ThreadLocal<Map<String, Object>>();
+
 
     Mapper() {
     }
 
     boolean isMapped(Class c) {
-        return mappedClasses.contains(c);
+        return mappedClasses.containsKey(c.getName());
     }
 
     void addMappedClass(Class c) {
-        mappedClasses.add(c);
+        mappedClasses.put(c.getName(), new MappedClass(c));
     }
 
-    CopyOnWriteArraySet<Class> getMappedClasses() {
+    void addMappedClass(MappedClass mc) {
+        mappedClasses.put(mc.clazz.getName(), mc);
+    }
+
+    Map<String, MappedClass> getMappedClasses() {
         return mappedClasses;
     }
 
@@ -73,32 +86,29 @@ public class Mapper {
         history.remove();
     }
 
-    private Field findAnnotatedField(Object obj, Class annotationClass) {
-        for (Field field : ReflectionUtils.getDeclaredAndInheritedFields(obj.getClass(), false)) {
-            if (field.isAnnotationPresent(annotationClass)) {
-                field.setAccessible(true);
-                return field;
-            }
-        }
-        return null;
+    public String getCollectionName(Object object) throws IllegalAccessException {
+    	if (object instanceof Class) return getCollectionName((Class)object);
+    	
+    	MappedClass mc = mappedClasses.get(object.getClass().getName());
+    	Field field = (mc == null) ? null : mc.collectionNameField;
+    	//return classname if a collection name doesn't exist.
+    	return (field == null || field.get(object) == null) ? getCollectionName(object.getClass()): (String) field.get(object);
     }
-
-    private String getCollectionName(Object object) throws IllegalAccessException {
-        return (String) findAnnotatedField(object, MongoCollectionName.class).get(object);
+    
+	public String getCollectionName(Class clazz) throws IllegalAccessException {
+		MongoDocument md = ReflectionUtils.getClassMongoDocumentAnnotation(clazz);
+		return (md == null || md.value().equals(Mapper.IGNORED_FIELDNAME)) ? clazz.getSimpleName() : md.value();
     }
 
     private String getID(Object object) throws IllegalAccessException {
-        return (String) findAnnotatedField(object, MongoID.class).get(object);
+    	return (String)mappedClasses.get(object.getClass().getName()).idField.get(object);
     }
 
     Class getClassForName( String className, Class defaultClass ) {
-        for ( Class c : mappedClasses ) {
-            if ( className.equals(c.getCanonicalName()) ) {
-                return c;
-            }
-        }
+    	if (mappedClasses.containsKey(className)) return mappedClasses.get(className).clazz;
         try {
-            return Class.forName(className, true, Thread.currentThread().getContextClassLoader());
+            Class c = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
+            return c;
         } catch ( ClassNotFoundException ex ) {
             return defaultClass;
         }
@@ -107,14 +117,11 @@ public class Mapper {
     Object createEntityInstanceForDbObject( Class entityClass, BasicDBObject dbObject ) throws Exception {
         // see if there is a className value
         String className = (String) dbObject.get(CLASS_NAME);
-        Class c = entityClass;
         if ( className != null ) {
-            c = getClassForName(className, entityClass);
+            return getClassForName(className, entityClass).newInstance();
+        } else {
+            return entityClass.newInstance();
         }
-
-        Constructor constructor = c.getDeclaredConstructor();
-        constructor.setAccessible(true);
-        return constructor.newInstance();
     }
 
     Object fromDBObject(Class entityClass, BasicDBObject dbObject) throws Exception {
@@ -131,6 +138,9 @@ public class Mapper {
         BasicDBObject dbObject = new BasicDBObject();
         dbObject.put(CLASS_NAME, entity.getClass().getCanonicalName());
 
+        String collName = getCollectionName(entity);
+        if ( collName != null && collName.length() > 0 ) dbObject.put(COLLECTIONNAME_KEY, collName);
+
         for (Field field : ReflectionUtils.getDeclaredAndInheritedFields(entity.getClass(), true)) {
             field.setAccessible(true);
 
@@ -140,24 +150,10 @@ public class Mapper {
             }
 
             if ( field.isAnnotationPresent(MongoID.class) ) {
-                if (field.getAnnotation(MongoID.class).useObjectId()) {
-                    String value = (String) field.get(entity);
-                    if (value != null && value.length() > 0) {
-                        dbObject.put("_id", new ObjectId(value));
-                    }
-                } else {
-                    Object value = (Object) field.get(entity);
-                    if (value != null) {
-                        dbObject.put("_id", value);
-                    }
+                Object value = field.get(entity);
+                if ( value != null ) {
+                    dbObject.put(ID_KEY, fixupId(value));
                 }
-
-            } else if ( field.isAnnotationPresent(MongoCollectionName.class) ) {
-                String value = (String) field.get(entity);
-                if ( value != null && value.length() > 0 ) {
-                    dbObject.put("_ns", value);
-                }
-
             } else if ( field.isAnnotationPresent(MongoReference.class) ) {
                 mapReferencesToDBObject(entity, field, dbObject);
 
@@ -170,8 +166,12 @@ public class Mapper {
                     || ReflectionUtils.implementsInterface(field.getType(), Set.class)
                     || ReflectionUtils.implementsInterface(field.getType(), Map.class) ) {
                 mapValuesToDBObject(entity, field, dbObject);
+            } else {
+            	logger.warning("Ignoring field: " + field.getName() + " [" + field.getType().getSimpleName() + "]");
             }
+            
         }
+        
         return dbObject;
     }
 
@@ -183,7 +183,7 @@ public class Mapper {
             if ( list != null ) {
                 List values = new ArrayList();
                 for ( Object o : list ) {
-                    values.add(new DBRef(null, getCollectionName(o), new ObjectId(getID(o))));
+                    values.add(new DBRef(null, getCollectionName(o), fixupId(getID(o))));
                 }
                 dbObject.put(name, values);
             } else {
@@ -195,7 +195,7 @@ public class Mapper {
             if ( set != null ) {
                 List values = new ArrayList();
                 for ( Object o : set ) {
-                    values.add(new DBRef(null, getCollectionName(o), new ObjectId(getID(o))));
+                    values.add(new DBRef(null, getCollectionName(o), fixupId(getID(o))));
                 }
                 dbObject.put(name, values);
             } else {
@@ -207,7 +207,7 @@ public class Mapper {
             if ( map != null ) {
                 Map values = mongoReference.mapClass().newInstance();
                 for ( Map.Entry<Object,Object> entry : map.entrySet() ) {
-                    values.put(entry.getKey(), new DBRef(null, getCollectionName(entry.getValue()), new ObjectId(getID(entry.getValue()))));
+                    values.put(entry.getKey(), new DBRef(null, getCollectionName(entry.getValue()), fixupId(getID(entry.getValue()))));
                 }
                 dbObject.put(name, values);
             } else {
@@ -217,7 +217,7 @@ public class Mapper {
         } else {
             Object o = field.get(entity);
             if ( o != null ) {
-                dbObject.put(name, new DBRef(null, getCollectionName(o), new ObjectId(getID(o))));
+                dbObject.put(name, new DBRef(null, getCollectionName(o), fixupId(getID(o))));
             } else {
                 dbObject.removeField(name);
             }
@@ -225,7 +225,6 @@ public class Mapper {
     }
 
     void mapEmbeddedToDBObject( Object entity, Field field, BasicDBObject dbObject ) throws Exception {
-        MongoEmbedded mongoEmbedded = field.getAnnotation(MongoEmbedded.class);
         String name = getMongoName(field);
         if (ReflectionUtils.implementsInterface(field.getType(), List.class)) {
             List list = (List) field.get(entity);
@@ -375,8 +374,12 @@ public class Mapper {
     }
 
     Object mapDBObjectToEntity( BasicDBObject dbObject, Object entity ) throws Exception {
-        // check the history key
-        String key = dbObject.containsField("_id") ? dbObject.get("_id").toString() : null;
+        // check the history key (a key is the namespace + id)
+        String key = (!dbObject.containsField(ID_KEY)) ? null : dbObject.getString(COLLECTIONNAME_KEY) + "[" + dbObject.getString(ID_KEY) + "]";
+        
+//        if (!dbObject.containsField(COLLECTIONNAME_KEY) || !dbObject.containsField(ID_KEY))
+//        	throw new RuntimeException("DBOject is missing _ns or _id; " + dbObject.toString());
+        
         if (history.get() == null) {
             history.set(new HashMap<String, Object>());
         }
@@ -397,12 +400,12 @@ public class Mapper {
             }
 
             if ( field.isAnnotationPresent(MongoID.class) ) {
-                if ( dbObject.get("_id") != null ) {
-                    field.set(entity, dbObject.get("_id").toString());
+                if ( dbObject.get(ID_KEY) != null ) {
+                    field.set(entity, objectFromValue(field.getType(), dbObject, ID_KEY));
                 }
             } else if ( field.isAnnotationPresent(MongoCollectionName.class) ) {
-                if ( dbObject.get("_ns") != null ) {
-                    field.set(entity, dbObject.get("_ns").toString());
+                if ( dbObject.get(COLLECTIONNAME_KEY) != null ) {
+                    field.set(entity, dbObject.get(COLLECTIONNAME_KEY).toString());
                 }
 
             } else if ( field.isAnnotationPresent(MongoReference.class) ) {
@@ -417,6 +420,8 @@ public class Mapper {
                     || ReflectionUtils.implementsInterface(field.getType(), Set.class)
                     || ReflectionUtils.implementsInterface(field.getType(), Map.class) ) {
                 mapValuesFromDBObject(dbObject, field, entity);
+            } else {
+            	logger.warning("Ignoring field: " + field.getName() + " [" + field.getType().getSimpleName() + "]");
             }
         }
         return entity;
@@ -515,7 +520,7 @@ public class Mapper {
         }
     }
 
-    Object objectFromValue( Class c, BasicDBObject dbObject, String name ) {
+    public static Object objectFromValue( Class c, BasicDBObject dbObject, String name ) {
         if (c == String.class) {
             return dbObject.getString(name);
         } else if (c == Date.class) {
@@ -708,14 +713,14 @@ public class Mapper {
             name = mr.value();
         }
 
-        if ( name == null || name.equals("fieldName") ) {
+        if ( name == null || name.equals(Mapper.IGNORED_FIELDNAME) ) {
             return field.getName();
         } else {
             return name;
         }
     }
 
-    private Locale parseLocale(String localeString) {
+    private static Locale parseLocale(String localeString) {
         if (localeString != null && localeString.length() > 0) {
             StringTokenizer st = new StringTokenizer(localeString, "_");
             String language = st.hasMoreElements() ? st.nextToken() : Locale.getDefault().getLanguage();
@@ -725,4 +730,11 @@ public class Mapper {
         }
         return null;
     }
+    
+    /** turns the object intto an ObjectId if it is/should-be one */
+	public static Object fixupId(Object id) {
+		if ((id instanceof String) && ObjectId.isValid((String)id)) return new ObjectId((String)id);
+		return id;
+	}
+
 }

@@ -52,7 +52,7 @@ public class TestInterfaces {
             DBObject rectangleDbObj = morphia.toDBObject(rectangle);
             shapes.save(rectangleDbObj);
 
-            BasicDBObject rectangleDbObjLoaded = (BasicDBObject) shapes.findOne(new BasicDBObject("_id", rectangleDbObj.get("_id")));
+            BasicDBObject rectangleDbObjLoaded = (BasicDBObject) shapes.findOne(new BasicDBObject(Mapper.ID_KEY, rectangleDbObj.get(Mapper.ID_KEY)));
             Shape rectangleLoaded = morphia.fromDBObject(Shape.class, rectangleDbObjLoaded);
 
             assertTrue(rectangle.getArea() == rectangleLoaded.getArea());
@@ -67,7 +67,7 @@ public class TestInterfaces {
             DBObject shifterDbObj = morphia.toDBObject(shifter);
             shapeshifters.save(shifterDbObj);
 
-            BasicDBObject shifterDbObjLoaded = (BasicDBObject) shapeshifters.findOne(new BasicDBObject("_id", shifterDbObj.get("_id")));
+            BasicDBObject shifterDbObjLoaded = (BasicDBObject) shapeshifters.findOne(new BasicDBObject(Mapper.ID_KEY, shifterDbObj.get(Mapper.ID_KEY)));
             ShapeShifter shifterLoaded = morphia.fromDBObject(ShapeShifter.class, shifterDbObjLoaded);
 
             assertTrue(rectangle.getArea() == shifterLoaded.getReferencedShape().getArea());

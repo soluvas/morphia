@@ -14,6 +14,7 @@ import java.util.Map;
  */
 @MongoDocument
 public class Article extends AbstractMongoEntity {
+	private static final long serialVersionUID = 1L;
 
     @MongoEmbedded
     private Map<String,Translation> translations;

@@ -16,17 +16,20 @@
 
 package com.google.code.morphia;
 
+import java.io.Serializable;
+
 import com.google.code.morphia.annotations.MongoCollectionName;
 import com.google.code.morphia.annotations.MongoID;
-import java.io.Serializable;
 
 /**
  *
  * @author Olafur Gauti Gudmundsson
  */
-public abstract class AbstractMongoEntity implements MongoEntity, Serializable {
 
-    @MongoID
+public abstract class AbstractMongoEntity implements MongoEntity, Serializable {
+	private static final long serialVersionUID = 1L;
+
+	@MongoID
     protected String id;
 
     @MongoCollectionName

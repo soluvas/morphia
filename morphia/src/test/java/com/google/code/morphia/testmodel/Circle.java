@@ -24,6 +24,7 @@ import com.google.code.morphia.annotations.MongoValue;
  * @author Olafur Gauti Gudmundsson
  */
 public class Circle extends AbstractMongoEntity implements Shape {
+	private static final long serialVersionUID = 1L;
 
     @MongoValue
     private double radius;
