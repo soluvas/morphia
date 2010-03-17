@@ -111,11 +111,11 @@ public class MorphiaDatastore implements Datastore {
 
 	@Override
 	public <T> T get(Object clazzOrEntity, long id) {
-		return get(clazzOrEntity, (Object)id);
+		return (T)get(clazzOrEntity, (Object)id);
 	}
 	
 	@Override
-	public <T> Iterable<T> get(Object clazzOrEntity, long[] ids) {
+	public <T> Query<T> get(Object clazzOrEntity, long[] ids) {
 		ArrayList<Long> listIds = new ArrayList<Long>(ids.length);
 		
 		for (int i = 0; i < ids.length; i++) listIds.add(ids[i]);
@@ -126,11 +126,11 @@ public class MorphiaDatastore implements Datastore {
 
 	@Override
 	public <T> T get(Object clazzOrEntity, String id) {
-		return get(clazzOrEntity, (Object)id);
+		return (T)get(clazzOrEntity, (Object)id);
 	}
 
 	@Override
-	public <T> Iterable<T> get(Object clazzOrEntity, String[] ids) {
+	public <T> Query<T> get(Object clazzOrEntity, String[] ids) {
 		return get(clazzOrEntity, (Object[])ids);
 	}
 

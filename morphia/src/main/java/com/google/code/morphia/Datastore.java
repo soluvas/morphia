@@ -9,8 +9,8 @@ import com.mongodb.Mongo;
 public interface Datastore {
 	<T> T get(Object clazzOrEntity, long id);
 	<T> T get(Object clazzOrEntity, String id);
-	<T> Iterable<T> get(Object clazzOrEntity, long[] ids);
-	<T> Iterable<T> get(Object clazzOrEntity, String[] ids);
+	<T> Query<T> get(Object clazzOrEntity, long[] ids);
+	<T> Query<T> get(Object clazzOrEntity, String[] ids);
 
 	<T> void save(T entity);
 	<T> void save(Iterable<T> entities);
