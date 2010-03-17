@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.Vector;
 
@@ -170,7 +169,8 @@ public class TestMapping {
             borgAddr.setStreet("Posthusstraeti 11");
             borgAddr.setPostCode("101");
             borg.setAddress(borgAddr);
-
+            borg.setCollectionName(hotels.getName());
+            
             BasicDBObject hotelDbObj = (BasicDBObject) morphia.toDBObject(borg);
             hotels.save(hotelDbObj);
 
@@ -191,7 +191,8 @@ public class TestMapping {
             TravelAgency agency = new TravelAgency();
             agency.setName("Lastminute.com");
             agency.getHotels().add(borgLoaded);
-
+            agency.setCollectionName(agencies.getName());
+            
             BasicDBObject agencyDbObj = (BasicDBObject) morphia.toDBObject(agency);
             agencies.save(agencyDbObj);
 
@@ -216,6 +217,7 @@ public class TestMapping {
             morphia.map(Article.class).map(Translation.class).map(Circle.class);
 
             Article related = new Article();
+            related.setCollectionName(articles.getName());
             BasicDBObject relatedDbObj = (BasicDBObject) morphia.toDBObject(related);
             articles.save(relatedDbObj);
 
@@ -231,6 +233,7 @@ public class TestMapping {
 
             article.putRelated("test", relatedLoaded);
 
+            article.setCollectionName(articles.getName());
             BasicDBObject articleDbObj = (BasicDBObject) morphia.toDBObject(article);
             articles.save(articleDbObj);
 
@@ -262,10 +265,12 @@ public class TestMapping {
             morphia.map(RecursiveParent.class).map(RecursiveChild.class);
 
             RecursiveParent parent = new RecursiveParent();
+            parent.setCollectionName(stuff.getName());
             BasicDBObject parentDbObj = (BasicDBObject) morphia.toDBObject(parent);
             stuff.save(parentDbObj);
 
             RecursiveChild child = new RecursiveChild();
+            child.setCollectionName(stuff.getName());
             BasicDBObject childDbObj = (BasicDBObject) morphia.toDBObject(child);
             stuff.save(childDbObj);
 
