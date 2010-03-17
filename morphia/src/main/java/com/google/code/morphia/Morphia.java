@@ -27,6 +27,7 @@ import com.google.code.morphia.annotations.MongoEmbedded;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.Mongo;
 
 /**
  *
@@ -144,4 +145,28 @@ public class Morphia {
         }
     }
     public Mapper getMapper() { return this.mapper; }
+
+    public Datastore createDatastore() {
+    	try {
+			return new DatastoreImpl(this, new Mongo());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+    }
+
+    public Datastore createDatastore(String dbName) {
+    	try {
+			return new DatastoreImpl(this, new Mongo(), dbName);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+    }
+   
+    public Datastore createDatastore(Mongo mon) {
+    	return new DatastoreImpl(this, mon);
+    }
+
+    public Datastore createDatastore(Mongo mon, String dbName) {
+    	return new DatastoreImpl(this, mon, dbName);
+    }
 }

@@ -15,17 +15,17 @@ import com.mongodb.ObjectId;
  * @author Scott Hernandez
  */
 @SuppressWarnings("unchecked")
-public class MorphiaDatastore implements Datastore {
+public class DatastoreImpl implements Datastore {
 
 	Morphia morphia;
 	Mongo mongo;
 	String dbName;
 
-	public MorphiaDatastore(Morphia morphia, Mongo mongo) {
+	public DatastoreImpl(Morphia morphia, Mongo mongo) {
 		this(morphia, mongo, null);
 	}
 	
-	public MorphiaDatastore(Morphia morphia, Mongo mongo, String dbName) {
+	public DatastoreImpl(Morphia morphia, Mongo mongo, String dbName) {
 		this.morphia = morphia; this.mongo = mongo; this.dbName = dbName;
 	}
 

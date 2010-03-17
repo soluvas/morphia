@@ -59,7 +59,7 @@ public class TestDatastore {
 	public void setUp() {
 		mongo.dropDatabase("morphia_test");
 		db = mongo.getDB("morphia_test");
-        ds = new MorphiaDatastore(morphia, mongo, db.getName());
+        ds = morphia.createDatastore(mongo, db.getName());
         
 	}
 	
