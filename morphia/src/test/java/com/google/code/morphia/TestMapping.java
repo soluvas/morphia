@@ -96,12 +96,8 @@ public class TestMapping {
         Morphia morphia = new Morphia();
         morphia.map(IPrintAWarning.class);
         
-        boolean foundSValue = false;
-        for(Field f :morphia.getMappedClasses().get(IPrintAWarning.class.getName()).persistenceFields) {
-        	assertTrue("'ne' field should not be persisted!", !f.getName().equals("ne"));
-        	if (f.getName().equals("sValue")) foundSValue = true;
-        }
-        assertTrue(foundSValue);
+        assertTrue("'ne' field should not be persisted!",
+        		!morphia.getMappedClasses().get(IPrintAWarning.class.getName()).persistenceFields.containsKey("ne"));
         
         boolean allGood=false;
         try {
@@ -109,7 +105,7 @@ public class TestMapping {
         } catch (MongoMappingException e) {
         	allGood = true;
         }
-        assertTrue("Validation: Missing @MongoId field not not caught", allGood);
+        assertTrue("Validation: Missing @MongoId field not caught", allGood);
 
         allGood = false;
         try {

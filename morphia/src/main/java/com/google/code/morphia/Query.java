@@ -1,4 +1,8 @@
-package com.google.com.morphia.ofy;
+package com.google.code.morphia;
+
+import java.util.List;
+
+import com.google.code.morphia.utils.Key;
 
 /**
  * @author Scott Hernandez
@@ -6,9 +10,19 @@ package com.google.com.morphia.ofy;
 public interface Query<T> extends Iterable<T>
 {
 	/**
-	 * <p>Create a filter based on the specified condition and value. Examples:</p>
+	 * <p>Create a filter based on the specified condition and value.
+	 * </p><p>
+	 * <b>Note</b>: Property is in the form of "name op" ("age >").
+	 * </p><p>
+	 * Valid operators are ["=", "==","!=", "<>", ">", "<", ">=", "<=", "in", "nin", "all", "size", "exists"]
+	 * </p>
+	 * <p>Examples:</p>
 	 * 
 	 * <ul>
+	 * <li>{@code filter("yearsOfOperation >", 5)}</li>
+	 * <li>{@code filter("rooms.maxBeds >=", 2)}</li>
+	 * <li>{@code filter("rooms.bathrooms exists", 1)}</li>
+	 * <li>{@code filter("stars in", new Long[]{3,4}) //3 and 4 stars (midrange?)}</li>
 	 * <li>{@code filter("age >=", age)}</li>
 	 * <li>{@code filter("age =", age)}</li>
 	 * <li>{@code filter("age", age)} (if no operator, = is assumed)</li>
@@ -63,6 +77,12 @@ public interface Query<T> extends Iterable<T>
 	 * @return the only instance in the result, or null if the result set is empty.
 	 */
 	public T get();
+	
+	/**
+	 * Execute the query and get the results (as a {@code List<T>}  This method is provided as a convenience;
+	 * {@code List<T> results = new ArrayList<T>; for(T ent : fetch()} results.add(ent); return results;}
+	 */
+	public List<T> asList();
 	
 	/**
 	 * Get the key of the first entity in the result set.  Obeys the offset value.

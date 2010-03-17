@@ -2,11 +2,13 @@ package com.google.code.morphia;
 
 import java.util.ArrayList;
 
-import com.google.com.morphia.ofy.Query;
+import com.google.code.morphia.utils.IndexDirection;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 import com.mongodb.Mongo;
 import com.mongodb.ObjectId;
 
@@ -29,6 +31,20 @@ public class DatastoreImpl implements Datastore {
 		this.morphia = morphia; this.mongo = mongo; this.dbName = dbName;
 	}
 
+	@Override
+	public Mongo getMongo() {
+		return this.mongo;
+	}
+
+	@Override
+	public Morphia getMorphia() {
+		return this.morphia;
+	}
+
+	@Override
+	public DB getDB() {
+		return (dbName == null) ? null : mongo.getDB(dbName);
+	}
 	public DBCollection getCollection(Class clazz) {
 		String collName;
 		try {
@@ -118,7 +134,8 @@ public class DatastoreImpl implements Datastore {
 	public <T> Query<T> get(Object clazzOrEntity, long[] ids) {
 		ArrayList<Long> listIds = new ArrayList<Long>(ids.length);
 		
-		for (int i = 0; i < ids.length; i++) listIds.add(ids[i]);
+		for (long id: ids) 
+			listIds.add(id);
 		
 		return get(clazzOrEntity, listIds.toArray());
 	}
@@ -166,16 +183,15 @@ public class DatastoreImpl implements Datastore {
 	
 	@Override
 	public <T> void delete(Object clazzOrEntity, long[] ids) {
-		for (int i = 0; i < ids.length; i++) {
-			delete(clazzOrEntity, ids[i]);
+		for (long id : ids) {
+			delete(clazzOrEntity, id);
 		}		
 	}
 
 	@Override
 	public <T> void delete(Object clazzOrEntity, String[] ids) {
-		for (int i = 0; i < ids.length; i++) {
-			delete(clazzOrEntity, ids[i]);
-		}
+		for (String id : ids)
+			delete(clazzOrEntity, id);
 	}
 	
 	@Override
@@ -217,13 +233,64 @@ public class DatastoreImpl implements Datastore {
 		return query.countAll();
 	}
 
+	protected Object getId(Object entity) {
+		MappedClass mc;
+		String keyClassName = entity.getClass().getName();
+		if (morphia.getMappedClasses().containsKey(keyClassName))
+			mc = morphia.getMappedClasses().get(keyClassName);
+		else
+			mc = new MappedClass(entity.getClass());
+		
+		try {
+			return mc.idField.get(entity);
+		} catch (Exception e) {
+			return null;
+		}
+	}
 	@Override
-	public Mongo getMongo() {
-		return this.mongo;
+	public <T> T get(Object entityOrRef) {
+		DBRef ref = null;
+		if(entityOrRef instanceof DBRef) ref = (DBRef)entityOrRef;
+		
+		if(ref==null) {
+			Object id = getId(entityOrRef);
+			if (id == null) throw new MongoMappingException("Could not get id for " + entityOrRef.getClass().getName());
+			return (T) get(entityOrRef, id);
+		} else {
+			//TODO replace with reflection code?
+			return null;
+		}
 	}
 
 	@Override
-	public Morphia getMorphia() {
-		return this.morphia;
+	public DBRef createRef(Object entity) {
+		Object id = getId(entity);
+		if (id == null) throw new MongoMappingException("Could not get id for " + entity.getClass().getName());
+		return new DBRef(getDB(), getCollection(entity).getName(), id);
 	}
+
+	@Override
+	public DBRef createRef(Object clazzOrEntity, Object id) {
+		if (id == null) throw new MongoMappingException("Could not get id for " + clazzOrEntity.getClass().getName());
+		return new DBRef(getDB(), getCollection(clazzOrEntity).getName(), id);
+	}
+
+	@Override
+	public void ensureIndex(Object clazzOrEntity, String name, IndexDirection dir) {
+		BasicDBObjectBuilder keyBuilder = BasicDBObjectBuilder.start();
+		if(dir == IndexDirection.BOTH)
+			keyBuilder.add(name, 1).add(name, -1);
+		else
+			keyBuilder.add(name, (dir == IndexDirection.ASC)? 1 : -1);
+		
+		getCollection(clazzOrEntity).ensureIndex(keyBuilder.get());
+	}
+
+	@Override
+	public void ensureSuggestedIndexes() {
+		//TODO loop over mappedClasses and call ensureIndex for each one on non-embedded objects (for now)
+		//MappedClass
+	}
+	
+	
 }

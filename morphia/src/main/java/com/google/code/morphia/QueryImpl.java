@@ -1,10 +1,10 @@
 package com.google.code.morphia;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
-import com.google.com.morphia.ofy.FilterOperator;
-import com.google.com.morphia.ofy.Key;
-import com.google.com.morphia.ofy.Query;
+import com.google.code.morphia.utils.Key;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -56,6 +56,14 @@ public class QueryImpl<T> implements Query<T> {
 		if (sort != null) cursor = cursor.sort(sort.get());
 		
 		return new MorphiaIterator<T>(cursor, ds.getMorphia(), clazz);
+	}
+
+	@Override
+	public List<T> asList() {
+		List<T> results = new ArrayList<T>(); 
+		for(T ent : fetch()) 
+			results.add(ent); 
+		return results;
 	}
 
 	@Override
@@ -166,6 +174,5 @@ public class QueryImpl<T> implements Query<T> {
 	@Override
 	public Iterator<T> iterator() {
 		return fetch().iterator();
-	}
-	
+	}	
 }

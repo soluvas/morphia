@@ -5,12 +5,14 @@ package com.google.code.morphia;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.google.code.morphia.annotations.Indexed;
 import com.google.code.morphia.annotations.MongoCollectionName;
 import com.google.code.morphia.annotations.MongoDocument;
 import com.google.code.morphia.annotations.MongoEmbedded;
@@ -18,6 +20,7 @@ import com.google.code.morphia.annotations.MongoID;
 import com.google.code.morphia.annotations.MongoReference;
 import com.google.code.morphia.annotations.MongoTransient;
 import com.google.code.morphia.annotations.MongoValue;
+import com.google.code.morphia.utils.IndexDirection;
 import com.google.code.morphia.utils.ReflectionUtils;
 
 /**
@@ -28,7 +31,15 @@ import com.google.code.morphia.utils.ReflectionUtils;
  * @author Scott Hernandez
  */
 public class MappedClass {
-    private static final Logger logger = Logger.getLogger(MappedClass.class.getName());
+    public class SuggestedIndex {
+		String name;
+		IndexDirection dir;
+		public SuggestedIndex(String n, IndexDirection d) {name = n; dir = d;}
+		public String getName() {return name;}
+		public IndexDirection getDirection() {return dir;}
+	}
+
+	private static final Logger logger = Logger.getLogger(MappedClass.class.getName());
 	
     /** special fields representing the Key of the object */
     public Field idField, collectionNameField;
@@ -37,15 +48,18 @@ public class MappedClass {
 	public MongoDocument mongoDocumentAnnotation;
 	public MongoEmbedded mongoEmbeddedAnnotation;
 	
+	public List<SuggestedIndex> suggestedIndexes = new ArrayList<SuggestedIndex>();
+	
     /** the collectionName based on the type and @MongoDocument value(); this can be overriden by the @MongoCollectionName field on the instance*/
 	public String defaultCollectionName;
 
 	/** a list of the fields to map */
-	public List<Field> persistenceFields = new ArrayList<Field>();
+	public Map<String,Field> persistenceFields = new HashMap<String, Field>();
 	
 	@SuppressWarnings("unchecked")
 	/** the type we are mapping to/from */
 	public Class clazz;
+	
 	
 	@SuppressWarnings("unchecked")
 	public MappedClass(Class clazz) {
@@ -66,7 +80,8 @@ public class MappedClass {
             			field.isAnnotationPresent(MongoReference.class) || 
             			field.isAnnotationPresent(MongoEmbedded.class) || 
             			isSupportedType(field.getType())) {
-                persistenceFields.add(field);   	
+                
+            	persistenceFields.put(getMappedFieldName(field), field);   	
             } else {
             	logger.warning("Ignoring (will not persist) field: " + clazz.getName() + "." + field.getName() + " [" + field.getType().getSimpleName() + "]");
             }
@@ -75,6 +90,20 @@ public class MappedClass {
         Validate();
 	}
 	
+	public static String getMappedFieldName(Field field) {
+		if (field.isAnnotationPresent(MongoValue.class)){
+			MongoValue mv = field.getAnnotation(MongoValue.class);
+			if(!mv.value().equals(Mapper.IGNORED_FIELDNAME)) return mv.value();
+		} else if (field.isAnnotationPresent(MongoReference.class)){
+			MongoReference mr = field.getAnnotation(MongoReference.class);
+			if(!mr.value().equals(Mapper.IGNORED_FIELDNAME)) return mr.value();
+		} else if (field.isAnnotationPresent(MongoEmbedded.class)){
+			MongoEmbedded me = field.getAnnotation(MongoEmbedded.class);
+			if(!me.value().equals(Mapper.IGNORED_FIELDNAME)) return me.value();
+		}			
+		return field.getName();
+	}
+
 	/** Checks to see if it a Map/Set/List or a property supported by the MangoDB java driver*/
 	@SuppressWarnings("unchecked")
 	public boolean isSupportedType(Class clazz) {
@@ -92,12 +121,16 @@ public class MappedClass {
                            + "]: Cannot have both @MongoDocument and @MongoEmbedded annotation at class level.");
         }
 
-        for (Field field : persistenceFields) {
-            field.setAccessible(true);
+        for (Map.Entry<String, Field> entry: persistenceFields.entrySet()) {
+            Field field = entry.getValue();
+            String mappedName = entry.getKey();
+            
+        	field.setAccessible(true);
             if (logger.isLoggable(Level.FINE)) {
                 logger.finer("In [" + clazz.getName() + "]: Processing field: " + field.getName());
             }
 
+            //a field can be a Value, Reference, or Embedded
             if ( field.isAnnotationPresent(MongoValue.class) ) {
                 // make sure that the property type is supported
                 if ( !ReflectionUtils.implementsInterface(field.getType(), List.class)
@@ -109,7 +142,6 @@ public class MappedClass {
                             + "] which is annotated as @MongoValue is of type that cannot be mapped (type is "
                             + field.getType().getName() + ").");
                 }
-
             } else if (field.isAnnotationPresent(MongoEmbedded.class)) {
                 if ( !ReflectionUtils.implementsInterface(field.getType(), List.class)
                         && !ReflectionUtils.implementsInterface(field.getType(), Set.class)
@@ -138,7 +170,13 @@ public class MappedClass {
                                     + "] which is annotated as @MongoReference is of type [" + field.getType().getName() + "] which cannot be referenced.");
                 }
             }
+            if (field.isAnnotationPresent(Indexed.class)) {
+    			Indexed index = field.getAnnotation(Indexed.class);
+            	suggestedIndexes.add(new SuggestedIndex(mappedName, index.value()));
+            }
+            
         }
+        
 
         // make sure @MongoCollectionName field is a String
         if (collectionNameField != null && collectionNameField.getType() != String.class) {

@@ -1,4 +1,4 @@
-package com.google.com.morphia.ofy;
+package com.google.code.morphia;
 
 /**
  * 
