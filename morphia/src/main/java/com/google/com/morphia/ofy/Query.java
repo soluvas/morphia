@@ -1,34 +1,12 @@
 package com.google.com.morphia.ofy;
 
-import java.util.Map;
-import java.util.Set;
-
-
 /**
- * <p>This is similar to the datastore Query object, but better understands
- * real class objects - it allows you to filter and sort by the key field
- * normally.</p>
- * 
- * <p>The methods of this class follow the GAE/Python Query class rather than
- * the GAE/Java Query class because the Python version is much more convenient
- * to use.  The Java version seems to have been designed for machines, not
- * humans.  You will appreciate the improvement.</p>
- * 
- * <p>Construct this class by calling {@code Objectify.query()}</p>
- * 
- * <p>Note that this class is Iterable itself; you do not need to call the
- * fetch() method, but it is available if you like it.</p>
- * 
- * <p>To obtain a {@code Cursor} call {@code Query.iterator().getCursor()}.
- * This cursor can be resumed with {@code Query.cursor()}.</p>
- *
- * @author Jeff Schnitzer <jeff@infohazard.org>
+ * @author Scott Hernandez
  */
 public interface Query<T> extends Iterable<T>
 {
 	/**
-	 * <p>Create a filter based on the specified condition and value, using
-	 * the same syntax as the GAE/Python query class. Examples:</p>
+	 * <p>Create a filter based on the specified condition and value. Examples:</p>
 	 * 
 	 * <ul>
 	 * <li>{@code filter("age >=", age)}</li>
@@ -36,14 +14,11 @@ public interface Query<T> extends Iterable<T>
 	 * <li>{@code filter("age", age)} (if no operator, = is assumed)</li>
 	 * <li>{@code filter("age !=", age)}</li>
 	 * <li>{@code filter("age in", ageList)}</li>
+	 * <li>{@code filter("customers.loyaltyYears in", yearsList)}</li>
 	 * </ul>
 	 * 
 	 * <p>You can filter on id properties <strong>if</strong> this query is
-	 * restricted to a Class<T> and the entity has no @Parent.  If you are
-	 * having trouble working around this limitation, please consult the
-	 * objectify-appengine google group.</p>
-	 * <p>You can <strong>not</strong> filter on @Parent properties.  Use
-	 * the {@code ancestor()} method instead.</p>
+	 * restricted to a Class<T>.
 	 */
 	public Query<T> filter(String condition, Object value);
 	
@@ -53,22 +28,11 @@ public interface Query<T> extends Iterable<T>
 	 * <ul>
 	 * <li>{@code sort("age")}</li>
 	 * <li>{@code sort("-age")} (descending sort)</li>
+	 * <li>{@code sort("age,date")}</li>
+	 * <li>{@code sort("age,-date")} (age ascending, date descending)</li>
 	 * </ul>
-	 * 
-	 * <p>You can sort on id properties <strong>if</strong> this query is
-	 * restricted to a Class<T>.  Note that this is only important for
-	 * descending sorting; default iteration is key-ascending.</p>
-	 * <p>You can <strong>not</strong> sort on @Parent properties.</p>
 	 */
 	public Query<T> order(String condition);
-	
-	/**
-	 * Restricts result set only to objects which have the given ancestor
-	 * somewhere in the chain.  Doesn't need to be the immediate parent.
-	 * 
-	 * @param keyOrEntity can be a Key, a Key<T>, or an Objectify entity object.
-	 */
-	public Query<T> ancestor(Object keyOrEntity);
 	
 	/**
 	 * Limit the fetched result set to a certain number of values.
@@ -87,7 +51,7 @@ public interface Query<T> extends Iterable<T>
 	/**
 	 * <p>Generates a string that consistently and uniquely specifies this query.  There
 	 * is no way to convert this string back into a query and there is no guarantee that
-	 * the string will be consistent across versions of Objectify.</p>
+	 * the string will be consistent across versions.</p>
 	 * 
 	 * <p>In particular, this value is useful as a key for a simple memcache query cache.</p> 
 	 */
@@ -114,29 +78,13 @@ public interface Query<T> extends Iterable<T>
 	public Iterable<T> fetch();
 	
 	/**
-	 * Execute the query and get the keys of the results.  This is more efficient than
-	 * fetching the actual results.
+	 * Execute the query and get the ids of the results.  This is more efficient than
+	 * fetching the actual results (transfers less data).
 	 */
-	public Iterable<Key<T>> fetchKeys();
-	
-	/**
-	 * Execute a keys-only query and then extract parent keys, returning them as a Set.
-	 * 
-	 * @throws IllegalStateException if any member of the query result does not have a parent. 
-	 */
-	public <V> Set<Key<V>> fetchParentKeys();
-	
-	/**
-	 * Gets the parent keys and then fetches the actual entities.  This is the same
-	 * as calling {@code ofy.get(query.fetchParentKeys())}.
-	 * 
-	 * @throws IllegalStateException if any member of the query result does not have a parent. 
-	 */
-	public <V> Map<Key<V>, V> fetchParents();
-	
+	public Iterable<T> fetchIdsOnly();
+		
 	/**
 	 * <p>Count the total number of values in the result, <strong>ignoring <em>limit</em> and <em>offset</em>.</p>
-	 * <p>This is somewhat faster than fetching, but the time still grows with the number of results.</p>
 	 */
-	public int countAll();
+	public long countAll();
 }

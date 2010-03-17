@@ -1,14 +1,15 @@
 package com.google.code.morphia;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
+import com.google.com.morphia.ofy.Query;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.ObjectId;
+
 /**
  * 
  * @author Scott Hernandez
@@ -48,19 +49,64 @@ public class MorphiaDatastore implements Datastore {
 		return mongo.getDB(dbName).getCollection(collName);
 	}
 
+	protected Object fixupId(Object id) {
+		return Mapper.fixupId(id);
+	}
+
+	private Class getEntityClass(Object clazzOrEntity) {
+		return (clazzOrEntity instanceof Class) ? (Class) clazzOrEntity : clazzOrEntity.getClass();
+	}
+	
+	protected void updateKeyInfo(Object entity, DBObject dbObj) {
+		MappedClass mc = morphia.getMappedClasses().get(entity.getClass().getName());
+	
+		//update id field, if there.
+		if (mc.idField != null) {
+			try {
+				Object value =  mc.idField.get(entity);
+		    	Object dbId = dbObj.get(Mapper.ID_KEY);
+				if ( value != null ) {
+			    	if (value != null && !value.equals(dbId))
+			    		throw new RuntimeException("id mismatch: " + value + " != " + dbId + " for " + entity.getClass().getSimpleName());
+				} else if (value == null)
+					if (dbId instanceof ObjectId && mc.idField.getType().isAssignableFrom(String.class)) dbId = dbId.toString();
+		    		mc.idField.set(entity, dbId);
+
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		//update ns (collectionName)
+		if (mc.collectionNameField != null) {
+			try {
+				String value = (String) mc.collectionNameField.get(entity);
+
+				String dbNs = dbObj.get("_ns").toString();
+				if ( value != null && value.length() > 0 ) {
+			    	if (value != null && !value.equals(dbNs))
+			    		throw new RuntimeException("ns mismatch: " + value + " != " + dbNs + " for " + entity.getClass().getSimpleName());
+				} else if (value == null) 
+		    		mc.collectionNameField.set(entity, dbNs);
+				
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+		
+	}
+
 	protected <T> T get(Object clazzOrEntity, Object id) {
 		DBObject obj =  getCollection(clazzOrEntity).findOne(BasicDBObjectBuilder.start().add(Mapper.ID_KEY, fixupId(id)).get());
 		if (obj == null) return null;
-		Class clazz = (clazzOrEntity instanceof Class) ? (Class)clazzOrEntity : clazzOrEntity.getClass();
-		return (T)morphia.fromDBObject(clazz, (BasicDBObject) obj);
+		return (T)morphia.fromDBObject(getEntityClass(clazzOrEntity), (BasicDBObject) obj);
 	}
 
-	protected <T> Iterator<T> get(Object clazzOrEntity, Object[] ids) {
+	protected <T> Query<T> get(Object clazzOrEntity, Object[] ids) {
 		for (int i = 0; i < ids.length; i++) {
 			ids[i] = fixupId(ids[i]);
 		}
-
-		return find(clazzOrEntity, BasicDBObjectBuilder.start().push(Mapper.ID_KEY).append("$in", ids).get());
+		return find(clazzOrEntity, Mapper.ID_KEY + " in", ids);
 	}
 
 	@Override
@@ -69,7 +115,7 @@ public class MorphiaDatastore implements Datastore {
 	}
 	
 	@Override
-	public <T> Iterator<T> get(Object clazzOrEntity, long[] ids) {
+	public <T> Iterable<T> get(Object clazzOrEntity, long[] ids) {
 		ArrayList<Long> listIds = new ArrayList<Long>(ids.length);
 		
 		for (int i = 0; i < ids.length; i++) listIds.add(ids[i]);
@@ -84,26 +130,14 @@ public class MorphiaDatastore implements Datastore {
 	}
 
 	@Override
-	public <T> Iterator<T> get(Object clazzOrEntity, String[] ids) {
+	public <T> Iterable<T> get(Object clazzOrEntity, String[] ids) {
 		return get(clazzOrEntity, (Object[])ids);
 	}
 
 	@Override
-	public <T> Iterator<T> find(Object clazzOrEntity) {
-		Iterator<DBObject> cursor = getCollection(clazzOrEntity).find();
-		return new MorphiaIterator<T>(cursor, morphia, (clazzOrEntity instanceof Class) ? (Class) clazzOrEntity : clazzOrEntity.getClass());
+	public <T> Query<T> find(Object clazzOrEntity) {
+		return new QueryImpl<T>(getEntityClass(clazzOrEntity), getCollection(clazzOrEntity), this);
 	}
-
-	public <T> MorphiaIterator<T> find(Object clazzOrEntity, DBObject query){
-    	Iterator<DBObject> cursor = getCollection(clazzOrEntity).find(query);
-    	return new MorphiaIterator<T>(cursor, morphia, (clazzOrEntity instanceof Class) ? (Class) clazzOrEntity : clazzOrEntity.getClass());
-    }
-
-	public <T> MorphiaIterator<T> find(Object clazzOrEntity, DBObject query, DBObject fields, int offset, int size){
-    	Iterator<DBObject> cursor;
-		cursor = getCollection(clazzOrEntity).find(query, fields, offset, size );
-    	return new MorphiaIterator<T>(cursor, morphia, (clazzOrEntity instanceof Class) ? (Class) clazzOrEntity : clazzOrEntity.getClass());
-    }
 
 	@Override
 	public <T> void delete(T entity) {
@@ -130,10 +164,6 @@ public class MorphiaDatastore implements Datastore {
 		dbColl.remove(BasicDBObjectBuilder.start().add(Mapper.ID_KEY, fixupId(id)).get());
 	}
 	
-	protected Object fixupId(Object id) {
-		return Mapper.fixupId(id);
-	}
-
 	@Override
 	public <T> void delete(Object clazzOrEntity, long[] ids) {
 		for (int i = 0; i < ids.length; i++) {
@@ -155,50 +185,12 @@ public class MorphiaDatastore implements Datastore {
 		updateKeyInfo(entity, dbObj);
     }
 
-	protected void updateKeyInfo(Object entity, DBObject dbObj) {
-		MappedClass mc = morphia.getMappedClasses().get(entity.getClass().getName());
-	
-		//update id field, if there.
-		if (mc.idField != null) {
-			try {
-				Object value =  mc.idField.get(entity);
-		    	Object dbId = dbObj.get(Mapper.ID_KEY);
-				if ( value != null ) {
-			    	if (value != null && !value.equals(dbId))
-			    		throw new RuntimeException("id mismatch: " + value + " != " + dbId + " for " + entity.getClass().getSimpleName());
-				} else if (value == null)
-					if (dbId instanceof ObjectId && mc.idField.getType().isAssignableFrom(String.class)) dbId = dbId.toString();
-		    		mc.idField.set(entity, dbId);
-
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-
-		//update ns (collectionName)
-		if (mc.collectionNameField != null) {
-			try {
-				String value = (String) mc.collectionNameField.get(entity);
-		    	String dbNs = dbObj.get("_ns").toString();
-				if ( value != null && value.length() > 0 ) {
-			    	if (value != null && !value.equals(dbNs))
-			    		throw new RuntimeException("ns mismatch: " + value + " != " + dbNs + " for " + entity.getClass().getSimpleName());
-				} else if (value == null) 
-		    		mc.collectionNameField.set(entity, dbNs);
-				
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-		
-	}
 	
 	@Override
 	public <T> void save(Iterable<T> entities) {
 		//for now, do it one at a time.
-		for(T ent : entities) {
+		for(T ent : entities)
 			save(ent);
-		}
 
 	}
 
@@ -208,7 +200,30 @@ public class MorphiaDatastore implements Datastore {
 	}
 
 	@Override
-	public <T> long getCount(Object clazzOrEntity, DBObject query) {
-		return getCollection(clazzOrEntity).getCount(query);
+	public <T> Query<T> find(Object clazzOrEntity, String property, Object value) {
+		Query<T> query = find(clazzOrEntity);
+		return query.filter(property, value);
+	}
+
+	@Override
+	public <T> Query<T> find(Object clazzOrEntity, String property, Object value, int offset, int size) {
+		Query<T> query = find(clazzOrEntity);
+		query.offset(offset); query.limit(size);
+		return query.filter(property, value);
+	}
+
+	@Override
+	public <T> long getCount(Query<T> query) {
+		return query.countAll();
+	}
+
+	@Override
+	public Mongo getMongo() {
+		return this.mongo;
+	}
+
+	@Override
+	public Morphia getMorphia() {
+		return this.morphia;
 	}
 }

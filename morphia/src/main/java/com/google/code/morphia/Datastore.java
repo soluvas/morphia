@@ -1,8 +1,7 @@
 package com.google.code.morphia;
 
-import java.util.Iterator;
-
-import com.mongodb.DBObject;
+import com.google.com.morphia.ofy.Query;
+import com.mongodb.Mongo;
 /**
  * 
  * @author Scott Hernandez
@@ -10,8 +9,8 @@ import com.mongodb.DBObject;
 public interface Datastore {
 	<T> T get(Object clazzOrEntity, long id);
 	<T> T get(Object clazzOrEntity, String id);
-	<T> Iterator<T> get(Object clazzOrEntity, long[] ids);
-	<T> Iterator<T> get(Object clazzOrEntity, String[] ids);
+	<T> Iterable<T> get(Object clazzOrEntity, long[] ids);
+	<T> Iterable<T> get(Object clazzOrEntity, String[] ids);
 
 	<T> void save(T entity);
 	<T> void save(Iterable<T> entities);
@@ -27,13 +26,16 @@ public interface Datastore {
 	 * @param <T> Type to return
 	 * @param clazzOrObject Class or entity to get collectionName from
 	 */
-	<T> Iterator<T> find(Object clazzOrEntity);
-	<T> Iterator<T> find(Object clazzOrEntity, DBObject query);
-	<T> Iterator<T> find(Object clazzOrEntity, DBObject query, DBObject fields, int offset, int size);
+	<T> Query<T> find(Object clazzOrEntity);
+	<T> Query<T> find(Object clazzOrEntity, String property, Object value);
+	<T> Query<T> find(Object clazzOrEntity, String property, Object value, int offset, int size);
 	
 	/**
 	 * Gets the count of the CollectionName
 	 */
 	<T> long getCount(Object clazzOrEntity);
-	<T> long getCount(Object clazzOrEntity, DBObject query);
+	<T> long getCount(Query<T> query);
+	
+	Morphia getMorphia();
+	Mongo getMongo();
 }

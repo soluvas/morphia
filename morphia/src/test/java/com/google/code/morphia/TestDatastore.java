@@ -90,7 +90,7 @@ public class TestDatastore {
 		ds.save(fbUsers);
 		assertEquals(4, ds.getCount(FacebookUser.class));
 		assertNotNull(ds.get(fbUsers.get(0), 1));
-		Iterator<FacebookUser> it = ds.get(fbUsers.get(0), new long[] {1,2});
+		Iterator<FacebookUser> it = ds.<FacebookUser>get(fbUsers.get(0), new long[] {1,2}).iterator();
 		assertNotNull(it.next());
 		assertNotNull(it.next());
 		assertTrue(!it.hasNext());
