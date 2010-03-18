@@ -18,7 +18,6 @@ package com.google.code.morphia;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -520,25 +519,20 @@ public class Mapper {
         }
     }
 
+    /** Converts known types from mongodb -> java. Really it just converts enums and locales from strings */
     public static Object objectFromValue( Class c, BasicDBObject dbObject, String name ) {
         if (c == String.class) {
             return dbObject.getString(name);
-        } else if (c == Date.class) {
-            return (Date)dbObject.get(name);
         } else if (c == Integer.class || c == int.class) {
             return dbObject.getInt(name);
         } else if (c == Long.class || c == long.class) {
             return dbObject.getLong(name);
-        } else if (c == Double.class || c == double.class) {
-            return (Double)dbObject.get(name);
-        } else if (c == Boolean.class || c == boolean.class) {
-            return (Boolean)dbObject.get(name);
         } else if (c == Locale.class) {
             return parseLocale(dbObject.getString(name));
         } else if (c.isEnum()) {
             return Enum.valueOf(c, dbObject.getString(name));
         }
-        return null;
+        return dbObject.get(name);
     }
 
     void mapEmbeddedFromDBObject( BasicDBObject dbObject, Field field, Object entity ) throws Exception {

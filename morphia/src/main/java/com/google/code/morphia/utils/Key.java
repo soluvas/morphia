@@ -2,6 +2,8 @@ package com.google.code.morphia.utils;
 
 import java.io.Serializable;
 
+import com.mongodb.DBRef;
+
 /**
  * <p>The key object.  It is also Serializable
  * and GWT-safe, enabling your entity objects to be used for GWT RPC should
@@ -39,7 +41,26 @@ public class Key<T> implements Serializable, Comparable<Key<?>>
 	{
 		this(null, kind, id);
 	}
-		
+	
+	/** Create a key with an id */
+	public Key(String kind, Object id)
+	{
+		this.parent = null;
+		this.kindClassName = kind;
+		this.id = id;
+	}
+
+	/** Create a key with a DBRef*/
+	public Key(DBRef ref)
+	{
+		this.parent = null;
+		this.kindClassName = ref.getRef();
+		this.id = ref.getId();
+	}
+
+	public DBRef toRef() {
+		return new DBRef(null, kindClassName, id);
+	}
 	/** Create a key with a parent and a long id */
 	public Key(Key<?> parent, Class<? extends T> kind, Object id)
 	{

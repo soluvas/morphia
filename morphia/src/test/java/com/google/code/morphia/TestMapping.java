@@ -35,13 +35,17 @@ import com.google.code.morphia.testmodel.Article;
 import com.google.code.morphia.testmodel.Circle;
 import com.google.code.morphia.testmodel.Hotel;
 import com.google.code.morphia.testmodel.PhoneNumber;
+import com.google.code.morphia.testmodel.Rectangle;
 import com.google.code.morphia.testmodel.RecursiveChild;
 import com.google.code.morphia.testmodel.RecursiveParent;
 import com.google.code.morphia.testmodel.Translation;
 import com.google.code.morphia.testmodel.TravelAgency;
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 import com.mongodb.Mongo;
 
 /**
@@ -90,6 +94,44 @@ public class TestMapping {
 		String noImNot;
 	}
 
+	public static class ContainsRef {
+		public @MongoID String id;
+		public DBRef rect;
+	}
+	
+	@Test
+    public void testDbRefMapping() throws Exception {
+        Morphia morphia = new Morphia();
+        Mongo mongo = new Mongo();
+        DB db = mongo.getDB("morphia_test");
+        
+        morphia.map(ContainsRef.class).map(Rectangle.class);
+        DBCollection stuff = db.getCollection("stuff");
+        DBCollection rectangles = db.getCollection("rectangles");
+        
+        assertTrue("'ne' field should not be persisted!",
+        		!morphia.getMappedClasses().get(ContainsRef.class.getName()).persistenceFields.containsKey("ne"));
+
+        Rectangle r = new Rectangle(1,1);
+        DBObject rDbObject = morphia.toDBObject(r);
+        rDbObject.put("_ns", rectangles.getName());
+        rectangles.save(rDbObject);
+        
+        ContainsRef cRef = new ContainsRef();
+        cRef.rect = new DBRef(null, (String)rDbObject.get("_ns"), rDbObject.get("_id"));
+        DBObject cRefDbOject = morphia.toDBObject(cRef);
+        stuff.save(cRefDbOject);
+        BasicDBObject cRefDbObjectLoaded =(BasicDBObject)stuff.findOne(BasicDBObjectBuilder.start("_id", cRefDbOject.get("_id")).get());
+        ContainsRef cRefLoaded = morphia.fromDBObject(ContainsRef.class, cRefDbObjectLoaded);
+        assertNotNull(cRefLoaded);
+        assertNotNull(cRefLoaded.rect);
+        assertNotNull(cRefLoaded.rect.getId());
+        assertNotNull(cRefLoaded.rect.getRef());
+        assertEquals(cRefLoaded.rect.getId(), cRef.rect.getId());
+        assertEquals(cRefLoaded.rect.getRef(), cRef.rect.getRef());    
+	}
+	
+	
 	@Test
     public void testBadMappings() throws Exception {
         Morphia morphia = new Morphia();

@@ -41,6 +41,8 @@ import java.util.jar.JarInputStream;
 
 import com.google.code.morphia.annotations.MongoDocument;
 import com.google.code.morphia.annotations.MongoEmbedded;
+import com.mongodb.DBRef;
+import com.mongodb.ObjectId;
 
 /**
  * Various reflection utility methods, used mainly in the Mapper.
@@ -140,6 +142,8 @@ public class ReflectionUtils {
                 || type == Boolean.class
                 || type == boolean.class
                 || type == Locale.class
+                || type == DBRef.class
+                || type == ObjectId.class
                 || type.isEnum()
                 ;
     }

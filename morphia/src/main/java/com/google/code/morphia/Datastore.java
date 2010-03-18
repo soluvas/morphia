@@ -72,7 +72,6 @@ public interface Datastore {
 	/** Ensures (creating if necessary) the indexes found during class mapping (using {@code @Indexed)}*/
 	void ensureSuggestedIndexes();
 	
-	
 	/** The instance this Datastore is using */
 	Morphia getMorphia();
 	/** The instance this Datastore is using */
