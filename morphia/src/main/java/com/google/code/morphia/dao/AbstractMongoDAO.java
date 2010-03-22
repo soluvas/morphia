@@ -16,14 +16,13 @@
 
 package com.google.code.morphia.dao;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import com.google.code.morphia.Mapper;
 import com.google.code.morphia.Morphia;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.ObjectId;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -49,80 +48,87 @@ public abstract class AbstractMongoDAO<T> implements MongoDAO<T> {
 
     @Override
     public void removeById(String id) {
-        collection().remove(new BasicDBObject(Mapper.ID_KEY, Mapper.fixupId(id)));
+        collection().remove(new BasicDBObject("_id", new ObjectId(id)));
     }
 
     @Override
     public T save(T entity) {
         BasicDBObject obj = (BasicDBObject) morphia.toDBObject(entity);
-        obj.put(Mapper.COLLECTION_NAME_KEY, collection().getName());
         collection().save(obj);
-        return get(obj.get(Mapper.ID_KEY).toString());
+        return get(obj.get("_id").toString());
     }
 
     @Override
     public boolean exists(String key, String value) {
-        return collection().getCount(new BasicDBObject(key, value)) > 0;
+        return exists(new BasicDBObject(key, value));
     }
 
     @Override
     public boolean exists(String key, int value) {
-        return collection().getCount(new BasicDBObject(key, value)) > 0;
+        return exists(new BasicDBObject(key, value));
     }
 
     @Override
     public boolean exists(String key, long value) {
-        return collection().getCount(new BasicDBObject(key, value)) > 0;
+        return exists(new BasicDBObject(key, value));
     }
 
     @Override
     public boolean exists(String key, double value) {
-        return collection().getCount(new BasicDBObject(key, value)) > 0;
+        return exists(new BasicDBObject(key, value));
     }
 
     @Override
     public boolean exists(String key, boolean value) {
-        return collection().getCount(new BasicDBObject(key, value)) > 0;
+        return exists(new BasicDBObject(key, value));
     }
 
-    @Override
+	@Override
     public boolean exists(String key, Enum value) {
-        return collection().getCount(new BasicDBObject(key, value.name())) > 0;
+        return exists(new BasicDBObject(key, value.name()));
+    }
+
+    protected boolean exists(final BasicDBObject condition) {
+        return collection().getCount(condition) > 0;
+    }
+
+    protected T get(final BasicDBObject condition) {
+        return morphia.fromDBObject(this.entityClass, (BasicDBObject) this.collection().findOne(condition));
     }
 
     @Override
     public T get(String id) {
-        return morphia.fromDBObject(entityClass, (BasicDBObject) collection().findOne(Mapper.fixupId(id)));
+        return morphia.fromDBObject(entityClass, (BasicDBObject) collection().findOne(new ObjectId(id)));
     }
 
     @Override
     public T getByValue(String key, String value) {
-        return morphia.fromDBObject(entityClass, (BasicDBObject) collection().findOne(new BasicDBObject(key, value)));
+        return get(new BasicDBObject(key, value));
     }
 
     @Override
     public T getByValue(String key, int value) {
-        return morphia.fromDBObject(entityClass, (BasicDBObject) collection().findOne(new BasicDBObject(key, value)));
+        return get(new BasicDBObject(key, value));
     }
 
     @Override
     public T getByValue(String key, long value) {
-        return morphia.fromDBObject(entityClass, (BasicDBObject) collection().findOne(new BasicDBObject(key, value)));
+        return get(new BasicDBObject(key, value));
     }
 
     @Override
     public T getByValue(String key, double value) {
-        return morphia.fromDBObject(entityClass, (BasicDBObject) collection().findOne(new BasicDBObject(key, value)));
+        return get(new BasicDBObject(key, value));
     }
 
     @Override
     public T getByValue(String key, boolean value) {
-        return morphia.fromDBObject(entityClass, (BasicDBObject) collection().findOne(new BasicDBObject(key, value)));
+        return get(new BasicDBObject(key, value));
     }
 
     @Override
     public T getByValue(String key, Enum value) {
-        return morphia.fromDBObject(entityClass, (BasicDBObject) collection().findOne(new BasicDBObject(key, value.name())));
+        return get(new BasicDBObject(key, value.name()));
     }
 
     @Override
@@ -130,9 +136,13 @@ public abstract class AbstractMongoDAO<T> implements MongoDAO<T> {
         collection().drop();
     }
 
-	@Override
+    @Override
     public List<T> findAll(int startIndex, int resultSize) {
-        Iterator cursor = collection().find(new BasicDBObject(), new BasicDBObject(), startIndex, resultSize);
+        DBCursor cursor = collection().find();
+        if ( startIndex > 0 ) {
+            cursor.skip(startIndex);
+        }
+        cursor.limit(resultSize);
         return toList(cursor);
     }
 
@@ -140,10 +150,10 @@ public abstract class AbstractMongoDAO<T> implements MongoDAO<T> {
         return morphia.fromDBObject(entityClass, dbObject);
     }
 
-    protected List<T> toList( Iterator<BasicDBObject> cursor ) {
+    protected List<T> toList( DBCursor cursor ) {
         List<T> list = new ArrayList<T>();
         while ( cursor.hasNext() ) {
-            list.add(morphia.fromDBObject(entityClass, cursor.next()));
+            list.add(morphia.fromDBObject(entityClass, (BasicDBObject) cursor.next()));
         }
         return list;
     }
