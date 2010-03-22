@@ -129,7 +129,7 @@ public class QueryImpl<T> implements Query<T> {
 		int oldLimit = limit;
 		limit=1;
 		Iterable<T> it = fetch();
-		limit = oldLimit;
+		limit = oldLimit;		
 		return (it.iterator().hasNext()) ? it.iterator().next() : null ;
 	}
 

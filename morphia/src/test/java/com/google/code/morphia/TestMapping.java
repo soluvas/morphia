@@ -195,7 +195,7 @@ public class TestMapping {
             morphia.map(Hotel.class);
             morphia.map(TravelAgency.class);
 
-            Hotel borg = new Hotel();
+            Hotel borg = Hotel.create();
             borg.setName("Hotel Borg");
             borg.setStars(4);
             borg.setTakesCreditCards(true);

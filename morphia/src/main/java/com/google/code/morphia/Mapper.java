@@ -16,6 +16,7 @@
 
 package com.google.code.morphia;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,9 +31,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import com.google.code.morphia.MappedClass.MappedField;
+import com.google.code.morphia.annotations.CollectionName;
 import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Id;
-import com.google.code.morphia.annotations.CollectionName;
 import com.google.code.morphia.annotations.Property;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.utils.ReflectionUtils;
@@ -125,11 +126,14 @@ public class Mapper {
     Object createEntityInstanceForDbObject( Class entityClass, BasicDBObject dbObject ) throws Exception {
         // see if there is a className value
         String className = (String) dbObject.get(CLASS_NAME_KEY);
+        Class c = entityClass;
         if ( className != null ) {
-            return getClassForName(className, entityClass).newInstance();
-        } else {
-            return entityClass.newInstance();
+            c = getClassForName(className, entityClass);
         }
+
+        Constructor constructor = c.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        return constructor.newInstance();
     }
 
     Object fromDBObject(Class entityClass, BasicDBObject dbObject) throws Exception {

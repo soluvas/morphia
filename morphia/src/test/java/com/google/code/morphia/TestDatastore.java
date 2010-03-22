@@ -76,6 +76,16 @@ public class TestDatastore {
 	}
 	
 	@Test
+    public void testNonexistantGet() throws Exception {
+		assertNull(ds.get(Hotel.class, -1));
+	}
+
+	@Test
+    public void testNonexistantFindGet() throws Exception {
+		assertNull(ds.find(Hotel.class,"_id", -1).get());
+	}
+	
+	@Test
     public void testCollectionNames() throws Exception {
 		assertTrue("facebook_users".equals(morphia.getMapper().getCollectionName(FacebookUser.class)));
 	}
@@ -153,7 +163,7 @@ public class TestDatastore {
 	
     @Test
     public void testEmbedded() throws Exception {
-        Hotel borg = new Hotel();
+        Hotel borg = Hotel.create();
         borg.setName("Hotel Borg");
         borg.setStars(4);
         borg.setTakesCreditCards(true);

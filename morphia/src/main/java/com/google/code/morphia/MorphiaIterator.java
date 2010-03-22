@@ -1,6 +1,7 @@
 package com.google.code.morphia;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import com.mongodb.BasicDBObject;
 
@@ -25,11 +26,13 @@ public class MorphiaIterator<T> implements Iterable<T>, Iterator<T>{
 	
 	@Override
 	public boolean hasNext() {
+		if(wrapped == null) return false;
 		return wrapped.hasNext();
 	}
 	
 	@Override
 	public T next() {
+		if(!hasNext()) throw new NoSuchElementException();
 		return (T) m.fromDBObject(clazz, (BasicDBObject) wrapped.next());
 	}
 	

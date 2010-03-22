@@ -34,6 +34,10 @@ import java.util.Vector;
 public class Hotel extends AbstractMongoEntity {
 	private static final long serialVersionUID = 1L;
 
+	public static Hotel create() {
+		return new Hotel();
+	}
+	
     public enum Type { BUSINESS, LEISURE }
 
     private String name;
@@ -52,12 +56,13 @@ public class Hotel extends AbstractMongoEntity {
     @Embedded(listClass = Vector.class)
     private List<PhoneNumber> phoneNumbers;
 
-    public Hotel() {
+    private Hotel() {
         super();
         tags = new HashSet<String>();
         phoneNumbers = new Vector<PhoneNumber>();
     }
 
+    
     public Address getAddress() {
         return address;
     }

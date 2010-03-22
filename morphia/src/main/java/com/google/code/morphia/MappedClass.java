@@ -5,7 +5,6 @@ package com.google.code.morphia;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -121,6 +120,7 @@ public class MappedClass {
 				ReflectionUtils.implementsAnyInterface(clazz, List.class, Map.class, Set.class);
 	}
 	
+	@SuppressWarnings("unchecked")
 	public void validate() {
 		// No @Document with @Embedded
         if (entityAn != null && embeddedAn != null ) {
