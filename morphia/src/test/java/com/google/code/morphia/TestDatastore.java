@@ -27,7 +27,8 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.code.morphia.annotations.MongoID;
+import com.google.code.morphia.annotations.Entity;
+import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.testmodel.Address;
 import com.google.code.morphia.testmodel.Hotel;
 import com.google.code.morphia.testmodel.Rectangle;
@@ -36,7 +37,7 @@ import com.mongodb.Mongo;
 
 /**
  *
- * @author Olafur Gauti Gudmundsson
+ * @author Scott Hernandez
  */
 public class TestDatastore {
 
@@ -44,6 +45,17 @@ public class TestDatastore {
 	Morphia morphia = new Morphia();
 	DB db;
 	Datastore ds;
+
+	@Entity("facebook_users")
+	public static class FacebookUser {
+		@Id long id;
+		String username;
+		public FacebookUser() {}
+		public FacebookUser(long id, String name) {
+			this(); this.id = id; this.username = name;
+		}
+	}
+	
 	
 	public TestDatastore () {
 		try {
@@ -51,7 +63,7 @@ public class TestDatastore {
 		} catch (UnknownHostException e) {
 			throw new RuntimeException(e);
 		}
-		morphia.map(Hotel.class).map(Rectangle.class);
+		morphia.map(Hotel.class).map(Rectangle.class).map(FacebookUser.class);
 		//delete, and (re)create test db
 	}
 
@@ -65,18 +77,8 @@ public class TestDatastore {
 	
 	@Test
     public void testCollectionNames() throws Exception {
-		
+		assertTrue("facebook_users".equals(morphia.getMapper().getCollectionName(FacebookUser.class)));
 	}
-	
-	public static class FacebookUser {
-		@MongoID long id;
-		String username;
-		public FacebookUser() {}
-		public FacebookUser(long id, String name) {
-			this(); this.id = id; this.username = name;
-		}
-	}
-	
 	@Test
     public void testGet() throws Exception {
 		List<FacebookUser> fbUsers = new ArrayList<FacebookUser>();
@@ -85,8 +87,7 @@ public class TestDatastore {
 		fbUsers.add(new FacebookUser(3,"user 3"));
 		fbUsers.add(new FacebookUser(4,"user 4"));
 		
-		morphia.map(FacebookUser.class);
-		
+	
 		ds.save(fbUsers);
 		assertEquals(4, ds.getCount(FacebookUser.class));
 		assertNotNull(ds.get(fbUsers.get(0), 1));

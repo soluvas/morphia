@@ -39,8 +39,8 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
-import com.google.code.morphia.annotations.MongoDocument;
-import com.google.code.morphia.annotations.MongoEmbedded;
+import com.google.code.morphia.annotations.Entity;
+import com.google.code.morphia.annotations.Embedded;
 import com.mongodb.DBRef;
 import com.mongodb.ObjectId;
 
@@ -82,6 +82,12 @@ public class ReflectionUtils {
         return validFields;
     }
 
+    public static boolean implementsAnyInterface(Class type, Class... interfaceClasses){
+    	for (Class iF : interfaceClasses) {
+			if (implementsInterface(type, iF)) return true;
+		}
+    	return false;
+    }
     /**
      * Check if a class implements a specific interface.
      *
@@ -278,22 +284,22 @@ public class ReflectionUtils {
         return false;
     }
 
-    public static MongoEmbedded getClassMongoEmbeddedAnnotation(Class c) {
+    public static Embedded getClassEmbeddedAnnotation(Class c) {
 
-        if (c.isAnnotationPresent(MongoEmbedded.class)) {
-            return (MongoEmbedded) c.getAnnotation(MongoEmbedded.class);
+        if (c.isAnnotationPresent(Embedded.class)) {
+            return (Embedded) c.getAnnotation(Embedded.class);
         } else {
             // need to check all superclasses
             Class parent = c.getSuperclass();
             while (parent != null && parent != Object.class) {
-                if (parent.isAnnotationPresent(MongoEmbedded.class)) {
-                    return (MongoEmbedded) parent.getAnnotation(MongoEmbedded.class);
+                if (parent.isAnnotationPresent(Embedded.class)) {
+                    return (Embedded) parent.getAnnotation(Embedded.class);
                 }
 
                 // ...and interfaces that the superclass implements
                 for (Class interfaceClass : parent.getInterfaces()) {
-                    if (interfaceClass.isAnnotationPresent(MongoEmbedded.class)) {
-                        return (MongoEmbedded) interfaceClass.getAnnotation(MongoEmbedded.class);
+                    if (interfaceClass.isAnnotationPresent(Embedded.class)) {
+                        return (Embedded) interfaceClass.getAnnotation(Embedded.class);
                     }
                 }
 
@@ -302,8 +308,8 @@ public class ReflectionUtils {
 
             // ...and all implemented interfaces
             for (Class interfaceClass : c.getInterfaces()) {
-                if (interfaceClass.isAnnotationPresent(MongoEmbedded.class)) {
-                    return (MongoEmbedded) interfaceClass.getAnnotation(MongoEmbedded.class);
+                if (interfaceClass.isAnnotationPresent(Embedded.class)) {
+                    return (Embedded) interfaceClass.getAnnotation(Embedded.class);
                 }
             }
         }
@@ -311,22 +317,22 @@ public class ReflectionUtils {
         return null;
     }
 
-    public static MongoDocument getClassMongoDocumentAnnotation(Class c) {
+    public static Entity getClassEntityAnnotation(Class c) {
 
-        if (c.isAnnotationPresent(MongoDocument.class)) {
-            return (MongoDocument) c.getAnnotation(MongoDocument.class);
+        if (c.isAnnotationPresent(Entity.class)) {
+            return (Entity) c.getAnnotation(Entity.class);
         } else {
             // need to check all superclasses
             Class parent = c.getSuperclass();
             while (parent != null && parent != Object.class) {
-                if (parent.isAnnotationPresent(MongoDocument.class)) {
-                    return (MongoDocument) parent.getAnnotation(MongoDocument.class);
+                if (parent.isAnnotationPresent(Entity.class)) {
+                    return (Entity) parent.getAnnotation(Entity.class);
                 }
 
                 // ...and interfaces that the superclass implements
                 for (Class interfaceClass : parent.getInterfaces()) {
-                    if (interfaceClass.isAnnotationPresent(MongoDocument.class)) {
-                        return (MongoDocument) interfaceClass.getAnnotation(MongoDocument.class);
+                    if (interfaceClass.isAnnotationPresent(Entity.class)) {
+                        return (Entity) interfaceClass.getAnnotation(Entity.class);
                     }
                 }
 
@@ -335,8 +341,8 @@ public class ReflectionUtils {
 
             // ...and all implemented interfaces
             for (Class interfaceClass : c.getInterfaces()) {
-                if (interfaceClass.isAnnotationPresent(MongoDocument.class)) {
-                    return (MongoDocument) interfaceClass.getAnnotation(MongoDocument.class);
+                if (interfaceClass.isAnnotationPresent(Entity.class)) {
+                    return (Entity) interfaceClass.getAnnotation(Entity.class);
                 }
             }
         }

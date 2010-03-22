@@ -55,7 +55,7 @@ public abstract class AbstractMongoDAO<T> implements MongoDAO<T> {
     @Override
     public T save(T entity) {
         BasicDBObject obj = (BasicDBObject) morphia.toDBObject(entity);
-        obj.put(Mapper.COLLECTIONNAME_KEY, collection().getName());
+        obj.put(Mapper.COLLECTION_NAME_KEY, collection().getName());
         collection().save(obj);
         return get(obj.get(Mapper.ID_KEY).toString());
     }

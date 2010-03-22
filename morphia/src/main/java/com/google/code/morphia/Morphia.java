@@ -22,8 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.code.morphia.annotations.MongoDocument;
-import com.google.code.morphia.annotations.MongoEmbedded;
+import com.google.code.morphia.annotations.Entity;
+import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -80,8 +80,8 @@ public class Morphia {
         try {
             for (Class c : ReflectionUtils.getClasses(packageName)) {
                 try {
-                    MongoEmbedded classMongoEmbedded = ReflectionUtils.getClassMongoEmbeddedAnnotation(c);
-                    MongoDocument classMongoDocument = ReflectionUtils.getClassMongoDocumentAnnotation(c);
+                    Embedded classMongoEmbedded = ReflectionUtils.getClassEmbeddedAnnotation(c);
+                    Entity classMongoDocument = ReflectionUtils.getClassEntityAnnotation(c);
                     if ( classMongoDocument != null || classMongoEmbedded != null ) {
                         map(c);
                     }
@@ -146,7 +146,7 @@ public class Morphia {
     }
     public Mapper getMapper() { return this.mapper; }
 
-    public Datastore createDatastore() {
+    public DatastoreSimple createDatastore() {
     	try {
 			return new DatastoreImpl(this, new Mongo());
 		} catch (Exception e) {

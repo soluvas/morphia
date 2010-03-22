@@ -34,15 +34,15 @@ import com.google.code.morphia.Mapper;
  * @author Olafur Gauti Gudmundsson
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
+@Target({ElementType.FIELD, ElementType.TYPE})
 @SuppressWarnings("unchecked")
-public @interface MongoValue {
+public @interface Embedded {
 
     /**
      * The name of the Mongo value to store the field.
      * Defaults to the name of the field being annotated.
      *
-     * @return the name of the Mongo value storing the field value
+     * @return the name of the Mongo value storing the field value (use on fields only, not applicable for Type level)
      */
     String value() default Mapper.IGNORED_FIELDNAME;
 

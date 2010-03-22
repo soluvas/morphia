@@ -1,13 +1,13 @@
 package com.google.code.morphia.testmodel;
 
-import com.google.code.morphia.annotations.MongoEmbedded;
+import com.google.code.morphia.annotations.Embedded;
 import java.io.Serializable;
 
 /**
  *
  * @author Olafur Gauti Gudmundsson
  */
-@MongoEmbedded
+@Embedded
 public class Translation implements Serializable {
 	private static final long serialVersionUID = 1L;
 

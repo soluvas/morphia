@@ -26,10 +26,10 @@ import java.util.Vector;
 
 import org.junit.Test;
 
-import com.google.code.morphia.annotations.MongoCollectionName;
-import com.google.code.morphia.annotations.MongoDocument;
-import com.google.code.morphia.annotations.MongoEmbedded;
-import com.google.code.morphia.annotations.MongoID;
+import com.google.code.morphia.annotations.CollectionName;
+import com.google.code.morphia.annotations.Entity;
+import com.google.code.morphia.annotations.Embedded;
+import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.testmodel.Address;
 import com.google.code.morphia.testmodel.Article;
 import com.google.code.morphia.testmodel.Circle;
@@ -55,7 +55,7 @@ import com.mongodb.Mongo;
 @SuppressWarnings("unchecked")
 public class TestMapping {
 
-	@MongoDocument
+	@Entity
 	public static class MissingId {
 		String id;
 	}
@@ -64,28 +64,28 @@ public class TestMapping {
 		String id;
 	}
 	
-	@MongoDocument("no-id")
+	@Entity("no-id")
 	public static class MissingIdRenamed {
 		String id;
 	}
 	
-	@MongoEmbedded
+	@Embedded
 	public static class IdOnEmbedded {
-		@MongoID String id;
+		@Id String id;
 	}
 
-	@MongoEmbedded
+	@Embedded
 	public static class CollectionNameOnEmbedded {
-		@MongoCollectionName String collName;
+		@CollectionName String collName;
 	}
 	
-	@MongoEmbedded("no-id")
+	@Embedded("no-id")
 	public static class RenamedEmbedded {
 		String name;
 	}
 	
 	public static class IPrintAWarning {
-		@MongoID String id;
+		@Id String id;
 		NotEmbeddable ne= new NotEmbeddable();
 		String sValue = "not empty";
 	}
@@ -95,7 +95,7 @@ public class TestMapping {
 	}
 
 	public static class ContainsRef {
-		public @MongoID String id;
+		public @Id String id;
 		public DBRef rect;
 	}
 	
@@ -110,7 +110,7 @@ public class TestMapping {
         DBCollection rectangles = db.getCollection("rectangles");
         
         assertTrue("'ne' field should not be persisted!",
-        		!morphia.getMappedClasses().get(ContainsRef.class.getName()).persistenceFields.containsKey("ne"));
+        		!morphia.getMappedClasses().get(ContainsRef.class.getName()).containsFieldName("ne"));
 
         Rectangle r = new Rectangle(1,1);
         DBObject rDbObject = morphia.toDBObject(r);
@@ -138,7 +138,7 @@ public class TestMapping {
         morphia.map(IPrintAWarning.class);
         
         assertTrue("'ne' field should not be persisted!",
-        		!morphia.getMappedClasses().get(IPrintAWarning.class.getName()).persistenceFields.containsKey("ne"));
+        		!morphia.getMappedClasses().get(IPrintAWarning.class.getName()).containsFieldName("ne"));
         
         boolean allGood=false;
         try {
@@ -229,6 +229,7 @@ public class TestMapping {
             assertEquals(borg.getPhoneNumbers().get(1), borgLoaded.getPhoneNumbers().get(1));
             assertNull(borgLoaded.getTemp());
             assertTrue(borgLoaded.getPhoneNumbers() instanceof Vector);
+            assertNotNull(borgLoaded.getId());
 
             TravelAgency agency = new TravelAgency();
             agency.setName("Lastminute.com");

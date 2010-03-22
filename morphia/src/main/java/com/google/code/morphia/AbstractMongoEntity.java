@@ -18,8 +18,8 @@ package com.google.code.morphia;
 
 import java.io.Serializable;
 
-import com.google.code.morphia.annotations.MongoCollectionName;
-import com.google.code.morphia.annotations.MongoID;
+import com.google.code.morphia.annotations.CollectionName;
+import com.google.code.morphia.annotations.Id;
 
 /**
  *
@@ -29,10 +29,10 @@ import com.google.code.morphia.annotations.MongoID;
 public abstract class AbstractMongoEntity implements MongoEntity, Serializable {
 	private static final long serialVersionUID = 1L;
 
-	@MongoID
+	@Id
     protected String id;
 
-    @MongoCollectionName
+    @CollectionName
     protected String collectionName;
 
     public AbstractMongoEntity() {

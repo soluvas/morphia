@@ -31,6 +31,6 @@ import com.google.code.morphia.Mapper;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface MongoDocument {
+public @interface Entity {
 	String value() default Mapper.IGNORED_FIELDNAME;
 }

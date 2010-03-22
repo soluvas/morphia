@@ -36,7 +36,7 @@ import com.google.code.morphia.Mapper;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 @SuppressWarnings("unchecked")
-public @interface MongoReference {
+public @interface Property {
 
     /**
      * The name of the Mongo value to store the field.

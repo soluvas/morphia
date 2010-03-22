@@ -89,6 +89,8 @@ public class DatastoreImpl implements Datastore {
 		    		mc.idField.set(entity, dbId);
 
 			} catch (Exception e) {
+				if (e.getClass().equals(RuntimeException.class)) throw (RuntimeException)e;
+				
 				throw new RuntimeException(e);
 			}
 		}
@@ -112,13 +114,15 @@ public class DatastoreImpl implements Datastore {
 		
 	}
 
-	protected <T> T get(Object clazzOrEntity, Object id) {
+	@Override
+	public <T> T get(Object clazzOrEntity, Object id) {
 		DBObject obj =  getCollection(clazzOrEntity).findOne(BasicDBObjectBuilder.start().add(Mapper.ID_KEY, fixupId(id)).get());
 		if (obj == null) return null;
 		return (T)morphia.fromDBObject(getEntityClass(clazzOrEntity), (BasicDBObject) obj);
 	}
 
-	protected <T> Query<T> get(Object clazzOrEntity, Object[] ids) {
+	@Override
+	public <T> Query<T> get(Object clazzOrEntity, Object[] ids) {
 		for (int i = 0; i < ids.length; i++) {
 			ids[i] = fixupId(ids[i]);
 		}
@@ -138,8 +142,7 @@ public class DatastoreImpl implements Datastore {
 			listIds.add(id);
 		
 		return get(clazzOrEntity, listIds.toArray());
-	}
-	
+	}	
 
 	@Override
 	public <T> T get(Object clazzOrEntity, String id) {
@@ -176,7 +179,8 @@ public class DatastoreImpl implements Datastore {
 		delete(clazzOrEntity, (Object)id);
 	}
 	
-	protected <T> void delete(Object clazzOrEntity, Object id) {
+	@Override
+	public <T> void delete(Object clazzOrEntity, Object id) {
 		DBCollection dbColl = getCollection(clazzOrEntity);
 		dbColl.remove(BasicDBObjectBuilder.start().add(Mapper.ID_KEY, fixupId(id)).get());
 	}
