@@ -284,22 +284,24 @@ public class ReflectionUtils {
         return false;
     }
 
-    public static Embedded getClassEmbeddedAnnotation(Class c) {
-
-        if (c.isAnnotationPresent(Embedded.class)) {
-            return (Embedded) c.getAnnotation(Embedded.class);
+    /**
+     * Returns the (first) instance of the annotation, on the class (or any superclass, or interfaces implemented).
+     */
+    protected static <T> T getAnnotation(Class c, Class<T> ann) {
+        if (c.isAnnotationPresent(ann)) {
+            return (T) c.getAnnotation(ann);
         } else {
             // need to check all superclasses
             Class parent = c.getSuperclass();
             while (parent != null && parent != Object.class) {
-                if (parent.isAnnotationPresent(Embedded.class)) {
-                    return (Embedded) parent.getAnnotation(Embedded.class);
+                if (parent.isAnnotationPresent(ann)) {
+                    return (T) parent.getAnnotation(ann);
                 }
 
                 // ...and interfaces that the superclass implements
                 for (Class interfaceClass : parent.getInterfaces()) {
-                    if (interfaceClass.isAnnotationPresent(Embedded.class)) {
-                        return (Embedded) interfaceClass.getAnnotation(Embedded.class);
+                    if (interfaceClass.isAnnotationPresent(ann)) {
+                        return (T) interfaceClass.getAnnotation(ann);
                     }
                 }
 
@@ -308,8 +310,8 @@ public class ReflectionUtils {
 
             // ...and all implemented interfaces
             for (Class interfaceClass : c.getInterfaces()) {
-                if (interfaceClass.isAnnotationPresent(Embedded.class)) {
-                    return (Embedded) interfaceClass.getAnnotation(Embedded.class);
+                if (interfaceClass.isAnnotationPresent(ann)) {
+                    return (T) interfaceClass.getAnnotation(ann);
                 }
             }
         }
@@ -317,37 +319,12 @@ public class ReflectionUtils {
         return null;
     }
 
+    public static Embedded getClassEmbeddedAnnotation(Class c) {
+    	return (Embedded) getAnnotation(c, Embedded.class);
+    }
+
     public static Entity getClassEntityAnnotation(Class c) {
-
-        if (c.isAnnotationPresent(Entity.class)) {
-            return (Entity) c.getAnnotation(Entity.class);
-        } else {
-            // need to check all superclasses
-            Class parent = c.getSuperclass();
-            while (parent != null && parent != Object.class) {
-                if (parent.isAnnotationPresent(Entity.class)) {
-                    return (Entity) parent.getAnnotation(Entity.class);
-                }
-
-                // ...and interfaces that the superclass implements
-                for (Class interfaceClass : parent.getInterfaces()) {
-                    if (interfaceClass.isAnnotationPresent(Entity.class)) {
-                        return (Entity) interfaceClass.getAnnotation(Entity.class);
-                    }
-                }
-
-                parent = parent.getSuperclass();
-            }
-
-            // ...and all implemented interfaces
-            for (Class interfaceClass : c.getInterfaces()) {
-                if (interfaceClass.isAnnotationPresent(Entity.class)) {
-                    return (Entity) interfaceClass.getAnnotation(Entity.class);
-                }
-            }
-        }
-        // no annotation found, use the defaults
-        return null;
+    	return (Entity) getAnnotation(c, Entity.class);
     }
 
     private static String stripFilenameExtension( String filename ) {

@@ -162,16 +162,16 @@ public class Mapper {
             
         	field.setAccessible(true);
 
-            if ( mf.relAnnotations.containsKey(Id.class) ) {
+            if ( mf.hasAnnotation(Id.class) ) {
                 Object value = field.get(entity);
                 if ( value != null ) {
                     dbObject.put(ID_KEY, fixupId(value));
                 }
-            } else if ( mf.relAnnotations.containsKey(Reference.class) ) {
+            } else if ( mf.hasAnnotation(Reference.class) ) {
                 mapReferencesToDBObject(entity, mf, dbObject);
-            } else  if (mf.relAnnotations.containsKey(Embedded.class)){
+            } else  if (mf.hasAnnotation(Embedded.class)){
                 mapEmbeddedToDBObject(entity, mf, dbObject);
-            } else if ( mf.relAnnotations.containsKey(Property.class)
+            } else if ( mf.hasAnnotation(Property.class)
                     || ReflectionUtils.isPropertyType(field.getType())
                     || ReflectionUtils.implementsAnyInterface(fieldType, Map.class, List.class, Set.class) ) {
                 mapValuesToDBObject(entity, mf, dbObject);
@@ -185,7 +185,7 @@ public class Mapper {
     }
 
     void mapReferencesToDBObject( Object entity, MappedField mf, BasicDBObject dbObject) throws Exception {
-        Reference mongoReference = (Reference)mf.relAnnotations.get(Reference.class);
+        Reference mongoReference = (Reference)mf.getAnnotation(Reference.class);
         String name = mf.name;
         Class fieldType = mf.field.getType();
         Object fieldValue = mf.field.get(entity);
@@ -331,22 +331,22 @@ public class Mapper {
 //            String name = mf.name;
             field.setAccessible(true);
 
-            if ( mf.relAnnotations.containsKey(Id.class) ) {
+            if ( mf.hasAnnotation(Id.class) ) {
                 if ( dbObject.get(ID_KEY) != null ) {
                     field.set(entity, objectFromValue(field.getType(), dbObject, ID_KEY));
                 }
-            } else if ( mf.relAnnotations.containsKey(CollectionName.class) ) {
+            } else if ( mf.hasAnnotation(CollectionName.class) ) {
                 if ( dbObject.get(COLLECTION_NAME_KEY) != null ) {
                     field.set(entity, dbObject.get(COLLECTION_NAME_KEY).toString());
                 }
 
-            } else if ( mf.relAnnotations.containsKey(Reference.class) ) {
+            } else if ( mf.hasAnnotation(Reference.class) ) {
                 mapReferencesFromDBObject(dbObject, mf, entity);
 
-            } else if ( mf.relAnnotations.containsKey(Embedded.class) ) {
+            } else if ( mf.hasAnnotation(Embedded.class) ) {
                 mapEmbeddedFromDBObject(dbObject, mf, entity);
                 
-            } else if ( mf.relAnnotations.containsKey(Property.class)
+            } else if ( mf.hasAnnotation(Property.class)
                     || ReflectionUtils.isPropertyType(field.getType())
                     || ReflectionUtils.implementsAnyInterface(field.getType(), List.class, Set.class, Map.class)) {
                 mapValuesFromDBObject(dbObject, mf, entity);
@@ -358,7 +358,7 @@ public class Mapper {
     }
 
     void mapValuesFromDBObject( BasicDBObject dbObject, MappedField mf, Object entity ) throws Exception {
-        Property mongoValue = (Property)mf.relAnnotations.get(Property.class);
+        Property mongoValue = (Property)mf.getAnnotation(Property.class);
         String name = mf.name;
 
         Class fieldType = mf.field.getType();
@@ -433,7 +433,7 @@ public class Mapper {
         }
     }
     void mapEmbeddedFromDBObject( BasicDBObject dbObject, MappedField mf, Object entity ) throws Exception {
-        Embedded mongoEmbedded = (Embedded)mf.relAnnotations.get(Embedded.class);
+        Embedded mongoEmbedded = (Embedded)mf.getAnnotation(Embedded.class);
         String name = mf.name;
 
         Class fieldType = mf.field.getType();
@@ -488,7 +488,7 @@ public class Mapper {
     }
 
     void mapReferencesFromDBObject( BasicDBObject dbObject, MappedField mf, Object entity ) throws Exception {
-        Reference mongoReference = (Reference)mf.relAnnotations.get(Reference.class);
+        Reference mongoReference = (Reference)mf.getAnnotation(Reference.class);
         String name = mf.name;
 
         
