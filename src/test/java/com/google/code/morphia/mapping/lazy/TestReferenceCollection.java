@@ -1,9 +1,5 @@
 package com.google.code.morphia.mapping.lazy;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Collection;
 import java.util.LinkedList;
 
@@ -11,12 +7,10 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.Reference;
-import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceList;
 import com.google.code.morphia.utils.AbstractMongoEntity;
 
-public class TestReferenceCollection extends TestBase
+public class TestReferenceCollection extends ProxyTestBase
 {
 
     @Test
@@ -39,52 +33,28 @@ public class TestReferenceCollection extends TestBase
         
         lazyBs = a.lazyBs;
         Assert.assertNotNull(lazyBs);
-        boolean isFetched = ((ProxiedEntityReferenceList) lazyBs).__isFetched();
-        Assert.assertFalse(isFetched);
+		assertNotFetched(lazyBs);
 
         Assert.assertNotNull(lazyBs.iterator().next());
-        isFetched = ((ProxiedEntityReferenceList) lazyBs).__isFetched();
-        Assert.assertTrue(isFetched);
+		assertFetched(lazyBs);
 
         a = deserialize(a);
 
         lazyBs = a.lazyBs;
         Assert.assertNotNull(lazyBs);
-        isFetched = ((ProxiedEntityReferenceList) lazyBs).__isFetched();
-        Assert.assertFalse(isFetched);
+		assertNotFetched(lazyBs);
 
         Assert.assertNotNull(lazyBs.iterator().next());
-        isFetched = ((ProxiedEntityReferenceList) lazyBs).__isFetched();
-        Assert.assertTrue(isFetched);
+		assertFetched(lazyBs);
 
         a = deserialize(a);
 
         ds.save(a);
         lazyBs = a.lazyBs;
-        Assert.assertNotNull(lazyBs);
-        isFetched = ((ProxiedEntityReferenceList) lazyBs).__isFetched();
-        Assert.assertFalse(isFetched);
+		assertNotFetched(lazyBs);
     }
 
    
-    private <T> T deserialize(T t)
-    {
-        try
-        {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream os = new ObjectOutputStream(baos);
-            os.writeObject(t);
-            os.close();
-            byte[] ba = baos.toByteArray();
-
-            return (T) new ObjectInputStream(new ByteArrayInputStream(ba)).readObject();
-        }
-        catch (Throwable e)
-        {
-            throw new RuntimeException(e);
-        }
-
-    }
 
     public static class A extends AbstractMongoEntity
     {
