@@ -50,6 +50,12 @@ import com.google.code.morphia.annotations.PreSave;
 import com.google.code.morphia.annotations.Property;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.annotations.Serialized;
+import com.google.code.morphia.mapping.lazy.CGLibLazyProxyFactory;
+import com.google.code.morphia.mapping.lazy.DatastoreProvider;
+import com.google.code.morphia.mapping.lazy.DefaultDatastoreProvider;
+import com.google.code.morphia.mapping.lazy.LazyProxyFactory;
+import com.google.code.morphia.mapping.lazy.ProxiedEntityReference;
+import com.google.code.morphia.mapping.lazy.ProxiedEntityReferenceList;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBBinary;
@@ -73,6 +79,7 @@ public class Mapper {
     /** Set of classes that have been validated for mapping by this mapper */
     private final ConcurrentHashMap<String,MappedClass> mappedClasses = new ConcurrentHashMap<String, MappedClass>();
     private final ThreadLocal<Map<String, Object>> entityCache = new ThreadLocal<Map<String, Object>>();
+    private final ThreadLocal<Map<DBRef, Object>> proxyCache = new ThreadLocal<Map<DBRef, Object>>();
     private final ConcurrentLinkedQueue<EntityInterceptor> interceptors = new ConcurrentLinkedQueue<EntityInterceptor>();
 
     public Mapper() {
@@ -128,6 +135,11 @@ public class Mapper {
 
     private String getId(Object entity) {
         try {
+            if (entity instanceof ProxiedEntityReference)
+            {
+                ProxiedEntityReference proxy = (ProxiedEntityReference) entity;
+                return proxy.__getEntityId();
+            }
             return (String)getMappedClass(entity).getIdField().get(entity);
         } catch ( IllegalAccessException iae ) {
             throw new RuntimeException(iae);
@@ -214,12 +226,14 @@ public class Mapper {
     	}
     	
     	entityCache.set(new HashMap<String, Object>());
+        proxyCache.set(new HashMap<DBRef, Object>());
     	Object entity = null;
     	try {
     		entity = createInstance(entityClass, dbObject);
 	        mapDBObjectToEntity(dbObject, entity);
         } finally {
         	entityCache.remove();
+            proxyCache.remove();
         }
         return entity;
     }
@@ -325,6 +339,20 @@ public class Mapper {
 	    		if (fieldValue != null) {
 	                List values = new ArrayList();
 
+                        if (fieldValue instanceof ProxiedEntityReferenceList)
+                        {
+                            ProxiedEntityReferenceList p = (ProxiedEntityReferenceList) fieldValue;
+                            List<Key<?>> getKeysAsList = p.__getKeysAsList();
+                            Class c = p.__getReferenceObjClass();
+                            String collectionName = getCollectionName(c);
+                            for (Key<?> key : getKeysAsList)
+                            {
+                                values.add(new DBRef(null, collectionName, asObjectIdMaybe(key.getId())));
+                            }
+                        }
+                        else
+                        {
+
 		            if (mf.getType().isArray()) {
 			            for (Object o : (Object[])fieldValue) {
 		                    values.add(new DBRef(null, getCollectionName(o), asObjectIdMaybe(getId(o))));
@@ -334,7 +362,7 @@ public class Mapper {
 		                    values.add(new DBRef(null, getCollectionName(o), asObjectIdMaybe(getId(o))));
 		                }		            	
 		            }
-		            
+                        }
 	                if (values.size() > 0) dbObject.put(name, values);
 	            }
 	        } else {
@@ -590,8 +618,8 @@ public class Mapper {
 	                            values.add(o);
 	                    }
 	                    if (fieldType.isArray()) {
-	                    	Object[] array = convertToArray(subtype, values);
-	                    	mf.setFieldValue(entity, array);
+                                    Object[] array = convertToArray(subtype, values);
+                                    mf.setFieldValue(entity, array);
 	                    }
 	                    else
 	                    	mf.setFieldValue(entity, values);
@@ -607,11 +635,12 @@ public class Mapper {
     	} catch (Exception e) {throw new RuntimeException(e);}
     }
 
-	private Object[] convertToArray(Class type, Collection values) {
-    	Object exampleArray = Array.newInstance(type, 1);
-		Object[] array = ((ArrayList)values).toArray((Object[]) exampleArray);
-		return array;
-	}
+    private Object[] convertToArray(Class type, Collection values)
+    {
+        Object exampleArray = Array.newInstance(type, 1);
+        Object[] array = ((ArrayList) values).toArray((Object[]) exampleArray);
+        return array;
+    }
 
 	void mapEmbeddedFromDBObject( BasicDBObject dbObject, MappedField mf, Object entity ) {
         String name = mf.getName();
@@ -628,6 +657,7 @@ public class Mapper {
 	                	Object newEntity = createInstance(mf.getSubType(), (BasicDBObject)entry.getValue());
 	                    
 	                	newEntity = mapDBObjectToEntity((BasicDBObject)entry.getValue(), newEntity);
+	                    //TODO Add Lifecycle call for newEntity
 	                    Object objKey = objectFromValue(mf.getMapKeyType(), entry.getKey());
 	                    map.put(objKey, newEntity);
 	                }
@@ -638,25 +668,29 @@ public class Mapper {
 	        } else if (mf.isMultipleValues()) {
 	        	// multiple documents in a List
 	            Class newEntityType = mf.getSubType();
-	            Collection values = (Collection)tryConstructor((!mf.isSet()) ? ArrayList.class : HashSet.class, mf.getCTor());
+                    Collection values = (Collection) tryConstructor((!mf.isSet()) ? ArrayList.class : HashSet.class, mf
+                            .getCTor());
 	
 	            if ( dbObject.containsField(name) ) {
 	                Object dbVal = dbObject.get(name);
-	                
-	                List<BasicDBObject> dbVals = (dbVal instanceof List) ? (List<BasicDBObject>) dbVal : Collections.singletonList((BasicDBObject)dbVal) ;
 
-	                for (BasicDBObject dbObj : dbVals ) {
-                        Object newEntity = createInstance(newEntityType, dbObj);
-                        newEntity = mapDBObjectToEntity(dbObj, newEntity);
-                        values.add(newEntity);
-                    }
+                        List<BasicDBObject> dbVals = (dbVal instanceof List) ? (List<BasicDBObject>) dbVal
+                                : Collections.singletonList((BasicDBObject) dbVal);
+
+                        for (BasicDBObject dbObj : dbVals)
+                        {
+                            Object newEntity = createInstance(newEntityType, dbObj);
+                            newEntity = mapDBObjectToEntity(dbObj, newEntity);
+                            values.add(newEntity);
+                        }
 	            }
-	            if (values.size() > 0)
-		            if (mf.getType().isArray()) {
-	                	Object[] array = convertToArray(mf.getSubType(), values);
-		            	mf.setFieldValue(entity, array);
-		            } else
-		            	mf.setFieldValue(entity, values);
+                    if (values.size() > 0) if (mf.getType().isArray())
+                    {
+                        Object[] array = convertToArray(mf.getSubType(), values);
+                        mf.setFieldValue(entity, array);
+                    }
+                    else
+                        mf.setFieldValue(entity, values);
 	        }  else {
 	            // single document
 	            if ( dbObject.containsField(name) ) {
@@ -703,27 +737,84 @@ public class Mapper {
 	        } else if (mf.isMultipleValues()) {
 	            // multiple references in a List
 	            Class referenceObjClass = mf.getSubType();
-	            Collection references = (Collection) tryConstructor((!mf.isSet()) ? ArrayList.class : HashSet.class, mf.getCTor());
-	        	
-	            if ( dbObject.containsField(name) ) {
-	                Object dbVal = dbObject.get(name);
-	                List<DBRef> dbVals = (dbVal instanceof List) ? (List<DBRef>) dbVal : Collections.singletonList((DBRef)dbVal) ;
-	                
-                    for ( DBRef dbRef : dbVals) {
-                        BasicDBObject dbRefObj = (BasicDBObject) dbRef.fetch();
+                    Collection references = (Collection) tryConstructor(
+                            (!mf.isSet()) ? ArrayList.class : HashSet.class, mf.getCTor());
 
-                        if (dbRefObj == null) {
-                        	if (!refAnn.ignoreMissing()) 
-                        		throw new MappingException("The reference("+ dbRef.toString()  + ") could not be fetched for " + mf.getFullName());
-                        } else {
-                            Object refObj = createInstance(referenceObjClass, dbRefObj);
-                            refObj = mapDBObjectToEntity(dbRefObj, refObj);
-                            references.add(refObj);
+                    if (refAnn.lazy())
+                    {
+                        if (dbObject.containsField(name))
+                        {
+                            references = proxyFactory.createListProxy(references, referenceObjClass, datastoreProvider);
+                            ProxiedEntityReferenceList referencesAsProxy = (ProxiedEntityReferenceList) references;
+
+                            // TODO test for existence could be done in one go
+                            // instead of one-by-one lookups.
+
+                            Object dbVal = dbObject.get(name);
+                            if (dbVal instanceof List)
+                            {
+                                List refList = (List) dbVal;
+                                for (Object dbRefObj : refList)
+                                {
+                                    DBRef dbRef = (DBRef) dbRefObj;
+                                    addToReferenceList(mf, refAnn, referencesAsProxy, dbRef);
+                                }
+                            }
+                            else
+                            {
+                                DBRef dbRef = (DBRef) dbObject.get(name);
+                                addToReferenceList(mf, refAnn, referencesAsProxy, dbRef);
+                            }
                         }
+                    }
+                    else
+                    {
+
+                        if (dbObject.containsField(name))
+                        {
+                            Object dbVal = dbObject.get(name);
+                            if (dbVal instanceof List)
+                            {
+                                List refList = (List) dbVal;
+                                for (Object dbRefObj : refList)
+                                {
+                                    DBRef dbRef = (DBRef) dbRefObj;
+                                    BasicDBObject refDbObject = (BasicDBObject) dbRef.fetch();
+
+                                    if (refDbObject == null)
+                                    {
+                                        if (!refAnn.ignoreMissing())
+                                            throw new MappingException("The reference(" + dbRef.toString()
+                                                    + ") could not be fetched for " + mf.getFullName());
+                                    }
+                                    else
+                                    {
+                                        Object refObj = createInstance(referenceObjClass, refDbObject);
+                                        refObj = mapDBObjectToEntity(refDbObject, refObj);
+                                        references.add(refObj);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                DBRef dbRef = (DBRef) dbObject.get(name);
+	                        BasicDBObject refDbObject = (BasicDBObject) dbRef.fetch();
+	                        if (refDbObject == null) {
+                                    if (!refAnn.ignoreMissing())
+                                        throw new MappingException("The reference(" + dbRef.toString()
+                                                + ") could not be fetched for " + mf.getFullName());
+	                        } else {
+                                    Object newEntity = createInstance(referenceObjClass, refDbObject);
+                                    newEntity = mapDBObjectToEntity(refDbObject, newEntity);
+                                    // TODO Add Lifecycle call for newEntity
+                                    references.add(newEntity);
+                                }
+	                    }
 	                }
 	            }
 	            
-	            if (references.size() > 0)
+//FIXME us, array detection before
+
 		            if (mf.getType().isArray()) {
 	                	Object[] array = convertToArray(mf.getSubType(), references);
 		            	mf.setFieldValue(entity, array);
@@ -734,21 +825,33 @@ public class Mapper {
 	            Class referenceObjClass = fieldType;
 	            if ( dbObject.containsField(name) ) {
 	                DBRef dbRef = (DBRef) dbObject.get(name);
-	                BasicDBObject refDbObject = (BasicDBObject) dbRef.fetch();
 
-                    if (refDbObject == null) {
-                    	if (!refAnn.ignoreMissing()) 
-                    		throw new MappingException("The reference("+ dbRef.toString()  + ") could not be fetched for " + mf.getFullName());
-                    } else {
-                        Object refObj = createInstance(referenceObjClass, refDbObject);
-                        refObj = mapDBObjectToEntity(refDbObject, refObj);
-                        mf.setFieldValue(entity, refObj);
-                    }
+                        Object resolvedObject = null;
+                        if (refAnn.lazy())
+                        {
+                            if (exists(dbRef))
+                            {
+                                resolvedObject = createOrReuseProxy(referenceObjClass, dbRef);
+                            }
+                            else
+                            {
+                                if (!refAnn.ignoreMissing())
+                                {
+                                    throw new MappingException("The reference(" + dbRef.toString()
+                                            + ") could not be fetched for " + mf.getFullName());
+                                }
+                            }
+                        }
+                        else
+                            resolvedObject = resolveObject(dbRef, referenceObjClass, refAnn.ignoreMissing(), mf);
+
+                        mf.setFieldValue(entity, resolvedObject);
+
 	            }
 	        }
         } catch (Exception e) {throw new RuntimeException(e);}
     }
-    
+
     private static Locale parseLocale(String localeString) {
         if (localeString != null && localeString.length() > 0) {
             StringTokenizer st = new StringTokenizer(localeString, "_");
@@ -888,4 +991,61 @@ public class Mapper {
     	if (obj == null) return null;
     	return objectToValue(obj.getClass(), obj);
     }
+
+    private Object resolveObject(DBRef dbRef, Class referenceObjClass, boolean ignoreMissing, MappedField mf)
+    {
+        BasicDBObject refDbObject = (BasicDBObject) dbRef.fetch();
+
+        if (refDbObject != null)
+        {
+            Object refObj = createInstance(referenceObjClass, refDbObject);
+            refObj = mapDBObjectToEntity(refDbObject, refObj);
+            return refObj;
+        }
+
+        if (!ignoreMissing)
+            throw new MappingException("The reference(" + dbRef.toString() + ") could not be fetched for "
+                    + mf.getFullName());
+        else
+            return null;
+
+    }
+
+    private boolean exists(DBRef dbRef)
+    {
+        // TODO that might be cheaper to implement?
+        return dbRef.fetch() != null;
+    }
+
+    private Object createOrReuseProxy(Class referenceObjClass, DBRef dbRef)
+    {
+        Map<DBRef, Object> cache = proxyCache.get();
+        Object proxyAlreadyCreated = cache.get(dbRef);
+        if (proxyAlreadyCreated != null) return proxyAlreadyCreated;
+
+        Object newProxy = proxyFactory.createProxy(referenceObjClass, new Key(dbRef), datastoreProvider);
+        cache.put(dbRef, newProxy);
+        return newProxy;
+    }
+
+    private void addToReferenceList(MappedField mf, Reference refAnn, ProxiedEntityReferenceList referencesAsProxy,
+            DBRef dbRef)
+    {
+        if (!exists(dbRef))
+        {
+            if (!refAnn.ignoreMissing())
+                throw new MappingException("The reference(" + dbRef.toString() + ") could not be fetched for "
+                        + mf.getFullName());
+        }
+        else
+        {
+            referencesAsProxy.__add(new Key(dbRef));
+        }
+    }
+
+    // could be made configurable
+    private final LazyProxyFactory proxyFactory = new CGLibLazyProxyFactory();
+    // could be made configurable
+    private DatastoreProvider datastoreProvider = new DefaultDatastoreProvider();
+
 }

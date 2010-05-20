@@ -16,6 +16,7 @@ import com.google.code.morphia.mapping.MappedClass;
 import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.Mapper;
 import com.google.code.morphia.mapping.MappingException;
+import com.google.code.morphia.mapping.lazy.DatastoreHolder;
 import com.google.code.morphia.query.Query;
 import com.google.code.morphia.query.QueryImpl;
 import com.google.code.morphia.query.UpdateOperations;
@@ -50,6 +51,9 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 	
 	public DatastoreImpl(Morphia morphia, Mongo mongo, String dbName) {
 		this.morphia = morphia; this.mongo = mongo; this.db = mongo.getDB(dbName);
+		
+		    // VERY discussable
+        DatastoreHolder.getInstance().set(this);
 	}
 
 	protected Object asObjectIdMaybe(Object id) {
