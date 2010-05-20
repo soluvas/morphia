@@ -8,11 +8,12 @@ import java.util.Collection;
 import java.util.Map;
 
 import com.google.code.morphia.Key;
+import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityMap;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReference;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceList;
 import com.google.code.morphia.mapping.lazy.proxy.SerializableCollectionObjectReference;
-import com.google.code.morphia.mapping.lazy.proxy.SerializableMapObjectReference;
 import com.google.code.morphia.mapping.lazy.proxy.SerializableEntityObjectReference;
+import com.google.code.morphia.mapping.lazy.proxy.SerializableMapObjectReference;
 import com.thoughtworks.proxy.factory.CglibProxyFactory;
 import com.thoughtworks.proxy.toys.dispatch.Dispatching;
 import com.thoughtworks.proxy.toys.hotswap.HotSwapping;
@@ -77,10 +78,9 @@ public class CGLibLazyProxyFactory implements LazyProxyFactory {
 		T backend = (T) HotSwapping.object(new Class[] { targetClass,
 				Serializable.class }, factory, objectReference, true);
 
-		T proxy = (T) Dispatching.object(new Class[] {
-				ProxiedEntityReferenceList.class, targetClass,
-				Serializable.class },
-				new Object[] { objectReference, backend }, factory);
+		T proxy = (T) Dispatching.object(new Class[] { ProxiedEntityMap.class,
+				targetClass, Serializable.class }, new Object[] {
+				objectReference, backend }, factory);
 
 		return proxy;
 

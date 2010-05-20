@@ -6,7 +6,6 @@ package com.google.code.morphia.mapping.lazy.proxy;
 import java.io.IOException;
 import java.io.Serializable;
 
-import com.google.code.morphia.Key;
 import com.google.code.morphia.mapping.lazy.DatastoreProvider;
 import com.thoughtworks.proxy.kit.ObjectReference;
 
@@ -54,8 +53,8 @@ ObjectReference, ProxiedReference {
 		return isFetched;
 	}
 
-	protected final Object fetch(final Key<?> k) {
-		return p.get().get(referenceObjClass, k);
+	protected final Object fetch(String id) {
+		return p.get().get(referenceObjClass, id);
 	}
 
 	private void writeObject(final java.io.ObjectOutputStream out)

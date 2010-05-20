@@ -5,15 +5,12 @@ import java.util.LinkedList;
 
 import junit.framework.Assert;
 
-import org.junit.Test;
-
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.utils.AbstractMongoEntity;
 
 public class TestReferenceCollection extends ProxyTestBase
 {
 
-    @Test
     public final void testCreateProxy()
     {
         A a = new A();
