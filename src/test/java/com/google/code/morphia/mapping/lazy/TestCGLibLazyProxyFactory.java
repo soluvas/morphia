@@ -1,42 +1,41 @@
 package com.google.code.morphia.mapping.lazy;
 
-import junit.framework.Assert;
-
-import org.junit.Test;
-
 import com.google.code.morphia.Key;
-import com.google.code.morphia.TestBase;
 import com.google.code.morphia.utils.AbstractMongoEntity;
 
-public class TestCGLibLazyProxyFactory extends TestBase
+public class TestCGLibLazyProxyFactory extends ProxyTestBase
 {
+	public final void testCreateProxy()
+	{
+		final E e = new E();
+		e.setFoo("bar");
+		final Key<E> key = ds.save(e);
+		E eProxy = new CGLibLazyProxyFactory().createProxy(E.class, key,
+				new DefaultDatastoreProvider());
 
-    @Test
-    public final void testCreateProxy()
-    {
-        DatastoreHolder.getInstance().set(this.ds);
-        final E e = new E();
-        e.setFoo("bar");
-        final Key<E> key = this.ds.save(e);
+		assertNotFetched(eProxy);
+		assertEquals("bar", eProxy.getFoo());
+		assertFetched(eProxy);
 
-        final E eProxy = new CGLibLazyProxyFactory().createProxy(E.class, key, new DefaultDatastoreProvider());
-        System.out.println("got a proxy");
-        Assert.assertEquals("bar", eProxy.getFoo());
-    }
+		eProxy = deserialize(eProxy);
+		assertNotFetched(eProxy);
+		assertEquals("bar", eProxy.getFoo());
+		assertFetched(eProxy);
 
-    public static class E extends AbstractMongoEntity
-    {
-        private String foo;
+	}
+	public static class E extends AbstractMongoEntity
+	{
+		private String foo;
 
-        public void setFoo(final String string)
-        {
-            this.foo = string;
-        }
+		public void setFoo(final String string)
+		{
+			foo = string;
+		}
 
-        public String getFoo()
-        {
-            return this.foo;
-        }
-    }
+		public String getFoo()
+		{
+			return foo;
+		}
+	}
 
 }

@@ -5,28 +5,23 @@ import com.google.code.morphia.Datastore;
 /**
  * for use with DatastoreProvider.Default
  */
-public final class DatastoreHolder
-{
-    private static final DatastoreHolder INSTANCE = new DatastoreHolder();
+public final class DatastoreHolder {
+	private static final DatastoreHolder INSTANCE = new DatastoreHolder();
 
-    public static final DatastoreHolder getInstance()
-    {
-        return INSTANCE;
-    }
+	public static final DatastoreHolder getInstance() {
+		return INSTANCE;
+	}
 
-    private DatastoreHolder()
-    {
-    }
+	private DatastoreHolder() {
+	}
 
-    private Datastore ds;
+	private Datastore ds;
 
-    public Datastore get()
-    {
-        return ds;
-    }
+	public Datastore get() {
+		return ds;
+	}
 
-    public void set(final Datastore ds)
-    {
-        this.ds = ds;
-    }
+	public void set(final Datastore ds) {
+		this.ds = ds;
+	}
 }

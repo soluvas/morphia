@@ -1,168 +1,138 @@
 package com.google.code.morphia.mapping.lazy;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
-import junit.framework.Assert;
-
-import org.junit.Test;
-
-import com.google.code.morphia.Key;
-import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.utils.AbstractMongoEntity;
 
-public class TestLazySingleReference extends TestBase
-{
+public class TestLazySingleReference extends ProxyTestBase {
 
-    @Test
-    public final void testCreateProxy()
-    {
-        E1 e1 = new E1();
-        E2 e2 = new E2();
+	// public final void testCreateProxy() {
+	// RootEntity root = new RootEntity();
+	// ReferencedEntity referenced = new ReferencedEntity();
+	//
+	// root.r = referenced;
+	// root.r.setFoo("bar");
+	//
+	// ds.save(referenced);
+	// ds.save(root);
+	//
+	// root = ds.get(root);
+	//
+	// assertNotFetched(root.r);
+	// assertEquals("bar", root.r.getFoo());
+	// assertFetched(root.r);
+	// assertEquals("bar", root.r.getFoo());
+	//
+	// // now remove it from DB
+	// ds.delete(root.r);
+	//
+	// root = deserialize(root);
+	// assertNotFetched(root.r);
+	//
+	// try {
+	// // must fail
+	// root.r.getFoo();
+	// fail("Expected Exception did not happen");
+	// } catch (LazyReferenceFetchingException expected) {
+	// // fine
+	// }
+	//
+	// }
+	//
+	// public final void testShortcutInterface() {
+	// RootEntity root = new RootEntity();
+	// ReferencedEntity reference = new ReferencedEntity();
+	//
+	// root.r = reference;
+	// reference.setFoo("bar");
+	//
+	// Key<ReferencedEntity> k = ds.save(reference);
+	// String keyAsString = k.getId().toString();
+	// ds.save(root);
+	//
+	// root = ds.get(root);
+	//
+	// ReferencedEntity p = root.r;
+	//
+	// assertIsProxy(p);
+	// assertNotFetched(p);
+	// assertEquals(keyAsString, ((ProxiedEntityReference) p).__getEntityId());
+	// // still unfetched?
+	// assertNotFetched(p);
+	// p.getFoo();
+	// // should be fetched now.
+	// assertFetched(p);
+	//
+	// root = deserialize(root);
+	// p = root.r;
+	// assertNotFetched(p);
+	// p.getFoo();
+	// // should be fetched now.
+	// assertFetched(p);
+	//
+	// root = ds.get(root);
+	// p = root.r;
+	// assertNotFetched(p);
+	// ds.save(root);
+	// assertNotFetched(p);
+	// }
 
-        e1.e2a = e2;
-        e2.setFoo("bar");
 
-        ds.save(e2);
-        ds.save(e1);
+	public final void testSameProxy() {
+		RootEntity root = new RootEntity();
+		ReferencedEntity reference = new ReferencedEntity();
 
-        e1 = ds.get(e1);
-        System.out.println("before fetching");
-        e2 = e1.e2a;
-        System.out.println("still before fetching");
+		root.r = reference;
+		root.secondReference = reference;
+		reference.setFoo("bar");
 
-        System.out.println("expecting fetch here ");
-        Assert.assertEquals("bar", e2.getFoo());
-        Assert.assertNull(e1.e2b);
-    }
+		ds.save(reference);
+		ds.save(root);
 
-    @Test
-    public final void testShortcutInterface()
-    {
-        E1 e1 = new E1();
-        E2 e2 = new E2();
+		root = ds.get(root);
+		assertSame(root.r, root.secondReference);
+	}
 
-        e1.e2a = e2;
-        e2.setFoo("bar");
+	public final void testSerialization() {
+		RootEntity e1 = new RootEntity();
+		ReferencedEntity e2 = new ReferencedEntity();
 
-        Key<E2> k = ds.save(e2);
-        String keyAsString = k.getId().toString();
-        ds.save(e1);
+		e1.r = e2;
+		e2.setFoo("bar");
 
-        e1 = ds.get(e1);
+		ds.save(e2);
+		ds.save(e1);
 
-        E2 p = e1.e2a;
+		e1 = deserialize(ds.get(e1));
 
-        Assert.assertTrue(p instanceof ProxiedEntityReference);
-        Assert.assertFalse(((ProxiedEntityReference) p).__isFetched());
-        Assert.assertEquals(keyAsString, ((ProxiedEntityReference) p).__getEntityId());
-        // still unfetched?
-        Assert.assertFalse(((ProxiedEntityReference) p).__isFetched());
-        p.getFoo();
-        // should be fetched now.
-        Assert.assertTrue(((ProxiedEntityReference) p).__isFetched());
+		assertNotFetched(e1.r);
+		assertEquals("bar", e1.r.getFoo());
+		assertFetched(e1.r);
 
-        e1 = deserialize(e1);
-        p = e1.e2a;
-        Assert.assertFalse(((ProxiedEntityReference) p).__isFetched());
-        p.getFoo();
-        // should be fetched now.
-        Assert.assertTrue(((ProxiedEntityReference) p).__isFetched());
+		e1 = deserialize(e1);
+		assertNotFetched(e1.r);
+		assertEquals("bar", e1.r.getFoo());
+		assertFetched(e1.r);
 
-        e1 = ds.get(e1);
-        p = e1.e2a;
-        Assert.assertFalse(((ProxiedEntityReference) p).__isFetched());
-        ds.save(e1);
-        Assert.assertFalse(((ProxiedEntityReference) p).__isFetched());
-    }
+	}
 
-    public final void testSameProxy()
-    {
-        E1 e1 = new E1();
-        E2 e2 = new E2();
+	public static class RootEntity extends AbstractMongoEntity {
+		@Reference(lazy = true)
+		ReferencedEntity r;
+		@Reference(lazy = true)
+		ReferencedEntity secondReference;
 
-        e1.e2a = e2;
-        e1.e2b = e2;
-        e2.setFoo("bar");
+	}
 
-        ds.save(e2);
-        ds.save(e1);
+	public static class ReferencedEntity extends AbstractMongoEntity {
+		private String foo;
 
-        e1 = ds.get(e1);
-        System.out.println("before fetching");
+		public void setFoo(final String string) {
+			foo = string;
+		}
 
-        Assert.assertSame(e1.e2a, e1.e2b);
-    }
-
-    @Test
-    public final void testSerialization()
-    {
-        E1 e1 = new E1();
-        E2 e2 = new E2();
-
-        e1.e2a = e2;
-        e2.setFoo("bar");
-
-        ds.save(e2);
-        ds.save(e1);
-
-        e1 = deserialize(ds.get(e1));
-
-        System.out.println("expecting fetch here ");
-        Assert.assertEquals("bar", e1.e2a.getFoo());
-        Assert.assertEquals("bar", e1.e2a.getFoo());
-        Assert.assertEquals("bar", e1.e2a.getFoo());
-
-        e1 = deserialize(e1);
-        System.out.println("and again");
-        Assert.assertEquals("bar", e1.e2a.getFoo());
-        Assert.assertEquals("bar", e1.e2a.getFoo());
-
-    }
-
-    private E1 deserialize(E1 e1)
-    {
-        try
-        {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream os = new ObjectOutputStream(baos);
-        os.writeObject(e1);
-        os.close();
-        byte[] ba = baos.toByteArray();
-
-        return (E1) new ObjectInputStream(new ByteArrayInputStream(ba)).readObject();
-        }
-        catch (Throwable e)
-        {
-            throw new RuntimeException(e);
-        }
-
-    }
-    public static class E1 extends AbstractMongoEntity
-    {
-        @Reference(lazy = true)
-        E2 e2a;
-        @Reference(lazy = true)
-        E2 e2b;
-
-    }
-
-    public static class E2 extends AbstractMongoEntity
-    {
-        private String foo;
-
-        public void setFoo(final String string)
-        {
-            this.foo = string;
-        }
-
-        public String getFoo()
-        {
-            return this.foo;
-        }
-    }
+		public String getFoo() {
+			return foo;
+		}
+	}
 
 }

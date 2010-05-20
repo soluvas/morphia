@@ -17,6 +17,7 @@ import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.Mapper;
 import com.google.code.morphia.mapping.MappingException;
 import com.google.code.morphia.mapping.lazy.DatastoreHolder;
+import com.google.code.morphia.mapping.lazy.proxy.ProxiedReference;
 import com.google.code.morphia.query.Query;
 import com.google.code.morphia.query.QueryImpl;
 import com.google.code.morphia.query.UpdateOperations;
@@ -68,6 +69,7 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 
 	@Override
 	public <T> DBRef createRef(T entity) {
+		entity = unwrap(entity);
 		Object id = getId(entity);
 		if (id == null) throw new MappingException("Could not get id for " + entity.getClass().getName());
 		return createRef(entity.getClass(), id);
@@ -75,6 +77,7 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 
 	@Override
 	public <T> Key<T> getKey(T entity) {
+		entity = unwrap(entity);
 		if (entity instanceof Key) return (Key<T>) entity;
 		
 		Object id = getId(entity);
@@ -108,6 +111,7 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 
 	@Override
 	public <T> void delete(T entity) {
+		entity = unwrap(entity);
 		try {
 			Object id = getId(entity);
 			delete(entity.getClass(), id);
@@ -333,6 +337,7 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 	
 	@Override
 	public <T> T get(T entity) {
+		entity = unwrap(entity);
 		Object id = getId(entity);
 		if (id == null) throw new MappingException("Could not get id for " + entity.getClass().getName());
 		return (T) get(entity.getClass(), id);
@@ -349,6 +354,7 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 	
 	@Override
 	public <T> long getCount(T entity) {
+		entity = unwrap(entity);
 		return getCollection(entity).getCount();
 	}
 	
@@ -378,6 +384,7 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 	}
 
 	protected Object getId(Object entity) {
+		entity=unwrap(entity);
 		MappedClass mc;
 		String keyClassName = entity.getClass().getName();
 		if (morphia.getMappedClasses().containsKey(keyClassName))
@@ -390,6 +397,13 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 		} catch (Exception e) {
 			return null;
 		}
+	}
+
+	public static <T> T unwrap(final T entity) {
+		if (entity instanceof ProxiedReference) {
+			return (T) ((ProxiedReference) entity).__unwrap();
+		}
+		return entity;
 	}
 
 	public Mapper getMapper() {
@@ -456,6 +470,7 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 
 	@Override
 	public <T> Key<T> save(T entity) {
+		entity = unwrap(entity);
 		DBCollection dbColl = getCollection(entity);
 		return save(dbColl, entity);
     }
@@ -491,4 +506,6 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 		DBObject dbObj = dbColl.getDB().getLastError();
 		return new UpdateResults<T>(dbObj);		
 	}
+
+
 }

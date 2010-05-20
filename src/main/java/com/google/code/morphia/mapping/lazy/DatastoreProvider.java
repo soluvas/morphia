@@ -16,7 +16,6 @@ import com.google.code.morphia.Datastore;
  * @see LazyProxyFactory
  * @author uwe schaefer
  */
-public interface DatastoreProvider extends Serializable
-{
-    Datastore get();
+public interface DatastoreProvider extends Serializable {
+	Datastore get();
 }

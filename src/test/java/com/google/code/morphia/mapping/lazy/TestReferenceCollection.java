@@ -13,6 +13,7 @@ import org.junit.Test;
 
 import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.Reference;
+import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceList;
 import com.google.code.morphia.utils.AbstractMongoEntity;
 
 public class TestReferenceCollection extends TestBase

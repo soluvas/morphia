@@ -8,17 +8,15 @@ import com.google.code.morphia.Datastore;
  * 
  * @author uwe schaefer
  */
-public class DefaultDatastoreProvider implements DatastoreProvider
-{
-    @Override
-    public Datastore get()
-    {
-        final Datastore datastore = DatastoreHolder.getInstance().get();
-        if (datastore == null)
-        {
-            throw new IllegalStateException("DatastoreHolder does not carry a Datastore.");
-        }
-        return datastore;
-    }
+public class DefaultDatastoreProvider implements DatastoreProvider {
+	@Override
+	public Datastore get() {
+		final Datastore datastore = DatastoreHolder.getInstance().get();
+		if (datastore == null) {
+			throw new IllegalStateException(
+					"DatastoreHolder does not carry a Datastore.");
+		}
+		return datastore;
+	}
 
 }
