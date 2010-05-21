@@ -59,8 +59,8 @@ public class MappingValidator {
 			}
 			Collections.sort(l);
 
-			for (LogLine string : l) {
-				string.log(logger);
+			for (LogLine line : l) {
+				line.log(logger);
 			}
 		}
 	}
