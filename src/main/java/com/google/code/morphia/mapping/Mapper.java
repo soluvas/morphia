@@ -53,6 +53,7 @@ import com.google.code.morphia.mapping.lazy.LazyProxyFactory;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityMap;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReference;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceList;
+import com.google.code.morphia.mapping.lazy.proxy.ProxyHelper;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBBinary;
@@ -118,7 +119,12 @@ public class Mapper {
 		if (obj == null) {
 			return null;
 		}
+		
 		Class type = (obj instanceof Class) ? (Class) obj : obj.getClass();
+		
+		if (ProxyHelper.isProxy(obj))
+			type = ProxyHelper.getReferentClass(obj);
+		
 		MappedClass mc = mappedClasses.get(type.getCanonicalName());
 		if (mc == null) {
 			// no validation
@@ -132,7 +138,8 @@ public class Mapper {
 		entityCache.remove();
 	}
 
-	public String getCollectionName(final Object object) {
+	public String getCollectionName(Object object) {
+		// object = ProxyHelper.unwrap(object);
 		MappedClass mc = getMappedClass(object);
 		return mc.getCollectionName();
 	}
@@ -321,10 +328,11 @@ public class Mapper {
 	/**
 	 * converts an entity to a DBObject
 	 */
-	public DBObject toDBObject(final Object entity,
+	public DBObject toDBObject(Object entity,
 			final LinkedHashMap<Object, DBObject> involvedObjects) {
+		
+		entity = ProxyHelper.unwrap(entity);
 		BasicDBObject dbObject = new BasicDBObject();
-
 		MappedClass mc = getMappedClass(entity);
 
 		dbObject
@@ -849,7 +857,7 @@ public class Mapper {
 						.isSet()) ? ArrayList.class : HashSet.class, mf
 								.getCTor());
 
-				if (refAnn.lazy() && LazyFeatureDependencies.fullFilled()) {
+				if (refAnn.lazy() && LazyFeatureDependencies.assertDependencyFullFilled()) {
 					if (dbObject.containsField(name)) {
 						references = proxyFactory.createListProxy(references,
 								referenceObjClass, refAnn.ignoreMissing(),
@@ -936,7 +944,7 @@ public class Mapper {
 					DBRef dbRef = (DBRef) dbObject.get(name);
 
 					Object resolvedObject = null;
-					if (refAnn.lazy() && LazyFeatureDependencies.fullFilled()) {
+					if (refAnn.lazy() && LazyFeatureDependencies.assertDependencyFullFilled()) {
 						if (exists(dbRef)) {
 							resolvedObject = createOrReuseProxy(
 									referenceObjClass, dbRef);
@@ -1217,7 +1225,7 @@ public class Mapper {
 		Map map = (Map) tryConstructor(HashMap.class, mf.getCTor());
 
 		if (dbObject.containsField(name)) {
-			if (refAnn.lazy() && LazyFeatureDependencies.fullFilled()) {
+			if (refAnn.lazy() && LazyFeatureDependencies.assertDependencyFullFilled()) {
 				// replace map by proxy to it.
 				map = proxyFactory.createMapProxy(map, referenceObjClass,
 						refAnn.ignoreMissing(), datastoreProvider);
@@ -1227,7 +1235,7 @@ public class Mapper {
 			for (Map.Entry entry : dbVal.entrySet()) {
 				DBRef dbRef = (DBRef) entry.getValue();
 
-				if (refAnn.lazy() && LazyFeatureDependencies.fullFilled()) {
+				if (refAnn.lazy() && LazyFeatureDependencies.assertDependencyFullFilled()) {
 					ProxiedEntityMap proxiedMap = (ProxiedEntityMap) map;
 					proxiedMap.__put(entry.getKey(), new Key(dbRef));
 				} else {
