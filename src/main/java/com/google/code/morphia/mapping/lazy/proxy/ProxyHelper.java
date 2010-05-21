@@ -30,4 +30,16 @@ public class ProxyHelper {
 		else
 			return entity != null ? entity.getClass() : null;
 	}
+	
+	public static boolean isFetched(Object entity) {
+		if (entity == null)
+			return true;
+		if (!isProxy(entity))
+			return true;
+		return asProxy(entity).__isFetched();
+	}
+	
+	public static boolean isUnFetched(Object entity) {
+		return !isFetched(entity);
+	}
 }

@@ -391,6 +391,10 @@ public class Mapper {
 					Map values = (Map) tryConstructor(HashMap.class, mf
 							.getCTor());
 
+					// TODO us handle proxies without fetching
+					// if (ProxyHelper.isProxy() && ProxyHelper.isUnFetched()
+					// ...
+
 					for (Map.Entry<Object, Object> entry : map.entrySet()) {
 						String strKey = objectToValue(entry.getKey())
 						.toString();
@@ -406,7 +410,7 @@ public class Mapper {
 				if (fieldValue != null) {
 					List values = new ArrayList();
 
-					if (fieldValue instanceof ProxiedEntityReferenceList) {
+					if (ProxyHelper.isProxy(fieldValue) && ProxyHelper.isUnFetched(fieldValue)) {
 						ProxiedEntityReferenceList p = (ProxiedEntityReferenceList) fieldValue;
 						List<Key<?>> getKeysAsList = p.__getKeysAsList();
 						Class c = p.__getReferenceObjClass();
