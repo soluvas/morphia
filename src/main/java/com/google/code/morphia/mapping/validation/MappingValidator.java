@@ -15,7 +15,12 @@ import java.util.logging.Logger;
 
 import com.google.code.morphia.mapping.MappedClass;
 import com.google.code.morphia.mapping.validation.ConstraintViolation.Level;
-import com.google.code.morphia.mapping.validation.rules.SingleId;
+import com.google.code.morphia.mapping.validation.classrules.EmbeddedAndId;
+import com.google.code.morphia.mapping.validation.classrules.EmbeddedAndValue;
+import com.google.code.morphia.mapping.validation.classrules.EntityAndEmbed;
+import com.google.code.morphia.mapping.validation.classrules.MultipleId;
+import com.google.code.morphia.mapping.validation.classrules.NoId;
+import com.google.code.morphia.mapping.validation.fieldrules.MisplacedProperty;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
@@ -35,13 +40,8 @@ public class MappingValidator {
 
 		List<ClassConstraint> rules = getConstraints();
 		for (MappedClass c : classes) {
-			// log().debug("Validating " + c.getName());
 			for (ClassConstraint v : rules) {
-				// log().trace(" against " + v.getClass().getName());
-				List<ConstraintViolation> validationErrors = v.check(c);
-				if (validationErrors != null) {
-					ve.addAll(validationErrors);
-				}
+				v.check(c, ve);
 			}
 		}
 
@@ -66,10 +66,20 @@ public class MappingValidator {
 	}
 
 	private List<ClassConstraint> getConstraints() {
-		List<ClassConstraint> constraints = new ArrayList(32);
+		List<ClassConstraint> constraints = new ArrayList<ClassConstraint>(32);
 		
-		// normally, i do this with scanning the classpath.
-		constraints.add(new SingleId());
+		// normally, i do this with scanning the classpath, but that´d bring
+		// another dependency ;)
+		
+		// class-level
+		constraints.add(new MultipleId());
+		constraints.add(new NoId());
+		constraints.add(new EmbeddedAndId());
+		constraints.add(new EntityAndEmbed());
+		constraints.add(new EmbeddedAndValue());
+		// field-level
+		constraints.add(new MisplacedProperty());
+
 		// TODO if you agree, id refactor all the checks there are into
 		// Constraints.
 

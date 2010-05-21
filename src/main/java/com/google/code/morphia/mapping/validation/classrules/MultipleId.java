@@ -1,10 +1,10 @@
 /**
  * 
  */
-package com.google.code.morphia.mapping.validation.rules;
+package com.google.code.morphia.mapping.validation.classrules;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.mapping.MappedClass;
@@ -16,10 +16,10 @@ import com.google.code.morphia.mapping.validation.ConstraintViolation.Level;
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  */
-public class SingleId implements ClassConstraint {
+public class MultipleId implements ClassConstraint {
 	
 	@Override
-	public List<ConstraintViolation> check(MappedClass mc) {
+	public void check(MappedClass mc, Set<ConstraintViolation> ve) {
 		
 		List<MappedField> idFields = mc.getFieldsAnnotatedWith(Id.class);
 		
@@ -32,11 +32,10 @@ public class SingleId implements ClassConstraint {
 			}
 			String fieldEnum = sb.toString();
 
-			return Arrays.asList(new ConstraintViolation(Level.FATAL, mc, "More than one @Id Field found (" + fieldEnum
+			ve.add(new ConstraintViolation(Level.FATAL, mc, "More than one @" + Id.class.getSimpleName()
+					+ " Field found (" + fieldEnum
 					+ ")."));
 		}
-
-		return null;
 	}
 	
 }
