@@ -48,6 +48,7 @@ import com.google.code.morphia.annotations.Serialized;
 import com.google.code.morphia.mapping.lazy.CGLibLazyProxyFactory;
 import com.google.code.morphia.mapping.lazy.DatastoreProvider;
 import com.google.code.morphia.mapping.lazy.DefaultDatastoreProvider;
+import com.google.code.morphia.mapping.lazy.LazyFeatureDependencies;
 import com.google.code.morphia.mapping.lazy.LazyProxyFactory;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityMap;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReference;
@@ -848,7 +849,7 @@ public class Mapper {
 						.isSet()) ? ArrayList.class : HashSet.class, mf
 								.getCTor());
 
-				if (refAnn.lazy()) {
+				if (refAnn.lazy() && LazyFeatureDependencies.fullFilled()) {
 					if (dbObject.containsField(name)) {
 						references = proxyFactory.createListProxy(references,
 								referenceObjClass, refAnn.ignoreMissing(),
@@ -935,7 +936,7 @@ public class Mapper {
 					DBRef dbRef = (DBRef) dbObject.get(name);
 
 					Object resolvedObject = null;
-					if (refAnn.lazy()) {
+					if (refAnn.lazy() && LazyFeatureDependencies.fullFilled()) {
 						if (exists(dbRef)) {
 							resolvedObject = createOrReuseProxy(
 									referenceObjClass, dbRef);
@@ -1216,7 +1217,7 @@ public class Mapper {
 		Map map = (Map) tryConstructor(HashMap.class, mf.getCTor());
 
 		if (dbObject.containsField(name)) {
-			if (refAnn.lazy()) {
+			if (refAnn.lazy() && LazyFeatureDependencies.fullFilled()) {
 				// replace map by proxy to it.
 				map = proxyFactory.createMapProxy(map, referenceObjClass,
 						refAnn.ignoreMissing(), datastoreProvider);
@@ -1226,7 +1227,7 @@ public class Mapper {
 			for (Map.Entry entry : dbVal.entrySet()) {
 				DBRef dbRef = (DBRef) entry.getValue();
 
-				if (refAnn.lazy()) {
+				if (refAnn.lazy() && LazyFeatureDependencies.fullFilled()) {
 					ProxiedEntityMap proxiedMap = (ProxiedEntityMap) map;
 					proxiedMap.__put(entry.getKey(), new Key(dbRef));
 				} else {
