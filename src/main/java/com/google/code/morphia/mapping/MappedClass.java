@@ -33,6 +33,7 @@ import com.google.code.morphia.annotations.PreSave;
 import com.google.code.morphia.annotations.Property;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.annotations.Transient;
+import com.google.code.morphia.mapping.validation.MappingValidator;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.DBObject;
 
@@ -229,6 +230,9 @@ public class MappedClass {
 	}
 	
 	public void validate() {
+		
+		new MappingValidator().validate(this);
+
 		// No @Entity with @Embedded
         if (getEntityAnnotation() != null && getEmbeddedAnnotation() != null ) {
             throw new MappingException(
