@@ -75,11 +75,13 @@
     		<groupId>cglib</groupId>
     		<artifactId>cglib-nodep</artifactId>
     		<version>[2.1_3,)</version>
+    		<optional>true</optional>
 		</dependency>
 	    <dependency>
     	  <groupId>proxytoys</groupId>
       	  <artifactId>proxytoys</artifactId>
           <version>0.2.1</version>
+          <optional>true</optional>
         </dependency>
 	</dependencies>
 

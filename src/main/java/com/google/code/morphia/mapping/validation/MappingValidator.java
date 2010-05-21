@@ -20,6 +20,7 @@ import com.google.code.morphia.mapping.validation.classrules.EmbeddedAndValue;
 import com.google.code.morphia.mapping.validation.classrules.EntityAndEmbed;
 import com.google.code.morphia.mapping.validation.classrules.MultipleId;
 import com.google.code.morphia.mapping.validation.classrules.NoId;
+import com.google.code.morphia.mapping.validation.fieldrules.LazyReferenceMissingDependencies;
 import com.google.code.morphia.mapping.validation.fieldrules.MisplacedProperty;
 import com.google.code.morphia.mapping.validation.fieldrules.ReferenceToUnidentifiable;
 
@@ -81,6 +82,7 @@ public class MappingValidator {
 		// field-level
 		constraints.add(new MisplacedProperty());
 		constraints.add(new ReferenceToUnidentifiable());
+		constraints.add(new LazyReferenceMissingDependencies());
 
 		// TODO if you agree, id refactor all the checks there are into
 		// Constraints.
