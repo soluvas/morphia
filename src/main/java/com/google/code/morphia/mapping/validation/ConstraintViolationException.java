@@ -6,10 +6,12 @@ package com.google.code.morphia.mapping.validation;
 
 import java.util.Collection;
 
+import com.google.code.morphia.mapping.MappingException;
+
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  */
-public class ConstraintViolationException extends IllegalArgumentException {
+public class ConstraintViolationException extends MappingException {
 	
 	public ConstraintViolationException(final Collection<ConstraintViolation> ve) {
 		super(createString(ve.toArray(new ConstraintViolation[ve.size()])));
