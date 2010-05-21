@@ -27,8 +27,8 @@ implements ProxiedEntityReferenceList {
 
 	@Override
 	protected synchronized Object fetch() {
-		List list = (List) object;
-		list.clear();
+		Collection c = (Collection) object;
+		c.clear();
 
 		int numberOfEntitiesExpected = listOfKeysAsStrings.size();
 		List retrievedEntities = p.get().getByKeys(referenceObjClass,
@@ -38,14 +38,14 @@ implements ProxiedEntityReferenceList {
 				&& (numberOfEntitiesExpected != retrievedEntities.size())) {
 			throw new LazyReferenceFetchingException(
 					"During the lifetime of a proxy of type '"
-					+ list.getClass().getSimpleName()
+					+ c.getClass().getSimpleName()
 					+ "', some referenced Entities of type '"
 					+ referenceObjClass.getSimpleName()
 					+ "' have disappeared from the Datastore.");
 		}
 
-		list.addAll(retrievedEntities);
-		return list;
+		c.addAll(retrievedEntities);
+		return c;
 	}
 
 	public List<Key<?>> __getKeysAsList() {
