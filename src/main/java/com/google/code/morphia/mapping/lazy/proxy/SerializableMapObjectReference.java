@@ -15,14 +15,12 @@ import com.google.code.morphia.mapping.lazy.DatastoreProvider;
  * 
  */
 @SuppressWarnings("unchecked")
-public class SerializableMapObjectReference extends AbstractReference implements
-ProxiedEntityMap {
+public class SerializableMapObjectReference extends AbstractReference implements ProxiedEntityMap {
 
 	private final HashMap<Object, String> keyMap;
-
-	public SerializableMapObjectReference(final Map mapToProxy,
-			final Class referenceObjClass, final boolean ignoreMissing,
-			final DatastoreProvider p) {
+	
+	public SerializableMapObjectReference(final Map mapToProxy, final Class referenceObjClass,
+			final boolean ignoreMissing, final DatastoreProvider p) {
 
 		super(p, referenceObjClass, ignoreMissing);
 		object = mapToProxy;
@@ -39,8 +37,10 @@ ProxiedEntityMap {
 	protected Object fetch() {
 		Map m = (Map) object;
 		m.clear();
-		// FIXME us: change to getting them all at once and yell according to
-		// ignoreMissing.
+		// TODO us: change to getting them all at once and yell according to
+		// ignoreMissing in order to a) increase performance and b) resolve
+		// equals keys to the same instance
+		// that should really be done in datastore.
 		for (Map.Entry<?, String> e : keyMap.entrySet()) {
 			String entityKey = e.getValue();
 			Object entity = fetch(entityKey);
@@ -53,6 +53,5 @@ ProxiedEntityMap {
 	protected void beforeWriteObject() {
 		((Map) object).clear();
 	}
-
 
 }

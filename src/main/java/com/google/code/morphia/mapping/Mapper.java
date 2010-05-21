@@ -922,8 +922,6 @@ public class Mapper {
 					}
 				}
 
-				// FIXME us, array detection before
-
 				if (mf.getType().isArray()) {
 					Object[] array = convertToArray(mf.getSubType(), references);
 					mf.setFieldValue(entity, array);

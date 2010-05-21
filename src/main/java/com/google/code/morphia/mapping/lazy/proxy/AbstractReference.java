@@ -57,6 +57,7 @@ ObjectReference, ProxiedReference {
 		return p.get().get(referenceObjClass, id);
 	}
 
+
 	private void writeObject(final java.io.ObjectOutputStream out)
 	throws IOException {
 		// excessive hoop-jumping in order not to have to recreate the
