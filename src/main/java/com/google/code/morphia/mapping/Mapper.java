@@ -11,11 +11,7 @@
 
 package com.google.code.morphia.mapping;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -50,9 +46,9 @@ import com.google.code.morphia.mapping.lazy.DatastoreProvider;
 import com.google.code.morphia.mapping.lazy.DefaultDatastoreProvider;
 import com.google.code.morphia.mapping.lazy.LazyFeatureDependencies;
 import com.google.code.morphia.mapping.lazy.LazyProxyFactory;
-import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityMap;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReference;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceList;
+import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceMap;
 import com.google.code.morphia.mapping.lazy.proxy.ProxyHelper;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
@@ -387,20 +383,25 @@ public class Mapper {
 
 			if (mf.isMap()) {
 				Map<Object, Object> map = (Map<Object, Object>) fieldValue;
-				if ((map != null) && (map.size() > 0)) {
+				if ((map != null)) {
 					Map values = (Map) tryConstructor(HashMap.class, mf
 							.getCTor());
 
-					// TODO us handle proxies without fetching
-					// if (ProxyHelper.isProxy() && ProxyHelper.isUnFetched()
-					// ...
-
-					for (Map.Entry<Object, Object> entry : map.entrySet()) {
-						String strKey = objectToValue(entry.getKey())
-						.toString();
-						values.put(strKey, new DBRef(null,
-								getCollectionName(entry.getValue()),
-								asObjectIdMaybe(getId(entry.getValue()))));
+					if (ProxyHelper.isProxy(map) && ProxyHelper.isUnFetched(map)) {
+						ProxiedEntityReferenceMap proxy = (ProxiedEntityReferenceMap) map;
+						Map<String, String> refMap = proxy.__getReferenceMap();
+						for (Map.Entry<String, String> entry : refMap.entrySet()) {
+							String strKey = entry.getKey();
+							values.put(strKey, new DBRef(null, getCollectionName(proxy.__getReferenceObjClass()),
+									asObjectIdMaybe(entry.getValue())));
+						}
+					} else {
+						for (Map.Entry<Object, Object> entry : map.entrySet()) {
+							// TODO is objectToValue necessary here?
+							String strKey = objectToValue(entry.getKey()).toString();
+							values.put(strKey, new DBRef(null, getCollectionName(entry.getValue()),
+									asObjectIdMaybe(getId(entry.getValue()))));
+						}
 					}
 					if (values.size() > 0) {
 						dbObject.put(name, values);
@@ -1213,11 +1214,11 @@ public class Mapper {
 			}
 
 			BasicDBObject dbVal = (BasicDBObject) dbObject.get(name);
-			for (Map.Entry entry : dbVal.entrySet()) {
+			for (Map.Entry<String, ?> entry : dbVal.entrySet()) {
 				DBRef dbRef = (DBRef) entry.getValue();
 
 				if (refAnn.lazy() && LazyFeatureDependencies.assertDependencyFullFilled()) {
-					ProxiedEntityMap proxiedMap = (ProxiedEntityMap) map;
+					ProxiedEntityReferenceMap proxiedMap = (ProxiedEntityReferenceMap) map;
 					proxiedMap.__put(entry.getKey(), new Key(dbRef));
 				} else {
 					Object resolvedObject = resolveObject(dbRef,

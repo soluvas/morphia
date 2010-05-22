@@ -15,20 +15,20 @@ import com.google.code.morphia.mapping.lazy.DatastoreProvider;
  * 
  */
 @SuppressWarnings("unchecked")
-public class SerializableMapObjectReference extends AbstractReference implements ProxiedEntityMap {
+public class SerializableMapObjectReference extends AbstractReference implements ProxiedEntityReferenceMap {
 
-	private final HashMap<Object, String> keyMap;
+	private final HashMap<String, String> keyMap;
 	
 	public SerializableMapObjectReference(final Map mapToProxy, final Class referenceObjClass,
 			final boolean ignoreMissing, final DatastoreProvider p) {
 
 		super(p, referenceObjClass, ignoreMissing);
 		object = mapToProxy;
-		keyMap = new LinkedHashMap<Object, String>();
+		keyMap = new LinkedHashMap<String, String>();
 	}
 
 	@Override
-	public void __put(final Object key, final Key k) {
+	public void __put(final String key, final Key k) {
 		// TODO clear up key -> String business.
 		keyMap.put(key, k.toRef().getId().toString());
 	}
@@ -52,6 +52,11 @@ public class SerializableMapObjectReference extends AbstractReference implements
 	@Override
 	protected void beforeWriteObject() {
 		((Map) object).clear();
+	}
+
+	@Override
+	public Map<String, String> __getReferenceMap() {
+		return keyMap;
 	}
 
 }

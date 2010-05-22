@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import com.google.code.morphia.Key;
-import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityMap;
+import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceMap;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReference;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceList;
 import com.google.code.morphia.mapping.lazy.proxy.SerializableCollectionObjectReference;
@@ -78,7 +78,7 @@ public class CGLibLazyProxyFactory implements LazyProxyFactory {
 		T backend = (T) HotSwapping.object(new Class[] { targetClass,
 				Serializable.class }, factory, objectReference, true);
 
-		T proxy = (T) Dispatching.object(new Class[] { ProxiedEntityMap.class,
+		T proxy = (T) Dispatching.object(new Class[] { ProxiedEntityReferenceMap.class,
 				targetClass, Serializable.class }, new Object[] {
 				objectReference, backend }, factory);
 

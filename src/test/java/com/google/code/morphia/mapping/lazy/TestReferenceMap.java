@@ -46,6 +46,11 @@ public class TestReferenceMap extends ProxyTestBase
 		assertEquals(b1, a.bs.get("b1+"));
 		assertNotNull(a.bs.get("b2"));
 
+		// make sure, saving does not fetch
+		a = deserialize(a);
+		assertNotFetched(a.bs);
+		ds.save(a);
+		assertNotFetched(a.bs);
     }
 
    
