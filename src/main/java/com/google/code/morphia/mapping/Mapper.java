@@ -216,19 +216,7 @@ public class Mapper {
 			// otherwise return the entityClass
 			c = getClassForName(className, entityClass);
 		}
-		return createInstance(c);
-	}
-
-	/** Gets a no-arg constructor and calls it via reflection. */
-	protected Object createInstance(final Class type) {
-		try {
-			// allows private/protected constructors
-			Constructor constructor = type.getDeclaredConstructor();
-			constructor.setAccessible(true);
-			return constructor.newInstance();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		return ReflectionUtils.createInstance(c);
 	}
 
 	/**
@@ -245,7 +233,7 @@ public class Mapper {
 				throw new RuntimeException(e);
 			}
 		}
-		return createInstance(fallbackType);
+		return ReflectionUtils.createInstance(fallbackType);
 	}
 
 	/** coverts a DBObject back to a type-safe java object */

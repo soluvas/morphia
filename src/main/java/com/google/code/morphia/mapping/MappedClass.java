@@ -32,6 +32,7 @@ import com.google.code.morphia.annotations.PreSave;
 import com.google.code.morphia.annotations.Property;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.annotations.Transient;
+import com.google.code.morphia.annotations.Version;
 import com.google.code.morphia.mapping.validation.MappingValidator;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.DBObject;
@@ -63,7 +64,8 @@ public class MappedClass {
 //    private Polymorphic polymorphicAn;
 	
 	/** Annotations we are interested in looking for. */
-	public static List<Class<? extends Annotation>> interestingAnnotations = new ArrayList<Class<? extends Annotation>>(Arrays.asList(Embedded.class, Entity.class, Polymorphic.class, EntityListeners.class));
+	public static List<Class<? extends Annotation>> interestingAnnotations = new ArrayList<Class<? extends Annotation>>(
+			Arrays.asList(Embedded.class, Entity.class, Polymorphic.class, EntityListeners.class, Version.class));
 	/** Annotations we were interested in, and found. */
 	private Map<Class<? extends Annotation>, Annotation> releventAnnotations = new HashMap<Class<? extends Annotation>, Annotation>();
 	
@@ -340,7 +342,7 @@ public class MappedClass {
 					toCall.put(cm.clazz, null);
 				for (Class<?> c : toCall.keySet())
 					if (c != null)
-						toCall.put(c, mapr.createInstance(c));
+						toCall.put(c, ReflectionUtils.createInstance(c));
 
 				for (ClassMethodPair cm: methodPairs) {
 					Method method = cm.method;

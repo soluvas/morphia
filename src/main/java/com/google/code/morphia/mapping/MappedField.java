@@ -20,6 +20,7 @@ import com.google.code.morphia.annotations.Indexed;
 import com.google.code.morphia.annotations.Property;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.annotations.Serialized;
+import com.google.code.morphia.annotations.Version;
 import com.google.code.morphia.utils.ReflectionUtils;
 
 /**
@@ -43,7 +44,8 @@ public class MappedField {
 	// The Annotations to look for when reflecting on the field (stored in the
 	// mappingAnnotations)
 	public static List<Class<? extends Annotation>> interestingAnnotations = new ArrayList<Class<? extends Annotation>>(
-			Arrays.asList(Serialized.class, Indexed.class, Property.class, Reference.class, Embedded.class, Id.class));
+			Arrays.asList(Serialized.class, Indexed.class, Property.class, Reference.class, Embedded.class, Id.class,
+					Version.class));
 	
 	// the type (T) for the Collection<T>/T[]/Map<?,T>
 	private Class subType = null;

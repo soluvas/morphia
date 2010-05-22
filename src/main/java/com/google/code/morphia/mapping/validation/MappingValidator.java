@@ -31,6 +31,7 @@ import com.google.code.morphia.mapping.validation.fieldrules.MapKeyDifferentFrom
 import com.google.code.morphia.mapping.validation.fieldrules.MapNotSerializable;
 import com.google.code.morphia.mapping.validation.fieldrules.MisplacedProperty;
 import com.google.code.morphia.mapping.validation.fieldrules.ReferenceToUnidentifiable;
+import com.google.code.morphia.mapping.validation.fieldrules.VersionMisuse;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
@@ -94,6 +95,7 @@ public class MappingValidator {
 		constraints.add(new LazyReferenceOnArray());
 		constraints.add(new MapKeyDifferentFromString());
 		constraints.add(new MapNotSerializable());
+		constraints.add(new VersionMisuse());
 		//
 		constraints.add(new ContradictingFieldAnnotation(Reference.class, Serialized.class));
 		constraints.add(new ContradictingFieldAnnotation(Reference.class, Property.class));
