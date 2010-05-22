@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+ 
 package com.google.code.morphia.annotations;
 
 import java.lang.annotation.Documented;
@@ -25,9 +25,15 @@ import java.lang.annotation.Target;
 
 /**
  * Marker for fields that should be (java) serialized
+ * 
  * @author Scott Hernandez
  */
-@Documented @Inherited
+@Documented
+// TODO why ?
+@Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface Serialized {}
+public @interface Serialized {
+
+    boolean zip() default false;
+}

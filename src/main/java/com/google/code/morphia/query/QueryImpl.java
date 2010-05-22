@@ -20,6 +20,7 @@ import com.google.code.morphia.mapping.MappedClass;
 import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.Mapper;
 import com.google.code.morphia.mapping.MappingException;
+import com.google.code.morphia.mapping.Serializer;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBCollection;
@@ -221,7 +222,10 @@ public class QueryImpl<T> implements Query<T> {
 		}
 		else if (mf!=null && mf.hasAnnotation(Serialized.class))
 			try {
-				mappedValue = mapr.serialize(value); } catch (IOException e) { throw new RuntimeException(e); }
+				mappedValue = Serializer.serialize(value, mf.getAnnotation(Serialized.class).zip());
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
 		else
 			mappedValue = Mapper.asObjectIdMaybe(mapr.toMongoObject(value));
 		

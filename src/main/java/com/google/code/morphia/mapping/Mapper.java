@@ -515,29 +515,6 @@ public class Mapper {
 		}
 	}
 
-	/** serializes object to byte[] */
-	public byte[] serialize(final Object o) throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ObjectOutputStream oos = new ObjectOutputStream(baos);
-		oos.writeObject(o);
-		return baos.toByteArray();
-	}
-
-	/** deserializes DBBinary/byte[] to object */
-	public Object deserialize(final Object data) throws IOException,
-	ClassNotFoundException {
-		ByteArrayInputStream bais;
-		if (data instanceof DBBinary) {
-			bais = new ByteArrayInputStream(((DBBinary) data).getData());
-		} else {
-			bais = new ByteArrayInputStream((byte[]) data);
-		}
-
-		ObjectInputStream ois = new ObjectInputStream(bais);
-
-		return ois.readObject();
-	}
-
 	void mapValuesToDBObject(final Object entity, final MappedField mf,
 			final BasicDBObject dbObject) {
 		try {
@@ -546,7 +523,7 @@ public class Mapper {
 			Object fieldValue = mf.getFieldValue(entity);
 
 			if (mf.hasAnnotation(Serialized.class)) {
-				dbObject.put(name, serialize(fieldValue));
+				dbObject.put(name, Serializer.serialize(fieldValue, mf.getAnnotation(Serialized.class).zip()));
 			}
 
 			// sets and list are stored in mongodb as ArrayLists
@@ -682,7 +659,7 @@ public class Mapper {
 				}
 
 				try {
-					mf.setFieldValue(entity, deserialize(data));
+					mf.setFieldValue(entity, Serializer.deserialize(data, mf.getAnnotation(Serialized.class).zip()));
 				} catch (IOException ex) {
 					throw new RuntimeException(ex);
 				} catch (ClassNotFoundException ex) {
