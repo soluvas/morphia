@@ -13,6 +13,9 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
+import com.google.code.morphia.annotations.Embedded;
+import com.google.code.morphia.annotations.Reference;
+import com.google.code.morphia.annotations.Serialized;
 import com.google.code.morphia.mapping.MappedClass;
 import com.google.code.morphia.mapping.validation.ConstraintViolation.Level;
 import com.google.code.morphia.mapping.validation.classrules.EmbeddedAndId;
@@ -20,8 +23,10 @@ import com.google.code.morphia.mapping.validation.classrules.EmbeddedAndValue;
 import com.google.code.morphia.mapping.validation.classrules.EntityAndEmbed;
 import com.google.code.morphia.mapping.validation.classrules.MultipleId;
 import com.google.code.morphia.mapping.validation.classrules.NoId;
+import com.google.code.morphia.mapping.validation.fieldrules.ContradictingFieldAnnotation;
 import com.google.code.morphia.mapping.validation.fieldrules.LazyReferenceMissingDependencies;
 import com.google.code.morphia.mapping.validation.fieldrules.LazyReferenceOnArray;
+import com.google.code.morphia.mapping.validation.fieldrules.MapKeyDifferentFromString;
 import com.google.code.morphia.mapping.validation.fieldrules.MisplacedProperty;
 import com.google.code.morphia.mapping.validation.fieldrules.ReferenceToUnidentifiable;
 
@@ -85,6 +90,10 @@ public class MappingValidator {
 		constraints.add(new ReferenceToUnidentifiable());
 		constraints.add(new LazyReferenceMissingDependencies());
 		constraints.add(new LazyReferenceOnArray());
+		constraints.add(new MapKeyDifferentFromString());
+		constraints.add(new ContradictingFieldAnnotation(Reference.class, Serialized.class));
+		constraints.add(new ContradictingFieldAnnotation(Embedded.class, Serialized.class));
+		constraints.add(new ContradictingFieldAnnotation(Embedded.class, Reference.class));
 
 		// TODO if you agree, id refactor all the checks there are into
 		// Constraints.
