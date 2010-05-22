@@ -18,21 +18,23 @@ import com.mongodb.DBObject;
  */
 public class VersionTest extends JUnit3TestBase {
 	
-	public static class Along extends AbstractMongoEntity {
+
+	public static class ALongPrimitive extends AbstractMongoEntity {
 		@Version
 		long hubba;
 		
 		String text;
+	}
+	
+	public static class ALong extends AbstractMongoEntity {
+		@Version
+		Long v;
 		
-		@PreSave
-		public void preSave(DBObject o) {
-			System.out.println(o);
-		}
-		
+		String text;
 	}
 
 	public void testVersions() throws Exception {
-		Along a = new Along();
+		ALongPrimitive a = new ALongPrimitive();
 		assertEquals(0, a.hubba);
 		ds.save(a);
 		assertTrue(a.hubba > 0);
@@ -46,15 +48,33 @@ public class VersionTest extends JUnit3TestBase {
 	}
 	
 	public void testConcurrentModDetection() throws Exception {
-		Along a = new Along();
+		morphia.map(ALongPrimitive.class);
+
+		ALongPrimitive a = new ALongPrimitive();
 		assertEquals(0, a.hubba);
 		ds.save(a);
-		final Along a1 = a;
+		final ALongPrimitive a1 = a;
 		
-		Along a2 = ds.get(a);
+		ALongPrimitive a2 = ds.get(a);
 		ds.save(a2);
 		
 
+		new AssertedFailure(ConcurrentModificationException.class) {
+			public void thisMustFail() throws Throwable {
+				ds.save(a1);
+			}
+		};
+	}
+
+	public void testConcurrentModDetectionLong() throws Exception {
+		ALong a = new ALong();
+		assertEquals(null, (Long) a.v);
+		ds.save(a);
+		final ALong a1 = a;
+		
+		ALong a2 = ds.get(a);
+		ds.save(a2);
+		
 		new AssertedFailure(ConcurrentModificationException.class) {
 			public void thisMustFail() throws Throwable {
 				ds.save(a1);

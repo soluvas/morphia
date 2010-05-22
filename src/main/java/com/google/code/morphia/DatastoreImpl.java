@@ -446,6 +446,9 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 	
 
 	protected <T> Key<T> save(DBCollection dbColl, T entity) {
+		DB db = dbColl.getDB();
+		db.requestStart();
+		try{
 		entity = ProxyHelper.unwrap(entity);
 		Mapper mapr = morphia.getMapper();
 		MappedClass mc = mapr.getMappedClass(entity);
@@ -453,6 +456,7 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 		LinkedHashMap<Object, DBObject> involvedObjects = new LinkedHashMap<Object, DBObject>();
 		DBObject dbObj = mapr.toDBObject(entity, involvedObjects);
 
+		
 		if (mc.isVersioned()) {
 			String versionName = mc.getMappedVersionField().getMappedFieldName();
 			Long oldVersion = (Long) mc.getMappedVersionField().getFieldValue(entity);
@@ -463,49 +467,57 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 			String idName = "_id"; // mc.getMappedIdField().getMappedFieldName();
 			Object id = mc.getMappedIdField().getFieldValue(entity);
 			dbObj.put(versionName, newVersion);
-			BasicDBObject query = new BasicDBObject();
 			if (oldVersion != null && oldVersion > 0)
  {
+				BasicDBObject query = new BasicDBObject();
+
 				// TODO help! there will probably be an correct way to do this,
 				// but i did not find it.
 				query.put(idName, new ObjectId(String.valueOf(id)));
 				query.put(versionName, oldVersion);
-				int affectedDocuments = dbColl.find(query).count();
-				if (affectedDocuments != 1) {
-					throw new ConcurrentModificationException("Entity of class " + entity.getClass().getName()
-							+ " (id='" + id + "',version='" + oldVersion + "') was concurrently updated.");
-				}
-
 				dbColl.update(query, dbObj);
+				BasicDBObject lastError = (BasicDBObject) db.getLastError();
+				
+				if (lastError.get("err") != null)
+					throw new MappingException("Error: " + lastError.toString());
 
-				query.put(versionName, newVersion);
-				affectedDocuments = dbColl.find(query).count();
-				if (affectedDocuments != 1) {
-					throw new ConcurrentModificationException("Entity of class " + entity.getClass().getName()
-							+ " (id='" + id + "',version='" + oldVersion + "') was concurrently updated.");
-				}
+				if (lastError.getInt("n")!=1)
+					 throw new ConcurrentModificationException("Entity of class "
+					 + entity.getClass().getName()
+					 + " (id='" + id + "',version='" + oldVersion +
+					 "') was concurrently updated.");
+
 				
 			} else {
 				dbColl.save(dbObj);
 			}
 			
-			mc.getMappedVersionField().setFieldValue(entity, new Long(newVersion));
+			mc.getMappedVersionField().setFieldValue(entity, new Long(newVersion));	
+			mapr.updateKeyInfo(entity, dbObj.get(Mapper.ID_KEY), dbColl.getName());
+
 		}
 		
 		else
+ {
 			dbColl.save(dbObj);
 
-		if (dbObj.get(Mapper.ID_KEY) == null)
-			throw new MappingException("Missing _id after save!");
-		
-		DBObject lastErr = dbColl.getDB().getLastError();
-		if (lastErr.get("err") != null)
-			throw new MappingException("Error: " + lastErr.toString());
+			if (dbObj.get(Mapper.ID_KEY) == null)
+				throw new MappingException("Missing _id after save!");
+			
+			DBObject lastErr = db.getLastError();
+			if (lastErr.get("err") != null)
+				throw new MappingException("Error: " + lastErr.toString());
+			
+			mapr.updateKeyInfo(entity, dbObj.get(Mapper.ID_KEY), dbColl.getName());
 
-		mapr.updateKeyInfo(entity, dbObj.get(Mapper.ID_KEY), dbColl.getName());
+		}
 		mc.callLifecycleMethods(PostPersist.class, entity, dbObj, mapr);
 		firePostPersistForChildren(involvedObjects, mapr);
-		return new Key<T>(dbColl.getName(), getId(entity));
+			return new Key<T>(dbColl.getName(), getId(entity));
+		}
+		finally{
+			db.requestDone();
+		}
 	}
 	
 	private void firePostPersistForChildren(LinkedHashMap<Object, DBObject> involvedObjects, Mapper mapr) {
