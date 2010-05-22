@@ -23,6 +23,7 @@ import com.google.code.morphia.mapping.validation.classrules.EmbeddedAndId;
 import com.google.code.morphia.mapping.validation.classrules.EmbeddedAndValue;
 import com.google.code.morphia.mapping.validation.classrules.EntityAndEmbed;
 import com.google.code.morphia.mapping.validation.classrules.MultipleId;
+import com.google.code.morphia.mapping.validation.classrules.MultipleVersions;
 import com.google.code.morphia.mapping.validation.classrules.NoId;
 import com.google.code.morphia.mapping.validation.fieldrules.ContradictingFieldAnnotation;
 import com.google.code.morphia.mapping.validation.fieldrules.LazyReferenceMissingDependencies;
@@ -84,6 +85,7 @@ public class MappingValidator {
 		
 		// class-level
 		constraints.add(new MultipleId());
+		constraints.add(new MultipleVersions());
 		constraints.add(new NoId());
 		constraints.add(new EmbeddedAndId());
 		constraints.add(new EntityAndEmbed());

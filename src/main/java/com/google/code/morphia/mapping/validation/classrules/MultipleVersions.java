@@ -6,7 +6,7 @@ package com.google.code.morphia.mapping.validation.classrules;
 import java.util.List;
 import java.util.Set;
 
-import com.google.code.morphia.annotations.Id;
+import com.google.code.morphia.annotations.Version;
 import com.google.code.morphia.mapping.MappedClass;
 import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.validation.ClassConstraint;
@@ -15,19 +15,15 @@ import com.google.code.morphia.mapping.validation.ConstraintViolation.Level;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
+ *
  */
-public class MultipleId implements ClassConstraint {
+public class MultipleVersions implements ClassConstraint {
 	
 	@Override
 	public void check(MappedClass mc, Set<ConstraintViolation> ve) {
-		
-		List<MappedField> idFields = mc.getFieldsAnnotatedWith(Id.class);
-		
-		if (idFields.size() > 1) {
-			ve.add(new ConstraintViolation(Level.FATAL, mc, "More than one @" + Id.class.getSimpleName()
-					+ " Field found (" + new FieldEnumString(idFields)
-					+ ")."));
-		}
+		List<MappedField> versionFields = mc.getFieldsAnnotatedWith(Version.class);
+		if (versionFields.size() > 1)
+			ve.add(new ConstraintViolation(Level.FATAL, mc, "Multiple @" + Version.class
+					+ " annotations are not allowed. (" + new FieldEnumString(versionFields)));
 	}
-	
 }
