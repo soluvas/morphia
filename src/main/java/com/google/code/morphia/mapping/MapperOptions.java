@@ -15,5 +15,4 @@ public class MapperOptions {
 	public boolean storeNulls = false;
 	public boolean storeEmpties = false;
 	public boolean ignoreFinals = false;
-	
 }
