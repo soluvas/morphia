@@ -24,7 +24,7 @@ public class VersionMisuse extends FieldConstraint {
 			Class<?> type = mf.getType();
 			if (Long.class.equals(type) || long.class.equals(type)) {
 				
-				try {
+
 				// hope that this is tested already by now?
 					Object testInstance = ReflectionUtils.createInstance(mc.getClazz());
 
@@ -42,11 +42,7 @@ public class VersionMisuse extends FieldConstraint {
 						
 					}
 					
-				} catch (IllegalArgumentException e) {
-					throw new RuntimeException(e);
-				} catch (IllegalAccessException e) {
-					throw new RuntimeException(e);
-				}
+
 
 			} else
 				ve.add(new ConstraintViolation(Level.FATAL, mc, mf, "@" + Version.class.getSimpleName()

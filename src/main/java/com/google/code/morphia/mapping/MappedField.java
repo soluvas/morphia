@@ -172,7 +172,7 @@ public class MappedField {
 	/**
 	 * Returns the name of the field's key-name for mongodb
 	 */
-	private String getMappedFieldName() {
+	public String getMappedFieldName() {
 		if (hasAnnotation(Property.class)) {
 			Property mv = (Property) mappingAnnotations.get(Property.class);
 			if (!mv.value().equals(Mapper.IGNORED_FIELDNAME))
@@ -238,14 +238,24 @@ public class MappedField {
 		return ctor;
 	}
 
-	public Object getFieldValue(Object classInst) throws IllegalArgumentException, IllegalAccessException {
+	// every time this is called, the error was just wrapped in a RTE, so that i
+	// took the liberty of doing the try/catch inside
+	public Object getFieldValue(Object classInst) throws IllegalArgumentException {
+		try {
 		field.setAccessible(true);
 		return field.get(classInst);
+		} catch (IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
-	public void setFieldValue(Object classInst, Object value) throws IllegalArgumentException, IllegalAccessException {
-		field.setAccessible(true);
-		field.set(classInst, value);
+	public void setFieldValue(Object classInst, Object value) throws IllegalArgumentException {
+		try {
+			field.setAccessible(true);
+			field.set(classInst, value);
+		} catch (IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	public Field getField() {

@@ -435,4 +435,17 @@ public class MappedClass {
 	public Mapper getMapper(){
 		return mapr;
 	}
+	
+	public boolean isVersioned() {
+		return getFieldsAnnotatedWith(Version.class).size() > 0;
+	}
+	
+	public MappedField getMappedVersionField() {
+		return getFieldsAnnotatedWith(Version.class).get(0);
+	}
+	
+	public MappedField getMappedIdField() {
+		return getFieldsAnnotatedWith(Id.class).get(0);
+	}
+
 }
