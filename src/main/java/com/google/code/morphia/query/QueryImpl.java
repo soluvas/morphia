@@ -222,7 +222,7 @@ public class QueryImpl<T> implements Query<T> {
 		}
 		else if (mf!=null && mf.hasAnnotation(Serialized.class))
 			try {
-				mappedValue = Serializer.serialize(value, mf.getAnnotation(Serialized.class).zip());
+				mappedValue = Serializer.serialize(value, mf.getAnnotation(Serialized.class).compression());
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
