@@ -18,7 +18,7 @@ import com.google.code.morphia.utils.AbstractMongoEntity;
 public class TestSerializedMap extends JUnit3TestBase {
 	
 	public static class Map1 extends AbstractMongoEntity {
-		@Serialized(compression = true)
+		@Serialized(compress = true)
 		Map<Integer, Foo> shouldBeOk = new HashMap();
 		
 	}

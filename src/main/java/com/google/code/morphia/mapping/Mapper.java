@@ -512,7 +512,7 @@ public class Mapper {
 			Object fieldValue = mf.getFieldValue(entity);
 
 			if (mf.hasAnnotation(Serialized.class)) {
-				dbObject.put(name, Serializer.serialize(fieldValue, mf.getAnnotation(Serialized.class).compression()));
+				dbObject.put(name, Serializer.serialize(fieldValue, mf.getAnnotation(Serialized.class).compress()));
 			}
 
 			// sets and list are stored in mongodb as ArrayLists
@@ -648,7 +648,7 @@ public class Mapper {
 				}
 
 				try {
-					mf.setFieldValue(entity, Serializer.deserialize(data, mf.getAnnotation(Serialized.class).compression()));
+					mf.setFieldValue(entity, Serializer.deserialize(data, mf.getAnnotation(Serialized.class).compress()));
 				} catch (IOException ex) {
 					throw new RuntimeException(ex);
 				} catch (ClassNotFoundException ex) {
