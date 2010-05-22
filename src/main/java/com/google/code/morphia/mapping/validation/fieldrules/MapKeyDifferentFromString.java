@@ -17,25 +17,17 @@ import com.google.code.morphia.utils.ReflectionUtils;
  * 
  */
 public class MapKeyDifferentFromString extends FieldConstraint {
-	
 	@Override
 	protected void check(MappedClass mc, MappedField mf, Set<ConstraintViolation> ve) {
-		if (mf.isMap()) {
-			if (!mf.hasAnnotation(Serialized.class)) {
-				Class parameterizedClass = ReflectionUtils.getParameterizedClass(mf.getField(), 0);
-				if (parameterizedClass == null) {
-					ve.add(new ConstraintViolation(Level.WARNING, mc, mf,
-							"Maps must be keyed by type String (Map<String,?>). Use parametrized types if possible."));
-				} else
-				if (!parameterizedClass.equals(String.class))
-					ve.add(new ConstraintViolation(Level.FATAL, mc, mf,
-							"Maps must be keyed by type String (Map<String,?>)"));
-			} else {
-				// TODO maybe check for serializability ?
-			}
-			
+		if (mf.isMap() && (!mf.hasAnnotation(Serialized.class))) {
+			Class parameterizedClass = ReflectionUtils.getParameterizedClass(mf.getField(), 0);
+			if (parameterizedClass == null) {
+				ve.add(new ConstraintViolation(Level.WARNING, mc, mf,
+						"Maps must be keyed by type String (Map<String,?>). Use parametrized types if possible."));
+			} else if (!parameterizedClass.equals(String.class))
+				ve
+						.add(new ConstraintViolation(Level.FATAL, mc, mf,
+								"Maps must be keyed by type String (Map<String,?>)"));
 		}
-
 	}
-	
 }

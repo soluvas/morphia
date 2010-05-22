@@ -23,6 +23,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.google.code.morphia.mapping.Mapper;
+
 /**
  * Marker for fields that should be (java) serialized
  * 
@@ -36,4 +38,6 @@ import java.lang.annotation.Target;
 public @interface Serialized {
 
     boolean zip() default false;
+	
+	String value() default Mapper.IGNORED_FIELDNAME;
 }

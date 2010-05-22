@@ -159,56 +159,8 @@ public class MappedField {
 	}
 
 	public void validate() {
-		
-		// are these two rules actually wrong?
-		//
-		// if (mappingAnnotations.get(Property.class) != null &&
-		// mappingAnnotations.get(Embedded.class) != null)
-		// throw new
-		// MappingException("@Property and @Embedded cannot be on the same Field: "
-		// + getFullName());
-		//		
-		// if (mappingAnnotations.get(Property.class) != null &&
-		// mappingAnnotations.get(Reference.class) != null)
-		// throw new
-		// MappingException("@Property and @Reference cannot be on the same Field: "
-		// + getFullName());
-		
-		//
-		//
-		
-		// if (mappingAnnotations.get(Reference.class) != null &&
-		// mappingAnnotations.get(Embedded.class) != null)
-		// throw new
-		// MappingException("@Refernce and @Embedded cannot be on the same Field: "
-		// + getFullName());
-
-		//
-		// moved to ReferenceAndSerializable
-		//
-		// if (mappingAnnotations.get(Reference.class) != null &&
-		// mappingAnnotations.get(Serialized.class) != null)
-		// throw new
-		// MappingException("@Refernce and @Serialized cannot be on the same Field: "
-		// + getFullName());
-		//		
-		//
-		// moved to EmbeddedAndSerializable
-		//
-		// if (mappingAnnotations.get(Embedded.class) != null &&
-		// mappingAnnotations.get(Serialized.class) != null)
-		// throw new
-		// MappingException("@Embedded and @Serialized cannot be on the same Field: "
-		// + getFullName());
-		//		
-		//
-		// moved to MapKeyDifferentFromString AND CHANGED A BIT
-		//
-		// if (isMap &&
-		// !ReflectionUtils.getParameterizedClass(field,0).equals(String.class))
-		// throw new
-		// MappingException("maps must keyed by type String (Map<String,?>); " +
-		// getFullName());
+		// moved to ContradictingFieldAnnotation, EmbeddedAndSerializable,
+		// MapKeyDifferentFromString (this is CHANGED A BIT)
 	}
 
 	public String getFullName() {
@@ -229,6 +181,10 @@ public class MappedField {
 				return mr.value();
 		} else if (hasAnnotation(Embedded.class)) {
 			Embedded me = (Embedded) mappingAnnotations.get(Embedded.class);
+			if (!me.value().equals(Mapper.IGNORED_FIELDNAME))
+				return me.value();
+		} else if (hasAnnotation(Serialized.class)) {
+			Serialized me = (Serialized) mappingAnnotations.get(Serialized.class);
 			if (!me.value().equals(Mapper.IGNORED_FIELDNAME))
 				return me.value();
 		}
