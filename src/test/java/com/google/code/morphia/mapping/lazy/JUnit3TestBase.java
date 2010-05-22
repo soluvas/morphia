@@ -5,7 +5,7 @@ package com.google.code.morphia.mapping.lazy;
 
 import junit.framework.TestCase;
 
-import org.junit.Test;
+import org.junit.Ignore;
 
 import com.google.code.morphia.Datastore;
 import com.google.code.morphia.Morphia;
@@ -16,6 +16,7 @@ import com.mongodb.Mongo;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  *
  */
+@Ignore
 public class JUnit3TestBase extends TestCase {
 	protected Mongo mongo;
 	protected DB db;
@@ -43,8 +44,4 @@ public class JUnit3TestBase extends TestCase {
 		super.tearDown();
 	}
 
-	@Test
-	public void testNothing() {
-		// to make that damn JUnit4 happy
-	}
 }

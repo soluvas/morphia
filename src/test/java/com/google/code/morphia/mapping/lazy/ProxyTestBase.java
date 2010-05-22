@@ -8,12 +8,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import org.junit.Ignore;
+
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedReference;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  *
  */
+@Ignore
 public class ProxyTestBase extends JUnit3TestBase {
 
 	protected void assertFetched(final Object e) {
