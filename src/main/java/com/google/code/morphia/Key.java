@@ -1,13 +1,15 @@
 package com.google.code.morphia;
 
+import java.io.IOException;
+import java.io.NotSerializableException;
 import java.io.Serializable;
 
 import com.google.code.morphia.mapping.Mapper;
 import com.mongodb.DBRef;
 
 /**
- * <p>The key object; this class is take from the app-engine datastore (mostly).  
- * It is also Serializable and GWT-safe, enabling your entity objects to 
+ * <p>The key object; this class is take from the app-engine datastore (mostly).
+ * It is also Serializable and GWT-safe, enabling your entity objects to
  * be used for GWT RPC should you so desire.</p>
  * 
  * <p>You may use normal DBRef objects as relationships in your entities if you
@@ -20,7 +22,7 @@ public class Key<T> implements Serializable, Comparable<Key<?>>
 {
 	private static final long serialVersionUID = 1L;
 	
-	/** 
+	/**
 	 * The name of the class which represents the kind.  As much as
 	 * we'd like to use the normal String kind value here, translating
 	 * back to a Class for getKind() would then require a link to the
@@ -31,7 +33,7 @@ public class Key<T> implements Serializable, Comparable<Key<?>>
 	
 	/** Id value */
 	protected Object id;
-
+	
 	/** For GWT serialization */
 	protected Key() {}
 	
@@ -48,14 +50,14 @@ public class Key<T> implements Serializable, Comparable<Key<?>>
 		this.kind = kind;
 		this.id = id;
 	}
-
+	
 	/** Create a key with a DBRef*/
 	public Key(DBRef ref)
 	{
 		this.kind = ref.getRef();
 		this.id = ref.getId();
 	}
-
+	
 	public DBRef toRef() {
 		if (kind == null) throw new IllegalStateException("missing collect-name; please call toRef(Mapper)");
 		return new DBRef(null, kind, id);
@@ -89,14 +91,14 @@ public class Key<T> implements Serializable, Comparable<Key<?>>
 	}
 	
 	public String updateKind(Mapper mapr) {
-		if (kind == null && kindClass == null) 
+		if (kind == null && kindClass == null)
 			throw new IllegalStateException("Key is invalid! " + toString());
-		else if (kind == null) 
+		else if (kind == null)
 			kind = mapr.getMappedClass(kindClass).getCollectionName();
 		
 		return kind;
 	}
-
+	
 	/**
 	 * <p>Compares based on the following traits, in order:</p>
 	 * <ol>
@@ -119,7 +121,7 @@ public class Key<T> implements Serializable, Comparable<Key<?>>
 		cmp = compareNullable(this.kind, other.kind);
 		if (cmp != 0)
 			return cmp;
-
+		
 		try {
 			cmp = compareNullable((Comparable)this.id,(Comparable)other.id);
 			if (cmp != 0)
@@ -127,10 +129,10 @@ public class Key<T> implements Serializable, Comparable<Key<?>>
 		} catch (Exception e) {
 			//continue
 		}
-
+		
 		return 0;
 	}
-
+	
 	/** */
 	@Override
 	public boolean equals(Object obj)
@@ -143,26 +145,26 @@ public class Key<T> implements Serializable, Comparable<Key<?>>
 		
 		return this.compareTo((Key<?>)obj) == 0;
 	}
-
+	
 	/** */
 	@Override
 	public int hashCode()
 	{
 		return this.id.hashCode();
 	}
-
+	
 	/** Creates a human-readable version of this key */
 	@Override
 	public String toString()
 	{
 		StringBuilder bld = new StringBuilder("Key{");
-
+		
 		if ( kind != null) {
 			bld.append("kind=");
 			bld.append(this.kind);
 		} else {
 			bld.append("kindClass=");
-			bld.append(this.kindClass.getName());			
+			bld.append(this.kindClass.getName());
 		}
 		bld.append(", id=");
 		bld.append(this.id);
@@ -183,5 +185,13 @@ public class Key<T> implements Serializable, Comparable<Key<?>>
 			return 1;
 		else
 			return o1.compareTo(o2);
+	}
+	
+	private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+		if (!(id instanceof Serializable))
+			throw new NotSerializableException(id.getClass().getName());
+		// TODO persist id to a BasicDBObject (or Map<String, Object>) using
+		// mapper to make serializable.
+		out.defaultWriteObject();
 	}
 }

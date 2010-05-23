@@ -30,18 +30,18 @@ class ReferenceMapper {
 	}
 	
 	void mapReferencesToDBObject(final Object entity, final MappedField mf, final BasicDBObject dbObject) {
-
-			String name = mf.getName();
-			
-			Object fieldValue = mf.getFieldValue(entity);
-			
-			if (mf.isMap()) {
+		
+		String name = mf.getName();
+		
+		Object fieldValue = mf.getFieldValue(entity);
+		
+		if (mf.isMap()) {
 			writeMapOfReferencesToDBObject(mf, dbObject, name, fieldValue);
-			} else if (mf.isMultipleValues()) {
-				writeCollectionOfReferenceToDBObject(mf, dbObject, name, fieldValue);
-			} else {
+		} else if (mf.isMultipleValues()) {
+			writeCollectionOfReferenceToDBObject(mf, dbObject, name, fieldValue);
+		} else {
 			writeSingleReferenceToDBObject(dbObject, name, fieldValue);
-			}
+		}
 		
 	}
 	
@@ -51,7 +51,7 @@ class ReferenceMapper {
 					.asObjectIdMaybe(mapper.getId(fieldValue))));
 		}
 	}
-
+	
 	private void writeCollectionOfReferenceToDBObject(final MappedField mf, final BasicDBObject dbObject, String name,
 			Object fieldValue) {
 		if (fieldValue != null) {
@@ -85,7 +85,7 @@ class ReferenceMapper {
 			}
 		}
 	}
-
+	
 	private void writeMapOfReferencesToDBObject(final MappedField mf, final BasicDBObject dbObject, String name,
 			Object fieldValue) {
 		Map<Object, Object> map = (Map<Object, Object>) fieldValue;
@@ -99,7 +99,7 @@ class ReferenceMapper {
 					String strKey = entry.getKey();
 					values.put(strKey, new DBRef(null,
 							mapper.getCollectionName(proxy.__getReferenceObjClass()), SimpleValueConverter
-									.asObjectIdMaybe(entry.getValue())));
+							.asObjectIdMaybe(entry.getValue())));
 				}
 			} else {
 				for (Map.Entry<Object, Object> entry : map.entrySet()) {
@@ -120,12 +120,12 @@ class ReferenceMapper {
 		
 		Class fieldType = mf.getType();
 		
-
-			
-			Reference refAnn = mf.getAnnotation(Reference.class);
-			if (mf.isMap()) {
+		
+		
+		Reference refAnn = mf.getAnnotation(Reference.class);
+		if (mf.isMap()) {
 			readMapOfReferencesFromDBObject(dbObject, mf, entity, name, refAnn);
-			} else if (mf.isMultipleValues()) {
+		} else if (mf.isMultipleValues()) {
 			readCollectionOfReferencesFromDBObject(dbObject, mf, entity, name, refAnn);
 		} else {
 			readSingleReferenceFromDBObject(dbObject, mf, entity, name, fieldType, refAnn);
@@ -267,7 +267,7 @@ class ReferenceMapper {
 			referencesAsProxy.__add(new Key(dbRef));
 		}
 	}
-
+	
 	void readMapOfReferencesFromDBObject(final BasicDBObject dbObject, final MappedField mf, final Object entity,
 			final String name, final Reference refAnn) {
 		Class referenceObjClass = mf.getSubType();

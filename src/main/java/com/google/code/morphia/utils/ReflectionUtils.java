@@ -39,6 +39,8 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
+import org.bson.types.ObjectId;
+
 import com.google.code.morphia.Key;
 import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Entity;
@@ -46,7 +48,6 @@ import com.google.code.morphia.mapping.Mapper;
 import com.google.code.morphia.mapping.MappingException;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBRef;
-import com.mongodb.ObjectId;
 
 /**
  * Various reflection utility methods, used mainly in the Mapper.
@@ -186,11 +187,11 @@ public class ReflectionUtils {
 			return false;
 		
 		return type == String.class || type == char.class || type == Character.class || type == short.class
-				|| type == Short.class || type == Integer.class || type == int.class || type == Long.class
-				|| type == long.class || type == Double.class || type == double.class || type == float.class
-				|| type == Float.class || type == Boolean.class || type == boolean.class || type == Byte.class
-				|| type == byte.class || type == Date.class || type == Locale.class || type == DBRef.class
-				|| type == ObjectId.class || type.isEnum() || type == Key.class;
+		|| type == Short.class || type == Integer.class || type == int.class || type == Long.class
+		|| type == long.class || type == Double.class || type == double.class || type == float.class
+		|| type == Float.class || type == Boolean.class || type == boolean.class || type == Byte.class
+		|| type == byte.class || type == Date.class || type == Locale.class || type == DBRef.class
+		|| type == ObjectId.class || type.isEnum() || type == Key.class;
 	}
 	
 	/**
@@ -242,7 +243,7 @@ public class ReflectionUtils {
 						return (Class) paramType;
 					else
 						throw new MappingException(
-								"Unknown type... pretty bad... call for help, wave your hands... yeah!");
+						"Unknown type... pretty bad... call for help, wave your hands... yeah!");
 				}
 			}
 		}
@@ -363,11 +364,11 @@ public class ReflectionUtils {
 	}
 	
 	public static Embedded getClassEmbeddedAnnotation(Class c) {
-		return (Embedded) getAnnotation(c, Embedded.class);
+		return getAnnotation(c, Embedded.class);
 	}
 	
 	public static Entity getClassEntityAnnotation(Class c) {
-		return (Entity) getAnnotation(c, Entity.class);
+		return getAnnotation(c, Entity.class);
 	}
 	
 	private static String stripFilenameExtension(String filename) {
@@ -393,7 +394,7 @@ public class ReflectionUtils {
 	}
 	
 	public static Set<Class<?>> getFromJARFile(String jar, String packageName) throws IOException,
-			FileNotFoundException, ClassNotFoundException {
+	FileNotFoundException, ClassNotFoundException {
 		Set<Class<?>> classes = new HashSet<Class<?>>();
 		JarInputStream jarFile = new JarInputStream(new FileInputStream(jar));
 		JarEntry jarEntry;
@@ -418,7 +419,7 @@ public class ReflectionUtils {
 	}
 	
 	public static Set<Class<?>> getClasses(ClassLoader loader, String packageName) throws IOException,
-			ClassNotFoundException {
+	ClassNotFoundException {
 		Set<Class<?>> classes = new HashSet<Class<?>>();
 		String path = packageName.replace('.', '/');
 		Enumeration<URL> resources = loader.getResources(path);
@@ -457,7 +458,7 @@ public class ReflectionUtils {
 			throw new RuntimeException(e);
 		}
 	}
-
+	
 	/**
 	 * creates an instance of testType (if it isn't Object.class or null) or
 	 * fallbackType
@@ -474,7 +475,7 @@ public class ReflectionUtils {
 		}
 		return createInstance(fallbackType);
 	}
-
+	
 	public static Class getClassForName(final String className, final Class defaultClass) {
 		// TODO scott please explain: why is the classname X$Y changed to X.Y?
 		// if (mappedClasses.containsKey(className)) {
@@ -487,7 +488,7 @@ public class ReflectionUtils {
 			return defaultClass;
 		}
 	}
-
+	
 	public static Object createInstance(final Class entityClass, final BasicDBObject dbObject) {
 		// see if there is a className value
 		String className = (String) dbObject.get(Mapper.CLASS_NAME_FIELDNAME);
