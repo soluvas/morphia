@@ -19,7 +19,7 @@ import com.google.code.morphia.mapping.Mapper;
 import com.google.code.morphia.mapping.MappingException;
 import com.google.code.morphia.mapping.lazy.DatastoreHolder;
 import com.google.code.morphia.mapping.lazy.proxy.ProxyHelper;
-import com.google.code.morphia.mapping.mapper.conv.SimpleValueConverter;
+import com.google.code.morphia.mapping.mapper.converter.SimpleValueConverter;
 import com.google.code.morphia.query.Query;
 import com.google.code.morphia.query.QueryImpl;
 import com.google.code.morphia.query.UpdateOperations;
