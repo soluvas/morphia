@@ -21,7 +21,7 @@ import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.Mapper;
 import com.google.code.morphia.mapping.MappingException;
 import com.google.code.morphia.mapping.Serializer;
-import com.google.code.morphia.mapping.mapper.conv.SimpleValueConverter;
+import com.google.code.morphia.mapping.mapper.converter.SimpleValueConverter;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBCollection;
