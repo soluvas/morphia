@@ -13,9 +13,7 @@ package com.google.code.morphia.mapping;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +24,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.code.morphia.EntityInterceptor;
-import com.google.code.morphia.Key;
 import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.PostLoad;
@@ -39,18 +36,13 @@ import com.google.code.morphia.annotations.Serialized;
 import com.google.code.morphia.mapping.lazy.CGLibLazyProxyFactory;
 import com.google.code.morphia.mapping.lazy.DatastoreProvider;
 import com.google.code.morphia.mapping.lazy.DefaultDatastoreProvider;
-import com.google.code.morphia.mapping.lazy.LazyFeatureDependencies;
 import com.google.code.morphia.mapping.lazy.LazyProxyFactory;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReference;
-import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceList;
-import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceMap;
 import com.google.code.morphia.mapping.lazy.proxy.ProxyHelper;
-import com.google.code.morphia.mapping.mapper.conv.EncoderChain;
 import com.google.code.morphia.mapping.mapper.conv.SimpleValueConverter;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import com.mongodb.DBRef;
 
 /**
  * @author Olafur Gauti Gudmundsson
@@ -58,8 +50,7 @@ import com.mongodb.DBRef;
  */
 @SuppressWarnings("unchecked")
 public class Mapper {
-	public static final Logger logger = Logger.getLogger(Mapper.class
-			.getName());
+	public static final Logger logger = Logger.getLogger(Mapper.class.getName());
 
 	public static final String ID_KEY = "_id";
 	public static final String IGNORED_FIELDNAME = ".";
@@ -68,8 +59,12 @@ public class Mapper {
 	/** Set of classes that have been validated for mapping by this mapper */
 	private final ConcurrentHashMap<String, MappedClass> mappedClasses = new ConcurrentHashMap<String, MappedClass>();
 	private final ThreadLocal<Map<String, Object>> entityCache = new ThreadLocal<Map<String, Object>>();
-	private final ThreadLocal<Map<String, Object>> proxyCache = new ThreadLocal<Map<String, Object>>();
+	final ThreadLocal<Map<String, Object>> proxyCache = new ThreadLocal<Map<String, Object>>();
 	private final ConcurrentLinkedQueue<EntityInterceptor> interceptors = new ConcurrentLinkedQueue<EntityInterceptor>();
+
+	private final ReferenceMapper referenceMapper = new ReferenceMapper(this);
+	private final EmbeddedMapper embeddedMapper = new EmbeddedMapper(this);
+	private final ValueMapper valueMapper = new ValueMapper(this);
 
 	public Mapper() {
 	}
@@ -83,18 +78,18 @@ public class Mapper {
 	}
 
 	public boolean isMapped(final Class c) {
-		return mappedClasses.containsKey(c.getCanonicalName());
+		return mappedClasses.containsKey(c.getName());
 	}
 
 	public void addMappedClass(final Class c) {
 		MappedClass mc = new MappedClass(c, this);
 		mc.validate();
-		mappedClasses.put(c.getCanonicalName(), mc);
+		mappedClasses.put(c.getName(), mc);
 	}
 
 	public MappedClass addMappedClass(final MappedClass mc) {
 		mc.validate();
-		mappedClasses.put(mc.getClazz().getCanonicalName(), mc);
+		mappedClasses.put(mc.getClazz().getName(), mc);
 		return mc;
 	}
 
@@ -116,17 +111,13 @@ public class Mapper {
 		if (ProxyHelper.isProxy(obj))
 			type = ProxyHelper.getReferentClass(obj);
 		
-		MappedClass mc = mappedClasses.get(type.getCanonicalName());
+		MappedClass mc = mappedClasses.get(type.getName());
 		if (mc == null) {
 			// no validation
 			mc = new MappedClass(type, this);
-			mappedClasses.put(mc.getClazz().getCanonicalName(), mc);
+			mappedClasses.put(mc.getClazz().getName(), mc);
 		}
 		return mc;
-	}
-
-	public void clearHistory() {
-		entityCache.remove();
 	}
 
 	public String getCollectionName(Object object) {
@@ -135,7 +126,7 @@ public class Mapper {
 		return mc.getCollectionName();
 	}
 
-	private String getId(final Object entity) {
+	String getId(final Object entity) {
 		try {
 			if (entity instanceof ProxiedEntityReference) {
 				ProxiedEntityReference proxy = (ProxiedEntityReference) entity;
@@ -157,22 +148,19 @@ public class Mapper {
 	 * @param dbNs
 	 *            Value to update with; null or empty means skip
 	 */
-	public void updateKeyInfo(final Object entity, final Object dbId,
-			final String dbNs) {
+	public void updateKeyInfo(final Object entity, final Object dbId, final String dbNs) {
 		MappedClass mc = getMappedClass(entity);
 		// update id field, if there.
 		if ((mc.getIdField() != null) && (dbId != null)) {
 			try {
-				Object dbIdValue = SimpleValueConverter.objectFromValue(mc.getIdField().getType(),
-						dbId);
+				Object dbIdValue = SimpleValueConverter.objectFromValue(mc.getIdField().getType(), dbId);
 				Object idValue = mc.getIdField().get(entity);
 				if (idValue != null) {
 					// The entity already had an id set. Check to make sure it
 					// hasn't changed. That would be unexpected, and could
 					// indicate a bad state.
 					if (!dbIdValue.equals(idValue)) {
-						throw new RuntimeException("id mismatch: " + idValue
-								+ " != " + dbIdValue + " for "
+						throw new RuntimeException("id mismatch: " + idValue + " != " + dbIdValue + " for "
 								+ entity.getClass().getName());
 					}
 				} else {
@@ -188,39 +176,11 @@ public class Mapper {
 		}
 	}
 
-	Class getClassForName(final String className, final Class defaultClass) {
-		if (mappedClasses.containsKey(className)) {
-			return mappedClasses.get(className).getClazz();
-		}
-		try {
-			Class c = Class.forName(className, true, Thread.currentThread()
-					.getContextClassLoader());
-			return c;
-		} catch (ClassNotFoundException ex) {
-			return defaultClass;
-		}
-	}
-
-	protected Object createInstance(final Class entityClass,
-			final BasicDBObject dbObject) {
-		// see if there is a className value
-		String className = (String) dbObject.get(CLASS_NAME_FIELDNAME);
-		Class c = entityClass;
-		if (className != null) {
-			// try to Class.forName(className) as defined in the dbObject first,
-			// otherwise return the entityClass
-			c = getClassForName(className, entityClass);
-		}
-		return ReflectionUtils.createInstance(c);
-	}
-
 	/** coverts a DBObject back to a type-safe java object */
-	public Object fromDBObject(final Class entityClass,
-			final BasicDBObject dbObject) {
+	public Object fromDBObject(final Class entityClass, final BasicDBObject dbObject) {
 		if (dbObject == null) {
 			Throwable t = new Throwable();
-			logger.log(Level.SEVERE,
-					"Somebody passed in a null dbObject; bad client!", t);
+			logger.log(Level.SEVERE, "Somebody passed in a null dbObject; bad client!", t);
 			return null;
 		}
 
@@ -228,7 +188,7 @@ public class Mapper {
 		proxyCache.set(new HashMap<String, Object>());
 		Object entity = null;
 		try {
-			entity = createInstance(entityClass, dbObject);
+			entity = ReflectionUtils.createInstance(entityClass, dbObject);
 			mapDBObjectToEntity(dbObject, entity);
 		} finally {
 			entityCache.remove();
@@ -253,20 +213,18 @@ public class Mapper {
 		Class subType = null;
 
 		if (type.isArray()
-				|| ReflectionUtils.implementsAnyInterface(type, Iterable.class,
-						Collection.class, List.class, Set.class, Map.class)) {
+				|| ReflectionUtils.implementsAnyInterface(type, Iterable.class, Collection.class, List.class,
+						Set.class, Map.class)) {
 			bSingleValue = false;
 			// subtype of Long[], List<Long> is Long
-			subType = (type.isArray()) ? type.getComponentType()
-					: ReflectionUtils.getParameterizedClass(type);
+			subType = (type.isArray()) ? type.getComponentType() : ReflectionUtils.getParameterizedClass(type);
 		}
 
 		if (bSameType && bSingleValue && !ReflectionUtils.isPropertyType(type)) {
 			DBObject dbObj = toDBObject(javaObj);
 			dbObj.removeField(CLASS_NAME_FIELDNAME);
 			return dbObj;
-		} else if (bSameType && !bSingleValue
-				&& !ReflectionUtils.isPropertyType(subType)) {
+		} else if (bSameType && !bSingleValue && !ReflectionUtils.isPropertyType(subType)) {
 			ArrayList<Object> vals = new ArrayList<Object>();
 			if (type.isArray()) {
 				for (Object obj : (Object[]) newObj) {
@@ -290,48 +248,44 @@ public class Mapper {
 	/**
 	 * converts an entity to a DBObject
 	 */
-	public DBObject toDBObject(Object entity,
-			final LinkedHashMap<Object, DBObject> involvedObjects) {
+	public DBObject toDBObject(Object entity, final LinkedHashMap<Object, DBObject> involvedObjects) {
 		
 		entity = ProxyHelper.unwrap(entity);
 		BasicDBObject dbObject = new BasicDBObject();
 		MappedClass mc = getMappedClass(entity);
-
-		dbObject
-		.put(CLASS_NAME_FIELDNAME, entity.getClass().getCanonicalName());
+		
+		dbObject.put(CLASS_NAME_FIELDNAME, entity.getClass().getName());
 
 		// if ( mc.getPolymorphicAnnotation() != null ) {
 		// dbObject.put(CLASS_NAME_FIELDNAME,
 		// entity.getClass().getCanonicalName());
 		// }
-
-		dbObject = (BasicDBObject) mc.callLifecycleMethods(PrePersist.class,
-				entity, dbObject, this);
+		
+		dbObject = (BasicDBObject) mc.callLifecycleMethods(PrePersist.class, entity, dbObject, this);
 		for (MappedField mf : mc.getPersistenceFields()) {
 			try {
 				if (mf.hasAnnotation(Id.class)) {
 					Object dbVal = mf.getFieldValue(entity);
 					if (dbVal != null) {
-						dbObject.put(ID_KEY,
- SimpleValueConverter.objectToValue(SimpleValueConverter
+						dbObject.put(ID_KEY, SimpleValueConverter.objectToValue(SimpleValueConverter
 								.asObjectIdMaybe(dbVal)));
 					}
 				} else if (mf.hasAnnotation(Reference.class)) {
-					mapReferencesToDBObject(entity, mf, dbObject);
-				} else if (mf.hasAnnotation(Embedded.class)
-						&& !mf.isTypeMongoCompatible()) {
-					mapEmbeddedToDBObject(entity, mf, dbObject, involvedObjects);
-				} else if (mf.hasAnnotation(Property.class)
-						|| mf.hasAnnotation(Serialized.class)
+					referenceMapper.mapReferencesToDBObject(entity, mf, dbObject);
+
+				} else if (mf.hasAnnotation(Embedded.class) && !mf.isTypeMongoCompatible()) {
+					embeddedMapper.mapEmbeddedToDBObject(entity, mf, dbObject, involvedObjects);
+
+				} else if (mf.hasAnnotation(Property.class) || mf.hasAnnotation(Serialized.class)
 						|| mf.isTypeMongoCompatible()) {
-					mapValuesToDBObject(entity, mf, dbObject);
+					valueMapper.mapValuesToDBObject(entity, mf, dbObject);
+
 				} else {
-					logger.warning("Ignoring field: " + mf.getFullName()
-							+ " [type:" + mf.getType().getSimpleName() + "]");
+					logger.warning("Ignoring field: " + mf.getFullName() + " [type:" + mf.getType().getSimpleName()
+							+ "]");
 				}
 			} catch (Exception e) {
-				throw new MappingException("Error mapping field:"
-						+ mf.getFullName(), e);
+				throw new MappingException("Error mapping field:" + mf.getFullName(), e);
 			}
 		}
 		if (involvedObjects != null) {
@@ -340,170 +294,12 @@ public class Mapper {
 		mc.callLifecycleMethods(PreSave.class, entity, dbObject, this);
 		return dbObject;
 	}
+	
 
-	void mapReferencesToDBObject(final Object entity, final MappedField mf,
-			final BasicDBObject dbObject) {
-		try {
-			String name = mf.getName();
-
-			Object fieldValue = mf.getFieldValue(entity);
-
-			if (mf.isMap()) {
-				Map<Object, Object> map = (Map<Object, Object>) fieldValue;
-				if ((map != null)) {
-					Map values = (Map) ReflectionUtils.tryConstructor(HashMap.class, mf
-							.getCTor());
-
-					if (ProxyHelper.isProxy(map) && ProxyHelper.isUnFetched(map)) {
-						ProxiedEntityReferenceMap proxy = (ProxiedEntityReferenceMap) map;
-						Map<String, String> refMap = proxy.__getReferenceMap();
-						for (Map.Entry<String, String> entry : refMap.entrySet()) {
-							String strKey = entry.getKey();
-							values.put(strKey, new DBRef(null, getCollectionName(proxy.__getReferenceObjClass()),
-									SimpleValueConverter.asObjectIdMaybe(entry.getValue())));
-						}
-					} else {
-						for (Map.Entry<Object, Object> entry : map.entrySet()) {
-							// TODO is objectToValue necessary here?
-							String strKey = SimpleValueConverter.objectToValue(entry.getKey()).toString();
-							values.put(strKey, new DBRef(null, getCollectionName(entry.getValue()),
-									SimpleValueConverter.asObjectIdMaybe(getId(entry.getValue()))));
-						}
-					}
-					if (values.size() > 0) {
-						dbObject.put(name, values);
-					}
-				}
-			} else if (mf.isMultipleValues()) {
-				if (fieldValue != null) {
-					List values = new ArrayList();
-
-					if (ProxyHelper.isProxy(fieldValue) && ProxyHelper.isUnFetched(fieldValue)) {
-						ProxiedEntityReferenceList p = (ProxiedEntityReferenceList) fieldValue;
-						List<Key<?>> getKeysAsList = p.__getKeysAsList();
-						Class c = p.__getReferenceObjClass();
-						String collectionName = getCollectionName(c);
-						for (Key<?> key : getKeysAsList) {
-							values.add(new DBRef(null, collectionName,
- SimpleValueConverter
-									.asObjectIdMaybe(key.getId())));
-						}
-					} else {
-
-						if (mf.getType().isArray()) {
-							for (Object o : (Object[]) fieldValue) {
-								values.add(new DBRef(null,
-										getCollectionName(o),
- SimpleValueConverter
-										.asObjectIdMaybe(getId(o))));
-							}
-						} else {
-							for (Object o : (Iterable) fieldValue) {
-								values.add(new DBRef(null,
-										getCollectionName(o),
- SimpleValueConverter
-										.asObjectIdMaybe(getId(o))));
-							}
-						}
-					}
-					if (values.size() > 0) {
-						dbObject.put(name, values);
-					}
-				}
-			} else {
-				if (fieldValue != null) {
-					dbObject.put(name, new DBRef(null,
-							getCollectionName(fieldValue),
- SimpleValueConverter
-							.asObjectIdMaybe(getId(fieldValue))));
-				}
-			}
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	void mapEmbeddedToDBObject(final Object entity, final MappedField mf,
-			final BasicDBObject dbObject,
-			final LinkedHashMap<Object, DBObject> involvedObjects) {
-		String name = mf.getName();
-
-		Object fieldValue = null;
-		try {
-			fieldValue = mf.getFieldValue(entity);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-
-		if (mf.isMap()) {
-			Map<String, Object> map = (Map<String, Object>) fieldValue;
-			if (map != null) {
-				BasicDBObject values = new BasicDBObject();
-				for (Map.Entry<String, Object> entry : map.entrySet()) {
-					Object entryVal = entry.getValue();
-					DBObject convertedVal = toDBObject(entryVal,
-							involvedObjects);
-
-					if (mf.getSubType().equals(entryVal.getClass())) {
-						convertedVal.removeField(Mapper.CLASS_NAME_FIELDNAME);
-					}
-
-					String strKey = SimpleValueConverter.objectToValue(entry.getKey()).toString();
-					values.put(strKey, convertedVal);
-				}
-				if (values.size() > 0) {
-					dbObject.put(name, values);
-				}
-			}
-
-		} else if (mf.isMultipleValues()) {
-			Iterable coll = (Iterable) fieldValue;
-			if (coll != null) {
-				List values = new ArrayList();
-				for (Object o : coll) {
-					DBObject dbObj = toDBObject(o, involvedObjects);
-					if (mf.getSubType().equals(o.getClass())) {
-						dbObj.removeField(Mapper.CLASS_NAME_FIELDNAME);
-					}
-					values.add(dbObj);
-				}
-				if (values.size() > 0) {
-					dbObject.put(name, values);
-				}
-			}
-		} else {
-			DBObject dbObj = fieldValue == null ? null : toDBObject(fieldValue,
-					involvedObjects);
-			if (dbObj != null) {
-
-				if (mf.getType().equals(fieldValue.getClass())) {
-					dbObj.removeField(Mapper.CLASS_NAME_FIELDNAME);
-				}
-
-				if (dbObj.keySet().size() > 0) {
-					dbObject.put(name, dbObj);
-				}
-			}
-		}
-	}
-
-	void mapValuesToDBObject(final Object entity, final MappedField mf,
-			final BasicDBObject dbObject) {
-		try {
-			
-			// TODO wont stay that way, just to keep it compatible for now.
-			new EncoderChain(this).toDBObject(entity, mf, dbObject);
-
-			
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
 
 	Object mapDBObjectToEntity(BasicDBObject dbObject, final Object entity) {
 		// check the history key (a key is the namespace + id)
-		String cacheKey = (!dbObject.containsField(ID_KEY)) ? null : "["
-			+ dbObject.getString(ID_KEY) + "]";
+		String cacheKey = (!dbObject.containsField(ID_KEY)) ? null : "[" + dbObject.getString(ID_KEY) + "]";
 		if (entityCache.get() == null) {
 			entityCache.set(new HashMap<String, Object>());
 		}
@@ -516,31 +312,27 @@ public class Mapper {
 		}
 
 		MappedClass mc = getMappedClass(entity);
-
-		dbObject = (BasicDBObject) mc.callLifecycleMethods(PreLoad.class,
-				entity, dbObject, this);
+		
+		dbObject = (BasicDBObject) mc.callLifecycleMethods(PreLoad.class, entity, dbObject, this);
 		try {
 			for (MappedField mf : mc.getPersistenceFields()) {
 				if (mf.hasAnnotation(Id.class)) {
 					if (dbObject.get(ID_KEY) != null) {
-						mf.setFieldValue(entity, SimpleValueConverter.objectFromValue(mf.getType(),
-								dbObject, ID_KEY));
+						mf.setFieldValue(entity, SimpleValueConverter.objectFromValue(mf.getType(), dbObject, ID_KEY));
 					}
 
 				} else if (mf.hasAnnotation(Reference.class)) {
-					mapReferencesFromDBObject(dbObject, mf, entity);
-
-				} else if (mf.hasAnnotation(Embedded.class)
-						&& !mf.isTypeMongoCompatible()) {
-					mapEmbeddedFromDBObject(dbObject, mf, entity);
-
-				} else if (mf.hasAnnotation(Property.class)
-						|| mf.hasAnnotation(Serialized.class)
+					referenceMapper.mapReferencesFromDBObject(dbObject, mf, entity);
+					
+				} else if (mf.hasAnnotation(Embedded.class) && !mf.isTypeMongoCompatible()) {
+					embeddedMapper.mapEmbeddedFromDBObject(dbObject, mf, entity);
+					
+				} else if (mf.hasAnnotation(Property.class) || mf.hasAnnotation(Serialized.class)
 						|| mf.isTypeMongoCompatible()) {
-					mapValuesFromDBObject(dbObject, mf, entity);
+					valueMapper.mapValuesFromDBObject(dbObject, mf, entity);
+					
 				} else {
-					logger.warning("Ignoring field: " + mf.getFullName()
-							+ " [type:" + mf.getType().getName() + "]");
+					logger.warning("Ignoring field: " + mf.getFullName() + " [type:" + mf.getType().getName() + "]");
 				}
 			}
 		} catch (Exception e) {
@@ -550,311 +342,10 @@ public class Mapper {
 		mc.callLifecycleMethods(PostLoad.class, entity, dbObject, this);
 		return entity;
 	}
-
-	void mapValuesFromDBObject(final BasicDBObject dbObject,
-			final MappedField mf, final Object entity) {
-		try {
-				// TODO wont stay that way, just to keep it compatible for now.
-				new EncoderChain(this).fromDBObject(dbObject, mf, entity);
-
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	void mapEmbeddedFromDBObject(final BasicDBObject dbObject,
-			final MappedField mf, final Object entity) {
-		String name = mf.getName();
-
-		Class fieldType = mf.getType();
-		try {
-
-			if (mf.isMap()) {
-				Map map = (Map) ReflectionUtils.tryConstructor(HashMap.class, mf.getCTor());
-
-				if (dbObject.containsField(name)) {
-					BasicDBObject dbVal = (BasicDBObject) dbObject.get(name);
-					for (Map.Entry entry : dbVal.entrySet()) {
-						Object newEntity = createInstance(mf.getSubType(),
-								(BasicDBObject) entry.getValue());
-
-						newEntity = mapDBObjectToEntity((BasicDBObject) entry
-								.getValue(), newEntity);
-						// TODO Add Lifecycle call for newEntity
-						Object objKey = SimpleValueConverter.objectFromValue(mf.getMapKeyType(),
-								entry.getKey());
-						map.put(objKey, newEntity);
-					}
-				}
-
-				if (map.size() > 0) {
-					mf.setFieldValue(entity, map);
-				}
-			} else if (mf.isMultipleValues()) {
-				// multiple documents in a List
-				Class newEntityType = mf.getSubType();
-				Collection values = (Collection) ReflectionUtils.tryConstructor(
-						(!mf.isSet()) ? ArrayList.class : HashSet.class, mf
-								.getCTor());
-
-				if (dbObject.containsField(name)) {
-					Object dbVal = dbObject.get(name);
-
-					List<BasicDBObject> dbVals = (dbVal instanceof List) ? (List<BasicDBObject>) dbVal
-							: Collections.singletonList((BasicDBObject) dbVal);
-
-					for (BasicDBObject dbObj : dbVals) {
-						Object newEntity = createInstance(newEntityType, dbObj);
-						newEntity = mapDBObjectToEntity(dbObj, newEntity);
-						values.add(newEntity);
-					}
-				}
-				if (values.size() > 0) {
-					if (mf.getType().isArray()) {
-						Object[] array = SimpleValueConverter.convertToArray(mf.getSubType(), values);
-						mf.setFieldValue(entity, array);
-					} else {
-						mf.setFieldValue(entity, values);
-					}
-				}
-			} else {
-				// single document
-				if (dbObject.containsField(name)) {
-					BasicDBObject dbVal = (BasicDBObject) dbObject.get(name);
-					Object refObj = createInstance(fieldType, dbVal);
-					refObj = mapDBObjectToEntity(dbVal, refObj);
-					if (refObj != null) {
-						mf.setFieldValue(entity, refObj);
-					}
-				}
-			}
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	void mapReferencesFromDBObject(final BasicDBObject dbObject,
-			final MappedField mf, final Object entity) {
-		String name = mf.getName();
-
-		Class fieldType = mf.getType();
-
-		try {
-
-			Reference refAnn = mf.getAnnotation(Reference.class);
-			if (mf.isMap()) {
-				createMapFromDBObject(dbObject, mf, entity, name, refAnn);
-			} else if (mf.isMultipleValues()) {
-				// multiple references in a List
-				Class referenceObjClass = mf.getSubType();
-				Collection references = (Collection) ReflectionUtils.tryConstructor((!mf
-						.isSet()) ? ArrayList.class : HashSet.class, mf
-								.getCTor());
-
-				if (refAnn.lazy() && LazyFeatureDependencies.assertDependencyFullFilled()) {
-					if (dbObject.containsField(name)) {
-						references = proxyFactory.createListProxy(references,
-								referenceObjClass, refAnn.ignoreMissing(),
-								datastoreProvider);
-						ProxiedEntityReferenceList referencesAsProxy = (ProxiedEntityReferenceList) references;
-
-						// TODO test for existence could be done in one go
-						// instead of one-by-one lookups.
-
-						Object dbVal = dbObject.get(name);
-						if (dbVal instanceof List) {
-							List refList = (List) dbVal;
-							for (Object dbRefObj : refList) {
-								DBRef dbRef = (DBRef) dbRefObj;
-								addToReferenceList(mf, refAnn,
-										referencesAsProxy, dbRef);
-							}
-						} else {
-							DBRef dbRef = (DBRef) dbObject.get(name);
-							addToReferenceList(mf, refAnn, referencesAsProxy,
-									dbRef);
-						}
-					}
-				} else {
-
-					if (dbObject.containsField(name)) {
-						Object dbVal = dbObject.get(name);
-						if (dbVal instanceof List) {
-							List refList = (List) dbVal;
-							for (Object dbRefObj : refList) {
-								DBRef dbRef = (DBRef) dbRefObj;
-								BasicDBObject refDbObject = (BasicDBObject) dbRef
-								.fetch();
-
-								if (refDbObject == null) {
-									if (!refAnn.ignoreMissing()) {
-										throw new MappingException(
-												"The reference("
-												+ dbRef.toString()
-												+ ") could not be fetched for "
-												+ mf.getFullName());
-									}
-								} else {
-									Object refObj = createInstance(
-											referenceObjClass, refDbObject);
-									refObj = mapDBObjectToEntity(refDbObject,
-											refObj);
-									references.add(refObj);
-								}
-							}
-						} else {
-							DBRef dbRef = (DBRef) dbObject.get(name);
-							BasicDBObject refDbObject = (BasicDBObject) dbRef
-							.fetch();
-							if (refDbObject == null) {
-								if (!refAnn.ignoreMissing()) {
-									throw new MappingException("The reference("
-											+ dbRef.toString()
-											+ ") could not be fetched for "
-											+ mf.getFullName());
-								}
-							} else {
-								Object newEntity = createInstance(
-										referenceObjClass, refDbObject);
-								newEntity = mapDBObjectToEntity(refDbObject,
-										newEntity);
-								// TODO Add Lifecycle call for newEntity
-								references.add(newEntity);
-							}
-						}
-					}
-				}
-
-				if (mf.getType().isArray()) {
-					Object[] array = SimpleValueConverter.convertToArray(mf.getSubType(), references);
-					mf.setFieldValue(entity, array);
-				} else {
-					mf.setFieldValue(entity, references);
-				}
-			} else {
-				// single reference
-				Class referenceObjClass = fieldType;
-				if (dbObject.containsField(name)) {
-					DBRef dbRef = (DBRef) dbObject.get(name);
-
-					Object resolvedObject = null;
-					if (refAnn.lazy() && LazyFeatureDependencies.assertDependencyFullFilled()) {
-						if (exists(dbRef)) {
-							resolvedObject = createOrReuseProxy(
-									referenceObjClass, dbRef);
-						} else {
-							if (!refAnn.ignoreMissing()) {
-								throw new MappingException("The reference("
-										+ dbRef.toString()
-										+ ") could not be fetched for "
-										+ mf.getFullName());
-							}
-						}
-					} else {
-						resolvedObject = resolveObject(dbRef,
-								referenceObjClass, refAnn.ignoreMissing(), mf);
-					}
-
-					mf.setFieldValue(entity, resolvedObject);
-
-				}
-			}
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	private Object resolveObject(final DBRef dbRef,
-			final Class referenceObjClass, final boolean ignoreMissing,
-			final MappedField mf) {
-		BasicDBObject refDbObject = (BasicDBObject) dbRef.fetch();
-
-		if (refDbObject != null) {
-			Object refObj = createInstance(referenceObjClass, refDbObject);
-			refObj = mapDBObjectToEntity(refDbObject, refObj);
-			return refObj;
-		}
-
-		if (!ignoreMissing) {
-			throw new MappingException("The reference(" + dbRef.toString()
-					+ ") could not be fetched for " + mf.getFullName());
-		} else {
-			return null;
-		}
-
-	}
-
-	private boolean exists(final DBRef dbRef) {
-		// TODO that might be cheaper to implement?
-		return dbRef.fetch() != null;
-	}
-
-	private Object createOrReuseProxy(final Class referenceObjClass,
-			final DBRef dbRef) {
-		Map<String, Object> cache = proxyCache.get();
-		String cacheKey = createCacheKey(dbRef);
-		Object proxyAlreadyCreated = cache.get(cacheKey);
-		if (proxyAlreadyCreated != null) {
-			return proxyAlreadyCreated;
-		}
-
-		Object newProxy = proxyFactory.createProxy(referenceObjClass, new Key(
-				dbRef), datastoreProvider);
-		cache.put(cacheKey, newProxy);
-		return newProxy;
-	}
-
-	private String createCacheKey(DBRef dbRef) {
-		return dbRef.getId().toString();
-	}
-
-	private void addToReferenceList(final MappedField mf,
-			final Reference refAnn,
-			final ProxiedEntityReferenceList referencesAsProxy,
-			final DBRef dbRef) {
-		if (!exists(dbRef)) {
-			if (!refAnn.ignoreMissing()) {
-				throw new MappingException("The reference(" + dbRef.toString()
-						+ ") could not be fetched for " + mf.getFullName());
-			}
-		} else {
-			referencesAsProxy.__add(new Key(dbRef));
-		}
-	}
-
-	private void createMapFromDBObject(final BasicDBObject dbObject,
-			final MappedField mf, final Object entity, final String name,
-			final Reference refAnn) throws IllegalAccessException {
-		Class referenceObjClass = mf.getSubType();
-		Map map = (Map) ReflectionUtils.tryConstructor(HashMap.class, mf.getCTor());
-
-		if (dbObject.containsField(name)) {
-			if (refAnn.lazy() && LazyFeatureDependencies.assertDependencyFullFilled()) {
-				// replace map by proxy to it.
-				map = proxyFactory.createMapProxy(map, referenceObjClass,
-						refAnn.ignoreMissing(), datastoreProvider);
-			}
-
-			BasicDBObject dbVal = (BasicDBObject) dbObject.get(name);
-			for (Map.Entry<String, ?> entry : dbVal.entrySet()) {
-				DBRef dbRef = (DBRef) entry.getValue();
-
-				if (refAnn.lazy() && LazyFeatureDependencies.assertDependencyFullFilled()) {
-					ProxiedEntityReferenceMap proxiedMap = (ProxiedEntityReferenceMap) map;
-					proxiedMap.__put(entry.getKey(), new Key(dbRef));
-				} else {
-					Object resolvedObject = resolveObject(dbRef,
-							referenceObjClass, refAnn.ignoreMissing(), mf);
-					map.put(entry.getKey(), resolvedObject);
-				}
-			}
-		}
-		mf.setFieldValue(entity, map);
-	}
-
+	
 	// could be made configurable
-	private final LazyProxyFactory proxyFactory = new CGLibLazyProxyFactory();
+	final LazyProxyFactory proxyFactory = new CGLibLazyProxyFactory();
 	// could be made configurable
-	private DatastoreProvider datastoreProvider = new DefaultDatastoreProvider();
+	DatastoreProvider datastoreProvider = new DefaultDatastoreProvider();
 
 }

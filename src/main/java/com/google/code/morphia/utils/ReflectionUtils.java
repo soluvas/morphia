@@ -42,7 +42,9 @@ import java.util.jar.JarInputStream;
 import com.google.code.morphia.Key;
 import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Entity;
+import com.google.code.morphia.mapping.Mapper;
 import com.google.code.morphia.mapping.MappingException;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBRef;
 import com.mongodb.ObjectId;
 
@@ -471,5 +473,30 @@ public class ReflectionUtils {
 			}
 		}
 		return createInstance(fallbackType);
+	}
+
+	public static Class getClassForName(final String className, final Class defaultClass) {
+		// TODO scott please explain: why is the classname X$Y changed to X.Y?
+		// if (mappedClasses.containsKey(className)) {
+		// return mappedClasses.get(className).getClazz();
+		// }
+		try {
+			Class c = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
+			return c;
+		} catch (ClassNotFoundException ex) {
+			return defaultClass;
+		}
+	}
+
+	public static Object createInstance(final Class entityClass, final BasicDBObject dbObject) {
+		// see if there is a className value
+		String className = (String) dbObject.get(Mapper.CLASS_NAME_FIELDNAME);
+		Class c = entityClass;
+		if (className != null) {
+			// try to Class.forName(className) as defined in the dbObject first,
+			// otherwise return the entityClass
+			c = getClassForName(className, entityClass);
+		}
+		return createInstance(c);
 	}
 }

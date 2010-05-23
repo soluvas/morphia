@@ -341,7 +341,8 @@ public class TestMapping  extends TestBase {
         DBCollection rectangles = db.getCollection("rectangles");
         
         assertTrue("'ne' field should not be persisted!",
-        		!morphia.getMappedClasses().get(ContainsRef.class.getCanonicalName()).containsFieldName("ne"));
+ !morphia.getMappedClasses().get(ContainsRef.class.getName())
+				.containsFieldName("ne"));
 
         Rectangle r = new Rectangle(1,1);
         DBObject rDbObject = morphia.toDBObject(r);
@@ -368,7 +369,8 @@ public class TestMapping  extends TestBase {
         morphia.map(IPrintAWarning.class);
         
         assertTrue("'ne' field should not be persisted!",
-        		!morphia.getMappedClasses().get(IPrintAWarning.class.getCanonicalName()).containsFieldName("ne"));
+ !morphia.getMappedClasses().get(
+				IPrintAWarning.class.getName()).containsFieldName("ne"));
         
         boolean allGood=false;
         try {

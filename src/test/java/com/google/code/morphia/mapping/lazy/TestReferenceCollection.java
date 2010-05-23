@@ -55,6 +55,9 @@ public class TestReferenceCollection extends ProxyTestBase
 
     public static class A extends AbstractMongoEntity
     {
+		{
+			System.out.println(this.getClass().getName());
+		}
         @Reference
         Collection<B> bs = new LinkedList();
 
