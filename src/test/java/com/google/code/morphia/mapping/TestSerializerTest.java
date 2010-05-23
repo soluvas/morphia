@@ -60,7 +60,7 @@ public class TestSerializerTest extends JUnit3TestBase {
 		String id;
 		@Serialized
 		byte[] payload1;
-		@Serialized(compress = true)
+		@Serialized()
 		byte[] payload2;
 
 	}

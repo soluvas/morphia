@@ -455,4 +455,21 @@ public class ReflectionUtils {
 			throw new RuntimeException(e);
 		}
 	}
+
+	/**
+	 * creates an instance of testType (if it isn't Object.class or null) or
+	 * fallbackType
+	 */
+	public static Object tryConstructor(final Class fallbackType,
+			final Constructor tryMe) {
+		if (tryMe != null) {
+			tryMe.setAccessible(true);
+			try {
+				return tryMe.newInstance();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+		return createInstance(fallbackType);
+	}
 }

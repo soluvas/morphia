@@ -37,7 +37,7 @@ import com.google.code.morphia.mapping.Mapper;
 @Target(ElementType.FIELD)
 public @interface Serialized {
 
-	boolean compress() default true;
+	boolean disableCompression() default false;
 	
 	String value() default Mapper.IGNORED_FIELDNAME;
 }

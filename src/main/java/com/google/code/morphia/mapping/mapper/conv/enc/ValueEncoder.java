@@ -6,6 +6,7 @@ package com.google.code.morphia.mapping.mapper.conv.enc;
 import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.MappingException;
 import com.google.code.morphia.mapping.mapper.conv.EncodingContext;
+import com.google.code.morphia.mapping.mapper.conv.SimpleValueConverter;
 
 /**
  * @author doc
@@ -22,12 +23,12 @@ public class ValueEncoder implements TypeEncoder {
 	@Override
 	public Object decode(EncodingContext ctx, MappedField f, Object fromDBObject) throws MappingException {
 		
-		return ctx.getMapper().objectFromValue(f.getType(), fromDBObject);
+		return SimpleValueConverter.objectFromValue(f.getType(), fromDBObject);
 	}
 	
 	@Override
 	public Object encode(EncodingContext ctx, MappedField f, Object value) throws MappingException {
-		return ctx.getMapper().objectToValue(value);
+		return SimpleValueConverter.objectToValue(value);
 	}
 	
 }

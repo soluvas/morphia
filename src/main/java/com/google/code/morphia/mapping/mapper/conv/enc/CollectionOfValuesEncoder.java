@@ -15,6 +15,8 @@ import com.google.code.morphia.Key;
 import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.MappingException;
 import com.google.code.morphia.mapping.mapper.conv.EncodingContext;
+import com.google.code.morphia.mapping.mapper.conv.SimpleValueConverter;
+import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.DBRef;
 
 /**
@@ -41,7 +43,7 @@ public class CollectionOfValuesEncoder implements TypeEncoder{
 			// FIXME move
 			if (subtype == Locale.class) {
 				for (Object o : list) {
-					values.add(ctx.getMapper().parseLocale((String) o));
+					values.add(SimpleValueConverter.parseLocale((String) o));
 				}
 			} else if (subtype == Key.class) {
 				for (Object o : list) {
@@ -58,7 +60,7 @@ public class CollectionOfValuesEncoder implements TypeEncoder{
 			}
 			
 			if (mf.getType().isArray()) {
-				return ctx.getMapper().convertToArray(subtype, values);
+				return SimpleValueConverter.convertToArray(subtype, values);
 			} else {
 				return values;
 			}
@@ -72,9 +74,9 @@ public class CollectionOfValuesEncoder implements TypeEncoder{
 		Collection values;
 		
 		if (!mf.isSet()) {
-			values = (List) ctx.getMapper().tryConstructor(ArrayList.class, mf.getCTor());
+			values = (List) ReflectionUtils.tryConstructor(ArrayList.class, mf.getCTor());
 		} else {
-			values = (Set) ctx.getMapper().tryConstructor(HashSet.class, mf.getCTor());
+			values = (Set) ReflectionUtils.tryConstructor(HashSet.class, mf.getCTor());
 		}
 		return values;
 	}
@@ -111,11 +113,11 @@ public class CollectionOfValuesEncoder implements TypeEncoder{
 			
 			if (f.getSubType() != null) {
 				for (Object o : iterableValues) {
-					values.add(ctx.getMapper().objectToValue(f.getSubType(), o));
+					values.add(SimpleValueConverter.objectToValue(f.getSubType(), o));
 				}
 			} else {
 				for (Object o : iterableValues) {
-					values.add(ctx.getMapper().objectToValue(o));
+					values.add(SimpleValueConverter.objectToValue(o));
 				}
 			}
 			if (values.size() > 0) {

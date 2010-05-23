@@ -11,8 +11,6 @@
 
 package com.google.code.morphia.mapping;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -20,10 +18,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
@@ -50,11 +46,11 @@ import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceList;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceMap;
 import com.google.code.morphia.mapping.lazy.proxy.ProxyHelper;
 import com.google.code.morphia.mapping.mapper.conv.EncoderChain;
+import com.google.code.morphia.mapping.mapper.conv.SimpleValueConverter;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
-import com.mongodb.ObjectId;
 
 /**
  * @author Olafur Gauti Gudmundsson
@@ -62,7 +58,7 @@ import com.mongodb.ObjectId;
  */
 @SuppressWarnings("unchecked")
 public class Mapper {
-	private static final Logger logger = Logger.getLogger(Mapper.class
+	public static final Logger logger = Logger.getLogger(Mapper.class
 			.getName());
 
 	public static final String ID_KEY = "_id";
@@ -167,7 +163,7 @@ public class Mapper {
 		// update id field, if there.
 		if ((mc.getIdField() != null) && (dbId != null)) {
 			try {
-				Object dbIdValue = objectFromValue(mc.getIdField().getType(),
+				Object dbIdValue = SimpleValueConverter.objectFromValue(mc.getIdField().getType(),
 						dbId);
 				Object idValue = mc.getIdField().get(entity);
 				if (idValue != null) {
@@ -218,23 +214,6 @@ public class Mapper {
 		return ReflectionUtils.createInstance(c);
 	}
 
-	/**
-	 * creates an instance of testType (if it isn't Object.class or null) or
-	 * fallbackType
-	 */
-	public Object tryConstructor(final Class fallbackType,
-			final Constructor tryMe) {
-		if (tryMe != null) {
-			tryMe.setAccessible(true);
-			try {
-				return tryMe.newInstance();
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-		return ReflectionUtils.createInstance(fallbackType);
-	}
-
 	/** coverts a DBObject back to a type-safe java object */
 	public Object fromDBObject(final Class entityClass,
 			final BasicDBObject dbObject) {
@@ -267,7 +246,7 @@ public class Mapper {
 			return null;
 		}
 		Class origClass = javaObj.getClass();
-		Object newObj = objectToValue(origClass, javaObj);
+		Object newObj = SimpleValueConverter.objectToValue(origClass, javaObj);
 		Class type = newObj.getClass();
 		boolean bSameType = origClass.equals(type);
 		boolean bSingleValue = true;
@@ -334,7 +313,8 @@ public class Mapper {
 					Object dbVal = mf.getFieldValue(entity);
 					if (dbVal != null) {
 						dbObject.put(ID_KEY,
-								objectToValue(asObjectIdMaybe(dbVal)));
+ SimpleValueConverter.objectToValue(SimpleValueConverter
+								.asObjectIdMaybe(dbVal)));
 					}
 				} else if (mf.hasAnnotation(Reference.class)) {
 					mapReferencesToDBObject(entity, mf, dbObject);
@@ -371,7 +351,7 @@ public class Mapper {
 			if (mf.isMap()) {
 				Map<Object, Object> map = (Map<Object, Object>) fieldValue;
 				if ((map != null)) {
-					Map values = (Map) tryConstructor(HashMap.class, mf
+					Map values = (Map) ReflectionUtils.tryConstructor(HashMap.class, mf
 							.getCTor());
 
 					if (ProxyHelper.isProxy(map) && ProxyHelper.isUnFetched(map)) {
@@ -380,14 +360,14 @@ public class Mapper {
 						for (Map.Entry<String, String> entry : refMap.entrySet()) {
 							String strKey = entry.getKey();
 							values.put(strKey, new DBRef(null, getCollectionName(proxy.__getReferenceObjClass()),
-									asObjectIdMaybe(entry.getValue())));
+									SimpleValueConverter.asObjectIdMaybe(entry.getValue())));
 						}
 					} else {
 						for (Map.Entry<Object, Object> entry : map.entrySet()) {
 							// TODO is objectToValue necessary here?
-							String strKey = objectToValue(entry.getKey()).toString();
+							String strKey = SimpleValueConverter.objectToValue(entry.getKey()).toString();
 							values.put(strKey, new DBRef(null, getCollectionName(entry.getValue()),
-									asObjectIdMaybe(getId(entry.getValue()))));
+									SimpleValueConverter.asObjectIdMaybe(getId(entry.getValue()))));
 						}
 					}
 					if (values.size() > 0) {
@@ -405,7 +385,8 @@ public class Mapper {
 						String collectionName = getCollectionName(c);
 						for (Key<?> key : getKeysAsList) {
 							values.add(new DBRef(null, collectionName,
-									asObjectIdMaybe(key.getId())));
+ SimpleValueConverter
+									.asObjectIdMaybe(key.getId())));
 						}
 					} else {
 
@@ -413,13 +394,15 @@ public class Mapper {
 							for (Object o : (Object[]) fieldValue) {
 								values.add(new DBRef(null,
 										getCollectionName(o),
-										asObjectIdMaybe(getId(o))));
+ SimpleValueConverter
+										.asObjectIdMaybe(getId(o))));
 							}
 						} else {
 							for (Object o : (Iterable) fieldValue) {
 								values.add(new DBRef(null,
 										getCollectionName(o),
-										asObjectIdMaybe(getId(o))));
+ SimpleValueConverter
+										.asObjectIdMaybe(getId(o))));
 							}
 						}
 					}
@@ -431,7 +414,8 @@ public class Mapper {
 				if (fieldValue != null) {
 					dbObject.put(name, new DBRef(null,
 							getCollectionName(fieldValue),
-							asObjectIdMaybe(getId(fieldValue))));
+ SimpleValueConverter
+							.asObjectIdMaybe(getId(fieldValue))));
 				}
 			}
 		} catch (Exception e) {
@@ -464,7 +448,7 @@ public class Mapper {
 						convertedVal.removeField(Mapper.CLASS_NAME_FIELDNAME);
 					}
 
-					String strKey = objectToValue(entry.getKey()).toString();
+					String strKey = SimpleValueConverter.objectToValue(entry.getKey()).toString();
 					values.put(strKey, convertedVal);
 				}
 				if (values.size() > 0) {
@@ -539,7 +523,7 @@ public class Mapper {
 			for (MappedField mf : mc.getPersistenceFields()) {
 				if (mf.hasAnnotation(Id.class)) {
 					if (dbObject.get(ID_KEY) != null) {
-						mf.setFieldValue(entity, objectFromValue(mf.getType(),
+						mf.setFieldValue(entity, SimpleValueConverter.objectFromValue(mf.getType(),
 								dbObject, ID_KEY));
 					}
 
@@ -578,12 +562,6 @@ public class Mapper {
 		}
 	}
 
-	public Object[] convertToArray(final Class type, final Collection values) {
-		Object exampleArray = Array.newInstance(type, 1);
-		Object[] array = ((ArrayList) values).toArray((Object[]) exampleArray);
-		return array;
-	}
-
 	void mapEmbeddedFromDBObject(final BasicDBObject dbObject,
 			final MappedField mf, final Object entity) {
 		String name = mf.getName();
@@ -592,7 +570,7 @@ public class Mapper {
 		try {
 
 			if (mf.isMap()) {
-				Map map = (Map) tryConstructor(HashMap.class, mf.getCTor());
+				Map map = (Map) ReflectionUtils.tryConstructor(HashMap.class, mf.getCTor());
 
 				if (dbObject.containsField(name)) {
 					BasicDBObject dbVal = (BasicDBObject) dbObject.get(name);
@@ -603,7 +581,7 @@ public class Mapper {
 						newEntity = mapDBObjectToEntity((BasicDBObject) entry
 								.getValue(), newEntity);
 						// TODO Add Lifecycle call for newEntity
-						Object objKey = objectFromValue(mf.getMapKeyType(),
+						Object objKey = SimpleValueConverter.objectFromValue(mf.getMapKeyType(),
 								entry.getKey());
 						map.put(objKey, newEntity);
 					}
@@ -615,7 +593,7 @@ public class Mapper {
 			} else if (mf.isMultipleValues()) {
 				// multiple documents in a List
 				Class newEntityType = mf.getSubType();
-				Collection values = (Collection) tryConstructor(
+				Collection values = (Collection) ReflectionUtils.tryConstructor(
 						(!mf.isSet()) ? ArrayList.class : HashSet.class, mf
 								.getCTor());
 
@@ -633,7 +611,7 @@ public class Mapper {
 				}
 				if (values.size() > 0) {
 					if (mf.getType().isArray()) {
-						Object[] array = convertToArray(mf.getSubType(), values);
+						Object[] array = SimpleValueConverter.convertToArray(mf.getSubType(), values);
 						mf.setFieldValue(entity, array);
 					} else {
 						mf.setFieldValue(entity, values);
@@ -669,7 +647,7 @@ public class Mapper {
 			} else if (mf.isMultipleValues()) {
 				// multiple references in a List
 				Class referenceObjClass = mf.getSubType();
-				Collection references = (Collection) tryConstructor((!mf
+				Collection references = (Collection) ReflectionUtils.tryConstructor((!mf
 						.isSet()) ? ArrayList.class : HashSet.class, mf
 								.getCTor());
 
@@ -748,7 +726,7 @@ public class Mapper {
 				}
 
 				if (mf.getType().isArray()) {
-					Object[] array = convertToArray(mf.getSubType(), references);
+					Object[] array = SimpleValueConverter.convertToArray(mf.getSubType(), references);
 					mf.setFieldValue(entity, array);
 				} else {
 					mf.setFieldValue(entity, references);
@@ -784,196 +762,6 @@ public class Mapper {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	public static Locale parseLocale(final String localeString) {
-		if ((localeString != null) && (localeString.length() > 0)) {
-			StringTokenizer st = new StringTokenizer(localeString, "_");
-			String language = st.hasMoreElements() ? st.nextToken() : Locale
-					.getDefault().getLanguage();
-			String country = st.hasMoreElements() ? st.nextToken() : "";
-			String variant = st.hasMoreElements() ? st.nextToken() : "";
-			return new Locale(language, country, variant);
-		}
-		return null;
-	}
-
-	/** turns the object into an ObjectId if it is/should-be one */
-	public static Object asObjectIdMaybe(final Object id) {
-		try {
-			if ((id instanceof String) && ObjectId.isValid((String) id)) {
-				return new ObjectId((String) id);
-			}
-		} catch (Exception e) {
-			// sometimes isValid throws exceptions... bad!
-		}
-		return id;
-	}
-
-	/** Converts known types from mongodb -> java. */
-	public static Object objectFromValue(final Class javaType,
-			final BasicDBObject dbObject, final String name) {
-		return objectFromValue(javaType, dbObject.get(name));
-	}
-
-	private static boolean compatibleTypes(final Class type1, final Class type2) {
-		if (type1.equals(type2)) {
-			return true;
-		}
-		return (type1.isAssignableFrom(type2) || ((type1.isPrimitive() || type2
-				.isPrimitive()) && type2.getSimpleName().toLowerCase().equals(
-						type1.getSimpleName().toLowerCase())));// &&
-		// valType.getName().startsWith("java.lang") &&
-		// javaType.getName().startsWith("java.lang") ));
-
-	}
-
-	/** Converts known types from mongodb -> java. */
-	public static Object objectFromValue(final Class javaType,
-			final Object val) {
-
-		if (val == null) {
-			return null;
-		}
-		if (javaType == null) {
-			return val;
-		}
-
-		Class valType = val.getClass();
-
-		if (compatibleTypes(javaType, valType)) {
-			return val;
-		}
-
-		if (javaType == String.class) {
-			logger.finer("Converting from " + val.getClass().getSimpleName()
-					+ " to " + javaType.getSimpleName());
-			return val.toString();
-		} else if ((javaType == Character.class) || (javaType == char.class)) {
-			logger.finer("Converting from " + val.getClass().getSimpleName()
-					+ " to " + javaType.getSimpleName());
-			return val.toString().charAt(0);
-		} else if ((javaType == Integer.class) || (javaType == int.class)) {
-			logger.finer("Converting from " + val.getClass().getSimpleName()
-					+ " to " + javaType.getSimpleName());
-			if (val instanceof String) {
-				return Integer.parseInt((String) val);
-			} else {
-				return ((Number) val).intValue();
-			}
-		} else if ((javaType == Long.class) || (javaType == long.class)) {
-			logger.finer("Converting from " + val.getClass().getSimpleName()
-					+ " to " + javaType.getSimpleName());
-			if (val instanceof String) {
-				return Long.parseLong((String) val);
-			} else {
-				return ((Number) val).longValue();
-			}
-		} else if ((javaType == Byte.class) || (javaType == byte.class)) {
-			logger.finer("Converting from " + val.getClass().getSimpleName()
-					+ " to " + javaType.getSimpleName());
-			Object dbValue = val;
-			if (dbValue instanceof Double) {
-				return ((Double) dbValue).byteValue();
-			} else if (dbValue instanceof Integer) {
-				return ((Integer) dbValue).byteValue();
-			}
-			String sVal = val.toString();
-			return Byte.parseByte(sVal);
-		} else if ((javaType == Short.class) || (javaType == short.class)) {
-			logger.finer("Converting from " + val.getClass().getSimpleName()
-					+ " to " + javaType.getSimpleName());
-			Object dbValue = val;
-			if (dbValue instanceof Double) {
-				return ((Double) dbValue).shortValue();
-			} else if (dbValue instanceof Integer) {
-				return ((Integer) dbValue).shortValue();
-			}
-			String sVal = val.toString();
-			return Short.parseShort(sVal);
-		} else if ((javaType == Float.class) || (javaType == float.class)) {
-			logger.finer("Converting from " + val.getClass().getSimpleName()
-					+ " to " + javaType.getSimpleName());
-			Object dbValue = val;
-			if (dbValue instanceof Double) {
-				return ((Double) dbValue).floatValue();
-			}
-			String sVal = val.toString();
-			return Float.parseFloat(sVal);
-		} else if ((javaType == Double.class) || (javaType == double.class)) {
-			logger.finer("Converting from " + val.getClass().getSimpleName()
-					+ " to " + javaType.getSimpleName());
-			if (val instanceof Double) {
-				return val;
-			}
-			Object dbValue = val;
-			if (dbValue instanceof Number) {
-				return ((Number) dbValue).doubleValue();
-			}
-			String sVal = val.toString();
-			return Double.parseDouble(sVal);
-		} else if (javaType == Locale.class) {
-			logger.finer("Converting from " + val.getClass().getSimpleName()
-					+ " to " + javaType.getSimpleName());
-			return parseLocale(val.toString());
-		} else if (javaType.isEnum()) {
-			logger.finer("Converting from " + val.getClass().getSimpleName()
-					+ " to " + javaType.getSimpleName());
-			return Enum.valueOf(javaType, val.toString());
-		} else if (javaType == Key.class) {
-			logger.finer("Converting from " + val.getClass().getSimpleName()
-					+ " to " + javaType.getSimpleName());
-			return new Key((DBRef) val);
-		} else {
-			// Not a known convertible
-			// type.
-			return val;
-		}
-	}
-
-	/**
-	 * Converts known types from java -> mongodb. Really it just converts enums
-	 * and locales to strings
-	 */
-	public Object objectToValue(Class javaType, final Object obj) {
-		if (obj == null) {
-			return null;
-		}
-		if (javaType == null) {
-			javaType = obj.getClass();
-		}
-
-		if (javaType.isEnum()) {
-			logger.finer("Converting from " + javaType.getSimpleName()
-					+ " to String");
-			return ((Enum) obj).name();
-		} else if (javaType == Locale.class) {
-			logger.finer("Converting from " + javaType.getSimpleName()
-					+ " to String");
-			return ((Locale) obj).toString();
-		} else if ((javaType == char.class) || (javaType == Character.class)) {
-			logger.finer("Converting from " + javaType.getSimpleName()
-					+ " to String");
-			return ((Character) obj).toString();
-		} else if (javaType == Key.class) {
-			logger.finer("Converting from " + javaType.getSimpleName()
-					+ " to DBRef");
-			return ((Key) obj).toRef(this);
-		} else {
-			return obj;
-		}
-
-	}
-
-	/**
-	 * Converts known types from java -> mongodb. Really it just converts enums
-	 * and locales to strings
-	 */
-	public Object objectToValue(final Object obj) {
-		if (obj == null) {
-			return null;
-		}
-		return objectToValue(obj.getClass(), obj);
 	}
 
 	private Object resolveObject(final DBRef dbRef,
@@ -1038,7 +826,7 @@ public class Mapper {
 			final MappedField mf, final Object entity, final String name,
 			final Reference refAnn) throws IllegalAccessException {
 		Class referenceObjClass = mf.getSubType();
-		Map map = (Map) tryConstructor(HashMap.class, mf.getCTor());
+		Map map = (Map) ReflectionUtils.tryConstructor(HashMap.class, mf.getCTor());
 
 		if (dbObject.containsField(name)) {
 			if (refAnn.lazy() && LazyFeatureDependencies.assertDependencyFullFilled()) {

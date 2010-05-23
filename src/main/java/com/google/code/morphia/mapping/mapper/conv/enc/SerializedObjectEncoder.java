@@ -33,7 +33,8 @@ public class SerializedObjectEncoder implements TypeEncoder {
 		}
 		
 		try {
-			return Serializer.deserialize(fromDBObject, f.getAnnotation(Serialized.class).compress());
+			boolean useCompression = !f.getAnnotation(Serialized.class).disableCompression();
+			return Serializer.deserialize(fromDBObject, useCompression);
 		} catch (IOException e) {
 			throw new MappingException("While deserializing to " + f.getFullName(), e);
 		} catch (ClassNotFoundException e) {
@@ -44,7 +45,8 @@ public class SerializedObjectEncoder implements TypeEncoder {
 	@Override
 	public Object encode(EncodingContext ctx, MappedField f, Object value) throws MappingException {
 		try {
-			return Serializer.serialize(value, f.getAnnotation(Serialized.class).compress());
+			boolean useCompression = !f.getAnnotation(Serialized.class).disableCompression();
+			return Serializer.serialize(value, useCompression);
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
 		}
