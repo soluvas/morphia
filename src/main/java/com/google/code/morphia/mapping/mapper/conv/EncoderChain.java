@@ -9,7 +9,6 @@ import java.util.Map;
 
 import com.google.code.morphia.Datastore;
 import com.google.code.morphia.mapping.MappedField;
-import com.google.code.morphia.mapping.Mapper;
 import com.google.code.morphia.mapping.mapper.conv.enc.ByteArrayEncoder;
 import com.google.code.morphia.mapping.mapper.conv.enc.CollectionOfValuesEncoder;
 import com.google.code.morphia.mapping.mapper.conv.enc.MapOfValuesEncoder;
@@ -30,14 +29,9 @@ public class EncoderChain {
 	private List<TypeEncoder> knownEncoders = new LinkedList<TypeEncoder>();
 	
 	// constr. will change
-	public EncoderChain(final Mapper m) {
+	public EncoderChain() {
 		// TODO replace by something serious.
 		this.ctx = new EncodingContext() {
-			
-			@Override
-			public Mapper getMapper() {
-				return m;
-			}
 			
 			@Override
 			public Map getEntityCache() {

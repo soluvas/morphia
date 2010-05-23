@@ -64,7 +64,7 @@ public class Mapper {
 
 	private final ReferenceMapper referenceMapper = new ReferenceMapper(this);
 	private final EmbeddedMapper embeddedMapper = new EmbeddedMapper(this);
-	private final ValueMapper valueMapper = new ValueMapper(this);
+	private final ValueMapper valueMapper = new ValueMapper();
 
 	public Mapper() {
 	}
