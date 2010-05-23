@@ -85,7 +85,8 @@ public class EncoderChain
                 return e;
             }
         }
-        throw new EncoderNotFoundException(mf); // policy about loggin only!?
+        throw new EncoderNotFoundException("Cannot find encoder for " + mf.getType() + " as need for "
+                + mf.getFullName());
     }
 
     public void toDBObject(final Object containingObject, final MappedField mf, final DBObject dbObj)

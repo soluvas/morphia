@@ -6,7 +6,6 @@ package com.google.code.morphia.mapping.encoder;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.annotations.Serialized;
 import com.google.code.morphia.mapping.MappedField;
@@ -31,10 +30,11 @@ public class MapOfValuesEncoder implements TypeEncoder
         {
             return false;
         }
-        if (f.getAnnotation(Embedded.class) != null)
-        {
-            return false;
-        }
+
+        // if (f.getAnnotation(Embedded.class) != null)
+        // {
+        // return false;
+        // }
 
         return f.isMap();
     }

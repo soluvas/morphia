@@ -3,7 +3,6 @@
  */
 package com.google.code.morphia.mapping.encoder;
 
-import com.google.code.morphia.mapping.MappedField;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
@@ -11,9 +10,8 @@ import com.google.code.morphia.mapping.MappedField;
 public class EncoderNotFoundException extends RuntimeException
 {
 
-    public EncoderNotFoundException(final MappedField mf)
+    public EncoderNotFoundException(final String msg)
     {
-        super(mf.getFullName());// FIXME us verbose
+        super(msg);
     }
-
 }

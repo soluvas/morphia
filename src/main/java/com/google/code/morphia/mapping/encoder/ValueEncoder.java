@@ -17,8 +17,7 @@ public class ValueEncoder implements TypeEncoder
     @Override
     public boolean canHandle(final MappedField f)
     {
-        return true; // wanted that to be more like:
-        // SimpleValueConverter.isSupportedType(f.getType());
+        return f.getType().isEnum() || SimpleValueConverter.isSupportedType(f.getType());
     }
 
     @Override
