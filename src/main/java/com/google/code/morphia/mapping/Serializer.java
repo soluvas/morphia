@@ -16,7 +16,7 @@ import java.util.zip.GZIPOutputStream;
 import com.mongodb.DBBinary;
 
 /**
- * @author doc
+ * @author Uwe Schaefer, (us@thomas-daily.de)
  */
 public class Serializer
 {

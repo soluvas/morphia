@@ -14,7 +14,7 @@ import com.mongodb.DBObject;
 /**
  * implements chain of responsibility for encoders
  * 
- * @author doc
+ * @author Uwe Schaefer, (us@thomas-daily.de)
  */
 public class EncoderChain
 {

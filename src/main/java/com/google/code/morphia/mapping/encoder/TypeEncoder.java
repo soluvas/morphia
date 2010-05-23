@@ -7,7 +7,7 @@ import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.MappingException;
 
 /**
- * @author doc
+ * @author Uwe Schaefer, (us@thomas-daily.de)
  */
 public interface TypeEncoder
 {

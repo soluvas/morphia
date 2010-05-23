@@ -12,7 +12,7 @@ import com.google.code.morphia.mapping.Serializer;
 import com.mongodb.DBBinary;
 
 /**
- * @author doc
+ * @author Uwe Schaefer, (us@thomas-daily.de)
  */
 @SuppressWarnings("unchecked")
 public class SerializedObjectEncoder implements TypeEncoder

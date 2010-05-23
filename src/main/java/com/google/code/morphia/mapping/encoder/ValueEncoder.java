@@ -8,7 +8,7 @@ import com.google.code.morphia.mapping.MappingException;
 import com.google.code.morphia.mapping.converter.SimpleValueConverter;
 
 /**
- * @author doc
+ * @author Uwe Schaefer, (us@thomas-daily.de)
  */
 @SuppressWarnings("unchecked")
 public class ValueEncoder implements TypeEncoder
