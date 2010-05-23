@@ -39,7 +39,7 @@ import com.google.code.morphia.mapping.lazy.DefaultDatastoreProvider;
 import com.google.code.morphia.mapping.lazy.LazyProxyFactory;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReference;
 import com.google.code.morphia.mapping.lazy.proxy.ProxyHelper;
-import com.google.code.morphia.mapping.mapper.conv.SimpleValueConverter;
+import com.google.code.morphia.mapping.mapper.converter.SimpleValueConverter;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;

@@ -12,7 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.code.morphia.mapping.mapper.conv.SimpleValueConverter;
+import com.google.code.morphia.mapping.mapper.converter.SimpleValueConverter;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;

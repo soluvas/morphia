@@ -3,7 +3,7 @@
  */
 package com.google.code.morphia.mapping;
 
-import com.google.code.morphia.mapping.mapper.conv.EncoderChain;
+import com.google.code.morphia.mapping.mapper.encoder.EncoderChain;
 import com.mongodb.BasicDBObject;
 
 class ValueMapper {
