@@ -50,6 +50,7 @@ import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReference;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceList;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceMap;
 import com.google.code.morphia.mapping.lazy.proxy.ProxyHelper;
+import com.google.code.morphia.mapping.mapper.conv.SerializedObjectEncoder;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBBinary;
@@ -512,7 +513,8 @@ public class Mapper {
 			Object fieldValue = mf.getFieldValue(entity);
 
 			if (mf.hasAnnotation(Serialized.class)) {
-				dbObject.put(name, Serializer.serialize(fieldValue, mf.getAnnotation(Serialized.class).compress()));
+				// TODO wont stay that way, just to keep it compatible for now.
+				new SerializedObjectEncoder().toDBObject(null, mf, entity, dbObject);
 			}
 
 			// sets and list are stored in mongodb as ArrayLists
@@ -639,22 +641,8 @@ public class Mapper {
 			Class fieldType = mf.getType();
 
 			if (mf.hasAnnotation(Serialized.class)) {
-				Object data = dbObject.get(name);
-				if (!((data instanceof DBBinary) || (data instanceof byte[]))) {
-					throw new MappingException(
-							"The stored data is not a DBBinary or byte[] instance for "
-							+ mf.getFullName() + " ; it is a "
-							+ data.getClass().getName());
-				}
-
-				try {
-					mf.setFieldValue(entity, Serializer.deserialize(data, mf.getAnnotation(Serialized.class).compress()));
-				} catch (IOException ex) {
-					throw new RuntimeException(ex);
-				} catch (ClassNotFoundException ex) {
-					throw new IllegalStateException("Unable to deserialize "
-							+ data + " on field " + mf.getFullName(), ex);
-				}
+				// TODO wont stay that way, just to keep it compatible for now.
+				new SerializedObjectEncoder().fromDBObject(null, mf, entity, dbObject);
 			} else if (mf.isMap()) {
 				if (dbObject.containsField(name)) {
 					Map<Object, Object> map = (Map<Object, Object>) dbObject
