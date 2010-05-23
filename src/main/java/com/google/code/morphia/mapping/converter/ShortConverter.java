@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.google.code.morphia.mapping.mapper.converter;
+package com.google.code.morphia.mapping.converter;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)

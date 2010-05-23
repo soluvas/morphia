@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.google.code.morphia.mapping.mapper.converter;
+package com.google.code.morphia.mapping.converter;
 
 import com.google.code.morphia.Key;
 import com.mongodb.DBRef;

@@ -8,7 +8,7 @@ import com.google.code.morphia.mapping.Constraints;
 import com.google.code.morphia.mapping.Mapper;
 import com.google.code.morphia.mapping.MappingException;
 import com.google.code.morphia.mapping.Modifiers;
-import com.google.code.morphia.mapping.mapper.converter.SimpleValueConverter;
+import com.google.code.morphia.mapping.converter.SimpleValueConverter;
 import com.google.code.morphia.query.Sort;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;

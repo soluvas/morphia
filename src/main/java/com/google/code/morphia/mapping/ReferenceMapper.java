@@ -12,11 +12,11 @@ import java.util.Map;
 
 import com.google.code.morphia.Key;
 import com.google.code.morphia.annotations.Reference;
+import com.google.code.morphia.mapping.converter.SimpleValueConverter;
 import com.google.code.morphia.mapping.lazy.LazyFeatureDependencies;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceList;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceMap;
 import com.google.code.morphia.mapping.lazy.proxy.ProxyHelper;
-import com.google.code.morphia.mapping.mapper.converter.SimpleValueConverter;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBRef;
