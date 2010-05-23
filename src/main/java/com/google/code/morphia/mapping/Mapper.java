@@ -11,7 +11,6 @@
 
 package com.google.code.morphia.mapping;
 
-import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -50,10 +49,9 @@ import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReference;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceList;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceMap;
 import com.google.code.morphia.mapping.lazy.proxy.ProxyHelper;
-import com.google.code.morphia.mapping.mapper.conv.SerializedObjectEncoder;
+import com.google.code.morphia.mapping.mapper.conv.EncoderChain;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBBinary;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 import com.mongodb.ObjectId;
@@ -224,7 +222,7 @@ public class Mapper {
 	 * creates an instance of testType (if it isn't Object.class or null) or
 	 * fallbackType
 	 */
-	protected Object tryConstructor(final Class fallbackType,
+	public Object tryConstructor(final Class fallbackType,
 			final Constructor tryMe) {
 		if (tryMe != null) {
 			tryMe.setAccessible(true);
@@ -508,76 +506,11 @@ public class Mapper {
 	void mapValuesToDBObject(final Object entity, final MappedField mf,
 			final BasicDBObject dbObject) {
 		try {
-			String name = mf.getName();
-			Class fieldType = mf.getType();
-			Object fieldValue = mf.getFieldValue(entity);
+			
+			// TODO wont stay that way, just to keep it compatible for now.
+			new EncoderChain(this).toDBObject(entity, mf, dbObject);
 
-			if (mf.hasAnnotation(Serialized.class)) {
-				// TODO wont stay that way, just to keep it compatible for now.
-				new SerializedObjectEncoder().toDBObject(null, mf, entity, dbObject);
-			}
-
-			// sets and list are stored in mongodb as ArrayLists
-			else if (mf.isMap()) {
-				Map<Object, Object> map = (Map<Object, Object>) mf
-				.getFieldValue(entity);
-				if ((map != null) && (map.size() > 0)) {
-					Map mapForDb = new HashMap();
-					for (Map.Entry<Object, Object> entry : map.entrySet()) {
-						String strKey = objectToValue(entry.getKey())
-						.toString();
-						mapForDb.put(strKey, objectToValue(entry.getValue()));
-					}
-					dbObject.put(name, mapForDb);
-				}
-			} else if (mf.isMultipleValues()) {
-				if (fieldValue != null) {
-					Iterable iterableValues = null;
-
-					if (fieldType.isArray()) {
-						Object[] objects = null;
-						try {
-							objects = (Object[]) fieldValue;
-						} catch (ClassCastException e) {
-							// store the primitive array without making
-							// it into a list.
-							if (Array.getLength(fieldValue) == 0) {
-								return;
-							}
-							dbObject.put(name, fieldValue);
-							return;
-						}
-						// convert array into arraylist
-						iterableValues = new ArrayList(objects.length);
-						for (Object obj : objects) {
-							((ArrayList) iterableValues).add(obj);
-						}
-					} else {
-						// cast value to a common interface
-						iterableValues = (Iterable) fieldValue;
-					}
-
-					List values = new ArrayList();
-
-					if (mf.getSubType() != null) {
-						for (Object o : iterableValues) {
-							values.add(objectToValue(mf.getSubType(), o));
-						}
-					} else {
-						for (Object o : iterableValues) {
-							values.add(objectToValue(o));
-						}
-					}
-					if (values.size() > 0) {
-						dbObject.put(name, values);
-					}
-				}
-			} else {
-				Object val = objectToValue(fieldValue);
-				if (val != null) {
-					dbObject.put(name, val);
-				}
-			}
+			
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -636,91 +569,16 @@ public class Mapper {
 
 	void mapValuesFromDBObject(final BasicDBObject dbObject,
 			final MappedField mf, final Object entity) {
-		String name = mf.getName();
 		try {
-			Class fieldType = mf.getType();
-
-			if (mf.hasAnnotation(Serialized.class)) {
 				// TODO wont stay that way, just to keep it compatible for now.
-				new SerializedObjectEncoder().fromDBObject(null, mf, entity, dbObject);
-			} else if (mf.isMap()) {
-				if (dbObject.containsField(name)) {
-					Map<Object, Object> map = (Map<Object, Object>) dbObject
-					.get(name);
-					Map values = (Map) tryConstructor(HashMap.class, mf
-							.getCTor());
-					for (Map.Entry<Object, Object> entry : map.entrySet()) {
-						Object objKey = objectFromValue(mf.getMapKeyType(),
-								entry.getKey());
-						values.put(objKey, objectFromValue(mf.getSubType(),
-								entry.getValue()));
-					}
-					mf.setFieldValue(entity, values);
-				}
-			} else if (mf.isMultipleValues()) {
-				if (dbObject.containsField(name)) {
-					Class subtype = mf.getSubType();
+				new EncoderChain(this).fromDBObject(dbObject, mf, entity);
 
-					// for byte[] don't treat it as a multiple values.
-					if ((subtype == byte.class) && fieldType.isArray()) {
-						mf.setFieldValue(entity, dbObject.get(name));
-						return;
-					}
-					// List and Sets are stored as List in mongodb
-					List list = (List) dbObject.get(name);
-
-					if (subtype != null) {
-						// map back to the java datatype
-						// (List/Set/Array[])
-						Collection values;
-
-						if (!mf.isSet()) {
-							values = (List) tryConstructor(ArrayList.class, mf
-									.getCTor());
-						} else {
-							values = (Set) tryConstructor(HashSet.class, mf
-									.getCTor());
-						}
-
-						if (subtype == Locale.class) {
-							for (Object o : list) {
-								values.add(parseLocale((String) o));
-							}
-						} else if (subtype == Key.class) {
-							for (Object o : list) {
-								values.add(new Key((DBRef) o));
-							}
-						} else if (subtype.isEnum()) {
-							for (Object o : list) {
-								values.add(Enum.valueOf(subtype, (String) o));
-							}
-						} else {
-							for (Object o : list) {
-								values.add(o);
-							}
-						}
-						if (fieldType.isArray()) {
-							Object[] array = convertToArray(subtype, values);
-							mf.setFieldValue(entity, array);
-						} else {
-							mf.setFieldValue(entity, values);
-						}
-					} else {
-						mf.setFieldValue(entity, list);
-					}
-				}
-			} else {
-				if (dbObject.containsField(name)) {
-					mf.setFieldValue(entity, objectFromValue(fieldType,
-							dbObject, name));
-				}
-			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	private Object[] convertToArray(final Class type, final Collection values) {
+	public Object[] convertToArray(final Class type, final Collection values) {
 		Object exampleArray = Array.newInstance(type, 1);
 		Object[] array = ((ArrayList) values).toArray((Object[]) exampleArray);
 		return array;
@@ -928,7 +786,7 @@ public class Mapper {
 		}
 	}
 
-	private static Locale parseLocale(final String localeString) {
+	public static Locale parseLocale(final String localeString) {
 		if ((localeString != null) && (localeString.length() > 0)) {
 			StringTokenizer st = new StringTokenizer(localeString, "_");
 			String language = st.hasMoreElements() ? st.nextToken() : Locale
@@ -971,7 +829,7 @@ public class Mapper {
 	}
 
 	/** Converts known types from mongodb -> java. */
-	protected static Object objectFromValue(final Class javaType,
+	public static Object objectFromValue(final Class javaType,
 			final Object val) {
 
 		if (val == null) {
