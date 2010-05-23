@@ -10,7 +10,7 @@ import com.google.code.morphia.annotations.Serialized;
 import com.google.code.morphia.mapping.lazy.JUnit3TestBase;
 
 /**
- * @author doc
+ * @author Uwe Schaefer, (us@thomas-daily.de)
  * 
  */
 public class TestSerializerTest extends JUnit3TestBase {
