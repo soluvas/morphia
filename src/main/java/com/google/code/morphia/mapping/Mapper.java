@@ -23,7 +23,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.bson.types.ObjectId;
+
 import com.google.code.morphia.EntityInterceptor;
+import com.google.code.morphia.Key;
 import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.PostLoad;
@@ -39,6 +42,7 @@ import com.google.code.morphia.mapping.lazy.DatastoreProvider;
 import com.google.code.morphia.mapping.lazy.DefaultDatastoreProvider;
 import com.google.code.morphia.mapping.lazy.LazyProxyFactory;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReference;
+import com.google.code.morphia.mapping.lazy.proxy.ProxiedReference;
 import com.google.code.morphia.mapping.lazy.proxy.ProxyHelper;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
@@ -121,23 +125,14 @@ public class Mapper {
 	}
 
 	public String getCollectionName(Object object) {
-		// object = ProxyHelper.unwrap(object);
+		if (ProxyHelper.isProxy(object))
+			return getCollectionName(((ProxiedReference) object).__getReferenceObjClass());
+
 		MappedClass mc = getMappedClass(object);
 		return mc.getCollectionName();
 	}
 
-	String getId(final Object entity) {
-		try {
-			if (entity instanceof ProxiedEntityReference) {
-				ProxiedEntityReference proxy = (ProxiedEntityReference) entity;
-				return proxy.__getEntityId();
-			}
-			return (String) getMappedClass(entity).getIdField().get(entity);
-		} catch (IllegalAccessException iae) {
-			throw new RuntimeException(iae);
-		}
-	}
-
+	
 	/**
 	 * Updates the {@code @Id} and {@code @CollectionName} fields.
 	 * 

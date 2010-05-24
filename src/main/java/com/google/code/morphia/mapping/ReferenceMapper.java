@@ -10,10 +10,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.bson.types.ObjectId;
+
 import com.google.code.morphia.Key;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.mapping.converter.SimpleValueConverter;
 import com.google.code.morphia.mapping.lazy.LazyFeatureDependencies;
+import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReference;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceList;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceMap;
 import com.google.code.morphia.mapping.lazy.proxy.ProxyHelper;
@@ -47,8 +50,9 @@ class ReferenceMapper {
 	
 	private void writeSingleReferenceToDBObject(final BasicDBObject dbObject, String name, Object fieldValue) {
 		if (fieldValue != null) {
-			dbObject.put(name, new DBRef(null, mapper.getCollectionName(fieldValue), SimpleValueConverter
-					.asObjectIdMaybe(mapper.getId(fieldValue))));
+			DBRef dbrefFromKey = getKey(fieldValue).toRef();
+			dbObject.put(name, dbrefFromKey);
+
 		}
 	}
 	
@@ -63,20 +67,17 @@ class ReferenceMapper {
 				Class c = p.__getReferenceObjClass();
 				String collectionName = mapper.getCollectionName(c);
 				for (Key<?> key : getKeysAsList) {
-					values.add(new DBRef(null, collectionName, SimpleValueConverter
-							.asObjectIdMaybe(key.getId())));
+					values.add(key.toRef());
 				}
 			} else {
 				
 				if (mf.getType().isArray()) {
 					for (Object o : (Object[]) fieldValue) {
-						values.add(new DBRef(null, mapper.getCollectionName(o), SimpleValueConverter
-								.asObjectIdMaybe(mapper.getId(o))));
+						values.add(getKey(o).toRef());
 					}
 				} else {
 					for (Object o : (Iterable) fieldValue) {
-						values.add(new DBRef(null, mapper.getCollectionName(o), SimpleValueConverter
-								.asObjectIdMaybe(mapper.getId(o))));
+						values.add(getKey(o).toRef());
 					}
 				}
 			}
@@ -94,19 +95,17 @@ class ReferenceMapper {
 			
 			if (ProxyHelper.isProxy(map) && ProxyHelper.isUnFetched(map)) {
 				ProxiedEntityReferenceMap proxy = (ProxiedEntityReferenceMap) map;
-				Map<String, String> refMap = proxy.__getReferenceMap();
-				for (Map.Entry<String, String> entry : refMap.entrySet()) {
+				
+				Map<String, Key<?>> refMap = proxy.__getReferenceMap();
+				for (Map.Entry<String, Key<?>> entry : refMap.entrySet()) {
 					String strKey = entry.getKey();
-					values.put(strKey, new DBRef(null,
-							mapper.getCollectionName(proxy.__getReferenceObjClass()), SimpleValueConverter
-							.asObjectIdMaybe(entry.getValue())));
+					values.put(strKey, entry.getValue().toRef());
 				}
 			} else {
 				for (Map.Entry<Object, Object> entry : map.entrySet()) {
 					// TODO is objectToValue necessary here?
 					String strKey = SimpleValueConverter.objectToValue(entry.getKey()).toString();
-					values.put(strKey, new DBRef(null, mapper.getCollectionName(entry.getValue()),
-							SimpleValueConverter.asObjectIdMaybe(mapper.getId(entry.getValue()))));
+					values.put(strKey, getKey(entry.getValue()).toRef());
 				}
 			}
 			if (values.size() > 0) {
@@ -115,12 +114,27 @@ class ReferenceMapper {
 		}
 	}
 	
+	private Key<?> getKey(final Object entity) {
+		try {
+			if (entity instanceof ProxiedEntityReference) {
+				ProxiedEntityReference proxy = (ProxiedEntityReference) entity;
+				return proxy.__getKey();
+			}
+			MappedClass mappedClass = mapper.getMappedClass(entity);
+			Object id = mappedClass.getIdField().get(entity);
+			// TODO scott: please help me with this one: why is that necessary?
+			ObjectId idStringAsObjectId = new ObjectId(id.toString());
+			Key key = new Key(mappedClass.getCollectionName(), idStringAsObjectId);
+			return key;
+		} catch (IllegalAccessException iae) {
+			throw new RuntimeException(iae);
+		}
+	}
+	
 	void mapReferencesFromDBObject(final BasicDBObject dbObject, final MappedField mf, final Object entity) {
 		String name = mf.getName();
 		
 		Class fieldType = mf.getType();
-		
-		
 		
 		Reference refAnn = mf.getAnnotation(Reference.class);
 		if (mf.isMap()) {
@@ -256,7 +270,7 @@ class ReferenceMapper {
 		}
 	}
 	
-	void addToReferenceList(final MappedField mf, final Reference refAnn,
+	private void addToReferenceList(final MappedField mf, final Reference refAnn,
 			final ProxiedEntityReferenceList referencesAsProxy, final DBRef dbRef) {
 		if (!exists(dbRef)) {
 			if (!refAnn.ignoreMissing()) {
@@ -268,7 +282,8 @@ class ReferenceMapper {
 		}
 	}
 	
-	void readMapOfReferencesFromDBObject(final BasicDBObject dbObject, final MappedField mf, final Object entity,
+	private void readMapOfReferencesFromDBObject(final BasicDBObject dbObject, final MappedField mf,
+			final Object entity,
 			final String name, final Reference refAnn) {
 		Class referenceObjClass = mf.getSubType();
 		Map map = (Map) ReflectionUtils.tryConstructor(HashMap.class, mf.getCTor());
@@ -296,7 +311,7 @@ class ReferenceMapper {
 		mf.setFieldValue(entity, map);
 	}
 	
-	Object createOrReuseProxy(final Class referenceObjClass, final DBRef dbRef) {
+	private Object createOrReuseProxy(final Class referenceObjClass, final DBRef dbRef) {
 		Map<String, Object> cache = mapper.proxyCache.get();
 		String cacheKey = createCacheKey(dbRef);
 		Object proxyAlreadyCreated = cache.get(cacheKey);

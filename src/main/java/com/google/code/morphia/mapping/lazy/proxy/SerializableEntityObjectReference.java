@@ -8,30 +8,30 @@ import com.google.code.morphia.mapping.lazy.DatastoreProvider;
 
 public class SerializableEntityObjectReference extends AbstractReference
 implements ProxiedEntityReference {
-	// TODO store key raw as soon as it is possible (Serialization issue)
-	private final String keyAsString;
+
+	private final Key key;
 
 	@SuppressWarnings("unchecked")
 	public SerializableEntityObjectReference(final Class targetClass,
 			final DatastoreProvider p, final Key key) {
 
 		super(p, targetClass, false);
-		keyAsString = key.getId().toString();
+		this.key = key;
 	}
 
 	@Override
-	public String __getEntityId() {
-		return keyAsString;
+	public Key __getKey() {
+		return key;
 	}
 
 	@Override
 	protected Object fetch() {
 
-		Object entity = p.get().get(referenceObjClass, keyAsString);
+		Object entity = p.get().getByKey(referenceObjClass, key);
 		if (entity == null) {
 			throw new LazyReferenceFetchingException(
 					"During the lifetime of the proxy, the Entity identified by '"
-					+ keyAsString + "' disappeared from the Datastore.");
+					+ key + "' disappeared from the Datastore.");
 		}
 		return entity;
 	}

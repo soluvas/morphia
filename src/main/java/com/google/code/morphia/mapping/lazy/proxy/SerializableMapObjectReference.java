@@ -17,20 +17,19 @@ import com.google.code.morphia.mapping.lazy.DatastoreProvider;
 @SuppressWarnings("unchecked")
 public class SerializableMapObjectReference extends AbstractReference implements ProxiedEntityReferenceMap {
 
-	private final HashMap<String, String> keyMap;
+	private final HashMap<String, Key<?>> keyMap;
 	
 	public SerializableMapObjectReference(final Map mapToProxy, final Class referenceObjClass,
 			final boolean ignoreMissing, final DatastoreProvider p) {
 
 		super(p, referenceObjClass, ignoreMissing);
 		object = mapToProxy;
-		keyMap = new LinkedHashMap<String, String>();
+		keyMap = new LinkedHashMap<String, Key<?>>();
 	}
 
 	@Override
 	public void __put(final String key, final Key k) {
-		// TODO clear up key -> String business.
-		keyMap.put(key, k.toRef().getId().toString());
+		keyMap.put(key, k);
 	}
 
 	@Override
@@ -41,8 +40,8 @@ public class SerializableMapObjectReference extends AbstractReference implements
 		// ignoreMissing in order to a) increase performance and b) resolve
 		// equals keys to the same instance
 		// that should really be done in datastore.
-		for (Map.Entry<?, String> e : keyMap.entrySet()) {
-			String entityKey = e.getValue();
+		for (Map.Entry<?, Key<?>> e : keyMap.entrySet()) {
+			Key<?> entityKey = e.getValue();
 			Object entity = fetch(entityKey);
 			m.put(e.getKey(), entity);
 		}
@@ -55,7 +54,7 @@ public class SerializableMapObjectReference extends AbstractReference implements
 	}
 
 	@Override
-	public Map<String, String> __getReferenceMap() {
+	public Map<String, Key<?>> __getReferenceMap() {
 		return keyMap;
 	}
 

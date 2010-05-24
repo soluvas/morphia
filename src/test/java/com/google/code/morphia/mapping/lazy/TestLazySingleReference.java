@@ -58,7 +58,7 @@ public class TestLazySingleReference extends ProxyTestBase {
 
 		assertIsProxy(p);
 		assertNotFetched(p);
-		assertEquals(keyAsString, ((ProxiedEntityReference) p).__getEntityId());
+		assertEquals(keyAsString, ((ProxiedEntityReference) p).__getKey().getId().toString());
 		// still unfetched?
 		assertNotFetched(p);
 		p.getFoo();
