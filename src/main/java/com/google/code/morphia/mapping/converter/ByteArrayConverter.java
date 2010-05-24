@@ -3,27 +3,21 @@
  */
 package com.google.code.morphia.mapping.converter;
 
-import java.util.Date;
-
 import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.MappingException;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  */
-public class DateConverter extends TypeConverter {
+public class ByteArrayConverter extends TypeConverter {
 	@Override
 	boolean canHandle(Class c, MappedField optionalExtraInfo) {
-		return oneOf(c, Date.class);
+		return oneOf(c, byte[].class); // TODO add Byte[]
 	}
 	
 	@Override
-	Object decode(Class targetClass, Object o, MappedField optionalExtraInfo) throws MappingException {
-		if (o instanceof Date) {
-			Date d = (Date) o;
-			return d;
-		}
-		return new Date(Date.parse(o.toString())); // good luck
+	Object decode(Class targetClass, Object fromDBObject, MappedField optionalExtraInfo) throws MappingException {
+		return fromDBObject; // as it comes
 	}
 	
 }

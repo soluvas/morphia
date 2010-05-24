@@ -21,7 +21,6 @@ import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.Mapper;
 import com.google.code.morphia.mapping.MappingException;
 import com.google.code.morphia.mapping.Serializer;
-import com.google.code.morphia.mapping.converter.SimpleValueConverter;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBCollection;
@@ -228,7 +227,7 @@ public class QueryImpl<T> implements Query<T> {
 				throw new RuntimeException(e);
 			}
 		else
-			mappedValue = SimpleValueConverter.asObjectIdMaybe(mapr.toMongoObject(value));
+			mappedValue = ReflectionUtils.asObjectIdMaybe(mapr.toMongoObject(value));
 		
 		Class<?> type = (mappedValue != null) ? mappedValue.getClass() : null;
 		

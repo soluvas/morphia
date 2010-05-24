@@ -3,20 +3,23 @@
  */
 package com.google.code.morphia.mapping;
 
-import com.google.code.morphia.mapping.encoder.EncoderChain;
+import com.google.code.morphia.mapping.converter.ConverterChain;
 import com.mongodb.BasicDBObject;
 
 class ValueMapper
 {
 
-    // TODO that should be made configurable
-    private final EncoderChain encoderChain = new EncoderChain();
+	private final ConverterChain chain;
+	
+	public ValueMapper(ConverterChain chain) {
+		this.chain = chain;
+	}
 
-    void mapValuesFromDBObject(final BasicDBObject dbObject, final MappedField mf, final Object entity)
+	void mapValuesFromDBObject(final BasicDBObject dbObject, final MappedField mf, final Object entity)
     {
         try
         {
-            encoderChain.fromDBObject(dbObject, mf, entity);
+			chain.fromDBObject(dbObject, mf, entity);
         }
         catch (Exception e)
         {
@@ -28,7 +31,7 @@ class ValueMapper
     {
         try
         {
-            encoderChain.toDBObject(entity, mf, dbObject);
+			chain.toDBObject(entity, mf, dbObject);
         }
         catch (Exception e)
         {

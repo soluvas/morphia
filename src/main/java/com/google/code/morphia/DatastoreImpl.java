@@ -17,7 +17,6 @@ import com.google.code.morphia.mapping.MappedClass;
 import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.Mapper;
 import com.google.code.morphia.mapping.MappingException;
-import com.google.code.morphia.mapping.converter.SimpleValueConverter;
 import com.google.code.morphia.mapping.lazy.DatastoreHolder;
 import com.google.code.morphia.mapping.lazy.proxy.ProxyHelper;
 import com.google.code.morphia.query.Query;
@@ -27,6 +26,7 @@ import com.google.code.morphia.query.UpdateOpsImpl;
 import com.google.code.morphia.query.UpdateResults;
 import com.google.code.morphia.utils.IndexDirection;
 import com.google.code.morphia.utils.IndexFieldDef;
+import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DB;
@@ -60,10 +60,7 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 		// VERY discussable
 		DatastoreHolder.getInstance().set(this);
 	}
-	
-	protected Object asObjectIdMaybe(Object id) {
-		return SimpleValueConverter.asObjectIdMaybe(id);
-	}
+
 	
 	@Override
 	public <T, V> DBRef createRef(Class<T> clazz, V id) {
@@ -94,7 +91,7 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 	}
 	
 	protected <T, V> void delete(DBCollection dbColl, V id) {
-		dbColl.remove(BasicDBObjectBuilder.start().add(Mapper.ID_KEY, asObjectIdMaybe(id)).get());
+		dbColl.remove(BasicDBObjectBuilder.start().add(Mapper.ID_KEY, ReflectionUtils.asObjectIdMaybe(id)).get());
 	}
 	
 	@Override
@@ -289,7 +286,7 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 	public <T, V> Query<T> get(Class<T> clazz, Iterable<V> ids) {
 		List objIds = new ArrayList();
 		for (V id : ids) {
-			objIds.add(asObjectIdMaybe(id));
+			objIds.add(ReflectionUtils.asObjectIdMaybe(id));
 		}
 		return find(clazz, Mapper.ID_KEY + " in", objIds);
 	}
@@ -321,7 +318,7 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 			List objIds = new ArrayList();
 			List<Key> kindKeys = kindMap.get(kind);
 			for (Key key : kindKeys) {
-				objIds.add(asObjectIdMaybe(key.getId()));
+				objIds.add(ReflectionUtils.asObjectIdMaybe(key.getId()));
 			}
 			List kindResults = find(kind, null).filter("_id in", objIds).asList();
 			results.addAll(kindResults);
@@ -447,7 +444,7 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 	
 	protected <T> Key<T> save(DBCollection dbColl, T entity) {
 		DB db = dbColl.getDB();
-		db.requestStart();
+		// TODO scary message from driver ... db.requestStart();
 		try{
 			entity = ProxyHelper.unwrap(entity);
 			Mapper mapr = morphia.getMapper();
@@ -495,7 +492,7 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 			return new Key<T>(dbColl.getName(), getId(entity));
 		}
 		finally{
-			db.requestDone();
+		     // TODO scary message from driver ... db.requestDone();
 		}
 	}
 	

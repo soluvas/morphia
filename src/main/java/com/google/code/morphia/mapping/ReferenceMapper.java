@@ -14,7 +14,7 @@ import org.bson.types.ObjectId;
 
 import com.google.code.morphia.Key;
 import com.google.code.morphia.annotations.Reference;
-import com.google.code.morphia.mapping.converter.SimpleValueConverter;
+import com.google.code.morphia.mapping.converter.ConverterChain;
 import com.google.code.morphia.mapping.lazy.LazyFeatureDependencies;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReference;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceList;
@@ -27,9 +27,11 @@ import com.mongodb.DBRef;
 class ReferenceMapper {
 	
 	private final Mapper mapper;
+	private final ConverterChain chain;
 	
-	public ReferenceMapper(Mapper mapper) {
+	public ReferenceMapper(Mapper mapper, ConverterChain chain) {
 		this.mapper = mapper;
+		this.chain = chain;
 	}
 	
 	void mapReferencesToDBObject(final Object entity, final MappedField mf, final BasicDBObject dbObject) {
@@ -91,7 +93,7 @@ class ReferenceMapper {
 			Object fieldValue) {
 		Map<Object, Object> map = (Map<Object, Object>) fieldValue;
 		if ((map != null)) {
-			Map values = (Map) ReflectionUtils.tryConstructor(HashMap.class, mf.getCTor());
+			Map values = (Map) ReflectionUtils.newInstance(mf.getCTor(), HashMap.class);
 			
 			if (ProxyHelper.isProxy(map) && ProxyHelper.isUnFetched(map)) {
 				ProxiedEntityReferenceMap proxy = (ProxiedEntityReferenceMap) map;
@@ -104,7 +106,7 @@ class ReferenceMapper {
 			} else {
 				for (Map.Entry<Object, Object> entry : map.entrySet()) {
 					// TODO is objectToValue necessary here?
-					String strKey = SimpleValueConverter.objectToValue(entry.getKey()).toString();
+					String strKey = chain.encode(entry.getKey()).toString();
 					values.put(strKey, getKey(entry.getValue()).toRef());
 				}
 			}
@@ -176,8 +178,8 @@ class ReferenceMapper {
 			final Object entity, String name, Reference refAnn) {
 		// multiple references in a List
 		Class referenceObjClass = mf.getSubType();
-		Collection references = (Collection) ReflectionUtils.tryConstructor((!mf.isSet()) ? ArrayList.class
-				: HashSet.class, mf.getCTor());
+		Collection references = (Collection) ReflectionUtils.newInstance(mf.getCTor(), (!mf.isSet()) ? ArrayList.class
+                		: HashSet.class);
 		
 		if (refAnn.lazy() && LazyFeatureDependencies.assertDependencyFullFilled()) {
 			if (dbObject.containsField(name)) {
@@ -240,7 +242,7 @@ class ReferenceMapper {
 		}
 		
 		if (mf.getType().isArray()) {
-			Object[] array = SimpleValueConverter.convertToArray(mf.getSubType(), references);
+			Object[] array = ReflectionUtils.convertToArray(mf.getSubType(), references);
 			mf.setFieldValue(entity, array);
 		} else {
 			mf.setFieldValue(entity, references);
@@ -286,7 +288,7 @@ class ReferenceMapper {
 			final Object entity,
 			final String name, final Reference refAnn) {
 		Class referenceObjClass = mf.getSubType();
-		Map map = (Map) ReflectionUtils.tryConstructor(HashMap.class, mf.getCTor());
+		Map map = (Map) ReflectionUtils.newInstance(mf.getCTor(), HashMap.class);
 		
 		if (dbObject.containsField(name)) {
 			if (refAnn.lazy() && LazyFeatureDependencies.assertDependencyFullFilled()) {

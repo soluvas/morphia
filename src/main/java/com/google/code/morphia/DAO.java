@@ -8,8 +8,8 @@ import com.google.code.morphia.mapping.Constraints;
 import com.google.code.morphia.mapping.Mapper;
 import com.google.code.morphia.mapping.MappingException;
 import com.google.code.morphia.mapping.Modifiers;
-import com.google.code.morphia.mapping.converter.SimpleValueConverter;
 import com.google.code.morphia.query.Sort;
+import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -100,7 +100,7 @@ public class DAO<T,K extends Serializable> {
     }
 
     public void deleteById( K id ) {
-        deleteMatching(new Constraints(Mapper.ID_KEY, SimpleValueConverter.asObjectIdMaybe(id)));
+		deleteMatching(new Constraints(Mapper.ID_KEY, ReflectionUtils.asObjectIdMaybe(id)));
     }
 
     public void deleteMatching( Constraints c ) {
@@ -112,7 +112,7 @@ public class DAO<T,K extends Serializable> {
     }
 
     public T get( K id ) {
-        BasicDBObject dbObject = (BasicDBObject) collection().findOne(SimpleValueConverter.asObjectIdMaybe(id));
+		BasicDBObject dbObject = (BasicDBObject) collection().findOne(ReflectionUtils.asObjectIdMaybe(id));
         return dbObject != null ? map(dbObject) : null;
     }
 

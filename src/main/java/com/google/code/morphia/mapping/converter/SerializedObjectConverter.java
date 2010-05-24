@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.google.code.morphia.mapping.encoder;
+package com.google.code.morphia.mapping.converter;
 
 import java.io.IOException;
 
@@ -16,51 +16,41 @@ import com.google.code.morphia.mapping.Serializer;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  */
 @SuppressWarnings("unchecked")
-public class SerializedObjectEncoder implements TypeEncoder
-{
-	
+public class SerializedObjectConverter extends TypeConverter {
 	@Override
-	public boolean canHandle(final MappedField f)
-	{
-		return (f.hasAnnotation(Serialized.class));
+	boolean canHandle(Class c, MappedField optionalExtraInfo) {
+		if (optionalExtraInfo == null)
+			return false;
+		
+		return (optionalExtraInfo.hasAnnotation(Serialized.class));
 	}
 	
 	@Override
-	public Object decode(final EncodingContext ctx, final MappedField f, final Object fromDBObject)
-	throws MappingException
-	{
+	Object decode(Class targetClass, Object fromDBObject, MappedField f) throws MappingException {
 		
-		if (!((fromDBObject instanceof Binary) || (fromDBObject instanceof byte[])))
-		{
+		if (!((fromDBObject instanceof Binary) || (fromDBObject instanceof byte[]))) {
 			throw new MappingException("The stored data is not a DBBinary or byte[] instance for " + f.getFullName()
 					+ " ; it is a " + fromDBObject.getClass().getName());
 		}
 		
-		try
-		{
+		try {
 			boolean useCompression = !f.getAnnotation(Serialized.class).disableCompression();
 			return Serializer.deserialize(fromDBObject, useCompression);
-		}
-		catch (IOException e)
-		{
+		} catch (IOException e) {
 			throw new MappingException("While deserializing to " + f.getFullName(), e);
-		}
-		catch (ClassNotFoundException e)
-		{
+		} catch (ClassNotFoundException e) {
 			throw new MappingException("While deserializing to " + f.getFullName(), e);
 		}
 	}
 	
 	@Override
-	public Object encode(final EncodingContext ctx, final MappedField f, final Object value) throws MappingException
-	{
-		try
-		{
+	Object encode(Object value, MappedField f) {
+		if (value == null)
+			return null;
+		try {
 			boolean useCompression = !f.getAnnotation(Serialized.class).disableCompression();
 			return Serializer.serialize(value, useCompression);
-		}
-		catch (IOException ex)
-		{
+		} catch (IOException ex) {
 			throw new RuntimeException(ex);
 		}
 	}

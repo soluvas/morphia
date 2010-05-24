@@ -12,16 +12,18 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.code.morphia.mapping.converter.SimpleValueConverter;
+import com.google.code.morphia.mapping.converter.ConverterChain;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 class EmbeddedMapper {
 	private final Mapper mapper;
+	private final ConverterChain chain;
 	
-	public EmbeddedMapper(Mapper mapper) {
+	public EmbeddedMapper(Mapper mapper, ConverterChain chain) {
 		this.mapper = mapper;
+		this.chain = chain;
 	}
 	
 	void mapEmbeddedToDBObject(final Object entity, final MappedField mf, final BasicDBObject dbObject,
@@ -80,7 +82,7 @@ class EmbeddedMapper {
 					convertedVal.removeField(Mapper.CLASS_NAME_FIELDNAME);
 				}
 				
-				String strKey = SimpleValueConverter.objectToValue(entry.getKey()).toString();
+				String strKey = chain.encode(entry.getKey()).toString();
 				values.put(strKey, convertedVal);
 			}
 			if (values.size() > 0) {
@@ -119,8 +121,8 @@ class EmbeddedMapper {
 			String name) {
 		// multiple documents in a List
 		Class newEntityType = mf.getSubType();
-		Collection values = (Collection) ReflectionUtils.tryConstructor(
-				(!mf.isSet()) ? ArrayList.class : HashSet.class, mf.getCTor());
+		Collection values = (Collection) ReflectionUtils.newInstance(
+				mf.getCTor(), (!mf.isSet()) ? ArrayList.class : HashSet.class);
 		
 		if (dbObject.containsField(name)) {
 			Object dbVal = dbObject.get(name);
@@ -136,7 +138,7 @@ class EmbeddedMapper {
 		}
 		if (values.size() > 0) {
 			if (mf.getType().isArray()) {
-				Object[] array = SimpleValueConverter.convertToArray(mf.getSubType(), values);
+				Object[] array = ReflectionUtils.convertToArray(mf.getSubType(), values);
 				mf.setFieldValue(entity, array);
 			} else {
 				mf.setFieldValue(entity, values);
@@ -146,7 +148,7 @@ class EmbeddedMapper {
 
 	private void readMapFromDBObject(final BasicDBObject dbObject, final MappedField mf, final Object entity,
 			String name) {
-		Map map = (Map) ReflectionUtils.tryConstructor(HashMap.class, mf.getCTor());
+		Map map = (Map) ReflectionUtils.newInstance(mf.getCTor(), HashMap.class);
 		
 		if (dbObject.containsField(name)) {
 			BasicDBObject dbVal = (BasicDBObject) dbObject.get(name);
@@ -155,7 +157,7 @@ class EmbeddedMapper {
 				
 				newEntity = mapper.mapDBObjectToEntity((BasicDBObject) entry.getValue(), newEntity);
 				// TODO Add Lifecycle call for newEntity
-				Object objKey = SimpleValueConverter.objectFromValue(mf.getMapKeyType(), entry.getKey());
+				Object objKey = chain.decode(mf.getMapKeyType(), entry.getKey());
 				map.put(objKey, newEntity);
 			}
 		}

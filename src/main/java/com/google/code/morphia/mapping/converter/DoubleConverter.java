@@ -3,14 +3,22 @@
  */
 package com.google.code.morphia.mapping.converter;
 
+import com.google.code.morphia.mapping.MappedField;
+import com.google.code.morphia.mapping.MappingException;
+
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
- *
+ * 
  */
-public class DoubleConverter implements ValueConverter<Double> {
+public class DoubleConverter extends TypeConverter {
 	
 	@Override
-	public Double objectFromValue(Object val) {
+	boolean canHandle(Class c, MappedField optionalExtraInfo) {
+		return oneOf(c, double.class, Double.class);
+	}
+	
+	@Override
+	Object decode(Class targetClass, Object val, MappedField optionalExtraInfo) throws MappingException {
 		if (val instanceof Double) {
 			return (Double) val;
 		}
@@ -20,11 +28,6 @@ public class DoubleConverter implements ValueConverter<Double> {
 		}
 		String sVal = val.toString();
 		return Double.parseDouble(sVal);
-	}
-	
-	@Override
-	public Object valueFromObject(Double t) {
-		return t;
 	}
 	
 }

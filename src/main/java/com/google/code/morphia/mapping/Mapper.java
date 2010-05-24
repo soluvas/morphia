@@ -23,10 +23,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.bson.types.ObjectId;
-
 import com.google.code.morphia.EntityInterceptor;
-import com.google.code.morphia.Key;
 import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.PostLoad;
@@ -36,12 +33,11 @@ import com.google.code.morphia.annotations.PreSave;
 import com.google.code.morphia.annotations.Property;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.annotations.Serialized;
-import com.google.code.morphia.mapping.converter.SimpleValueConverter;
+import com.google.code.morphia.mapping.converter.ConverterChain;
 import com.google.code.morphia.mapping.lazy.CGLibLazyProxyFactory;
 import com.google.code.morphia.mapping.lazy.DatastoreProvider;
 import com.google.code.morphia.mapping.lazy.DefaultDatastoreProvider;
 import com.google.code.morphia.mapping.lazy.LazyProxyFactory;
-import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReference;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedReference;
 import com.google.code.morphia.mapping.lazy.proxy.ProxyHelper;
 import com.google.code.morphia.utils.ReflectionUtils;
@@ -66,11 +62,17 @@ public class Mapper {
 	final ThreadLocal<Map<String, Object>> proxyCache = new ThreadLocal<Map<String, Object>>();
 	private final ConcurrentLinkedQueue<EntityInterceptor> interceptors = new ConcurrentLinkedQueue<EntityInterceptor>();
 
-	private final ReferenceMapper referenceMapper = new ReferenceMapper(this);
-	private final EmbeddedMapper embeddedMapper = new EmbeddedMapper(this);
-	private final ValueMapper valueMapper = new ValueMapper();
+	private final ReferenceMapper referenceMapper;
+	private final EmbeddedMapper embeddedMapper;
+	private final ValueMapper valueMapper;
+	private final ConverterChain chain;
 
 	public Mapper() {
+		chain = new ConverterChain();// FIXME us should be exposed to be
+										// configurable
+		valueMapper = new ValueMapper(chain);
+		embeddedMapper = new EmbeddedMapper(this, chain);
+		referenceMapper = new ReferenceMapper(this, chain);
 	}
 
 	public void addInterceptor(final EntityInterceptor ei) {
@@ -148,7 +150,7 @@ public class Mapper {
 		// update id field, if there.
 		if ((mc.getIdField() != null) && (dbId != null)) {
 			try {
-				Object dbIdValue = SimpleValueConverter.objectFromValue(mc.getIdField().getType(), dbId);
+				Object dbIdValue = chain.decode(mc.getIdField().getType(), dbId);
 				Object idValue = mc.getIdField().get(entity);
 				if (idValue != null) {
 					// The entity already had an id set. Check to make sure it
@@ -201,7 +203,7 @@ public class Mapper {
 			return null;
 		}
 		Class origClass = javaObj.getClass();
-		Object newObj = SimpleValueConverter.objectToValue(origClass, javaObj);
+		Object newObj = chain.encode(origClass, javaObj);
 		Class type = newObj.getClass();
 		boolean bSameType = origClass.equals(type);
 		boolean bSingleValue = true;
@@ -262,7 +264,7 @@ public class Mapper {
 				if (mf.hasAnnotation(Id.class)) {
 					Object dbVal = mf.getFieldValue(entity);
 					if (dbVal != null) {
-						dbObject.put(ID_KEY, SimpleValueConverter.objectToValue(SimpleValueConverter
+						dbObject.put(ID_KEY, chain.encode(ReflectionUtils
 								.asObjectIdMaybe(dbVal)));
 					}
 				} else if (mf.hasAnnotation(Reference.class)) {
@@ -313,7 +315,7 @@ public class Mapper {
 			for (MappedField mf : mc.getPersistenceFields()) {
 				if (mf.hasAnnotation(Id.class)) {
 					if (dbObject.get(ID_KEY) != null) {
-						mf.setFieldValue(entity, SimpleValueConverter.objectFromValue(mf.getType(), dbObject, ID_KEY));
+						mf.setFieldValue(entity, chain.decode(mf.getType(), dbObject.get(ID_KEY)));
 					}
 
 				} else if (mf.hasAnnotation(Reference.class)) {

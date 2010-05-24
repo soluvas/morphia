@@ -3,7 +3,7 @@
  */
 package com.google.code.morphia.mapping.converter;
 
-import java.util.Date;
+import org.bson.types.ObjectId;
 
 import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.MappingException;
@@ -11,19 +11,15 @@ import com.google.code.morphia.mapping.MappingException;
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  */
-public class DateConverter extends TypeConverter {
+public class ObjectIdConverter extends TypeConverter {
 	@Override
 	boolean canHandle(Class c, MappedField optionalExtraInfo) {
-		return oneOf(c, Date.class);
+		return oneOf(c, ObjectId.class);
 	}
 	
 	@Override
-	Object decode(Class targetClass, Object o, MappedField optionalExtraInfo) throws MappingException {
-		if (o instanceof Date) {
-			Date d = (Date) o;
-			return d;
-		}
-		return new Date(Date.parse(o.toString())); // good luck
+	Object decode(Class targetClass, Object val, MappedField optionalExtraInfo) throws MappingException {
+		return val;
 	}
 	
 }

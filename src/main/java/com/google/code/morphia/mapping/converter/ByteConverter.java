@@ -3,14 +3,21 @@
  */
 package com.google.code.morphia.mapping.converter;
 
+import com.google.code.morphia.mapping.MappedField;
+import com.google.code.morphia.mapping.MappingException;
+
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
- *
+ * 
  */
-public class ByteConverter implements ValueConverter<Byte> {
+public class ByteConverter extends TypeConverter {
+	@Override
+	boolean canHandle(Class c, MappedField optionalExtraInfo) {
+		return oneOf(c, Byte.class, byte.class);
+	}
 	
 	@Override
-	public Byte objectFromValue(Object val) {
+	Object decode(Class targetClass, Object val, MappedField optionalExtraInfo) throws MappingException {
 		Object dbValue = val;
 		if (dbValue instanceof Double) {
 			return ((Double) dbValue).byteValue();
@@ -19,11 +26,6 @@ public class ByteConverter implements ValueConverter<Byte> {
 		}
 		String sVal = val.toString();
 		return Byte.parseByte(sVal);
-	}
-	
-	@Override
-	public Object valueFromObject(Byte t) {
-		return t;
 	}
 	
 }

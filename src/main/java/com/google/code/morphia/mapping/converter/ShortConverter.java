@@ -3,14 +3,21 @@
  */
 package com.google.code.morphia.mapping.converter;
 
+import com.google.code.morphia.mapping.MappedField;
+import com.google.code.morphia.mapping.MappingException;
+
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
- *
+ * 
  */
-public class ShortConverter implements ValueConverter<Short> {
+public class ShortConverter extends TypeConverter {
+	@Override
+	boolean canHandle(Class c, MappedField optionalExtraInfo) {
+		return oneOf(c, short.class, Short.class);
+	}
 	
 	@Override
-	public Short objectFromValue(Object val) {
+	Object decode(Class targetClass, Object val, MappedField optionalExtraInfo) throws MappingException {
 		Object dbValue = val;
 		if (dbValue instanceof Double) {
 			return ((Double) dbValue).shortValue();
@@ -19,11 +26,6 @@ public class ShortConverter implements ValueConverter<Short> {
 		}
 		String sVal = val.toString();
 		return Short.parseShort(sVal);
-	}
-	
-	@Override
-	public Object valueFromObject(Short t) {
-		return t;
 	}
 	
 }
