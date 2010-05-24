@@ -105,7 +105,6 @@ class ReferenceMapper {
 				}
 			} else {
 				for (Map.Entry<Object, Object> entry : map.entrySet()) {
-					// TODO is objectToValue necessary here?
 					String strKey = chain.encode(entry.getKey()).toString();
 					values.put(strKey, getKey(entry.getValue()).toRef());
 				}

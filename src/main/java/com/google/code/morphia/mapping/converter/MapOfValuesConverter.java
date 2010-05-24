@@ -31,7 +31,6 @@ public class MapOfValuesConverter extends TypeConverter {
 		Map<Object, Object> map = (Map<Object, Object>) fromDBObject;
 		Map values = (Map) ReflectionUtils.newInstance(f.getCTor(), HashMap.class);
 		for (Map.Entry<Object, Object> entry : map.entrySet()) {
-			// FIXME reroute
 			Object objKey = chain.decode(f.getMapKeyType(), entry.getKey());
 			values.put(objKey, chain.decode(f.getSubType(), entry.getValue()));
 		}
@@ -47,7 +46,6 @@ public class MapOfValuesConverter extends TypeConverter {
 		if ((map != null) && (map.size() > 0)) {
 			Map mapForDb = new HashMap();
 			for (Map.Entry<Object, Object> entry : map.entrySet()) {
-				// FIXME reroute
 				String strKey = chain.encode(entry.getKey()).toString();
 				mapForDb.put(strKey, chain.encode(entry.getValue()));
 			}
