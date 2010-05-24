@@ -86,6 +86,10 @@ public class Key<T> implements Serializable, Comparable<Key<?>>
 		return this.kind;
 	}
 	
+	public void setKindClass(Class<? extends T> clazz) {
+		this.kindClass = clazz;
+	}
+	
 	public Class<? extends T> getKindClass() {
 		return this.kindClass;
 	}

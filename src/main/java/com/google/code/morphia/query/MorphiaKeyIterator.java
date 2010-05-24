@@ -38,7 +38,7 @@ public class MorphiaKeyIterator<T> implements Iterable<Key<T>>, Iterator<Key<T>>
 		if(!hasNext()) throw new NoSuchElementException();
 		BasicDBObject dbObj = (BasicDBObject) wrapped.next();
 		Key<T> key = new Key<T>(kind, dbObj.get(Mapper.ID_KEY));
-		key.updateKind(m);
+		key.setKindClass(this.clazz);
 		return key;
 	}
 	
