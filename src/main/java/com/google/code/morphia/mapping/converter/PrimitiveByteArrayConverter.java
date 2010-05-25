@@ -9,10 +9,10 @@ import com.google.code.morphia.mapping.MappingException;
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  */
-public class ByteArrayConverter extends TypeConverter {
+public class PrimitiveByteArrayConverter extends TypeConverter {
 	@Override
 	boolean canHandle(Class c, MappedField optionalExtraInfo) {
-		return oneOf(c, byte[].class); // TODO add Byte[]
+		return oneOf(c, byte[].class);
 	}
 	
 	@Override

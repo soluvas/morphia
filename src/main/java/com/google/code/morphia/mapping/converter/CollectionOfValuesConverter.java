@@ -32,9 +32,9 @@ public class CollectionOfValuesConverter extends TypeConverter {
 	
 	@Override
 	Object decode(Class targetClass, Object fromDBObject, MappedField mf) throws MappingException {
-		List list = (List) fromDBObject;
-		// TODO what if that fails? migration
-		// issue?
+		Collection list = (Collection) fromDBObject;
+		if (mf == null)
+			return list;
 		
 		// FIXME we rely on subtype here... is this possible without?
 
@@ -43,20 +43,18 @@ public class CollectionOfValuesConverter extends TypeConverter {
 			// map back to the java datatype
 			// (List/Set/Array[])
 			Collection values = createCollection(mf);
-			
 			for (Object o : list) {
 				values.add(chain.decode(subtype, o));
 			}
-			
-			if (mf.getType().isArray()) {
-				return ReflectionUtils.convertToArray(subtype, values);
-			} else {
-				return values;
-			}
-		} else {
-			// TODO for types converted by driver?
-			return list;
+			list = values;
 		}
+		
+		if (mf.getType().isArray()) {
+			return ReflectionUtils.convertToArray(subtype, list);
+		}
+		
+		return list;
+
 	}
 	
 	private Collection createCollection(final MappedField mf) {
@@ -79,27 +77,21 @@ public class CollectionOfValuesConverter extends TypeConverter {
 		Iterable iterableValues = null;
 		
 		if (value.getClass().isArray()) {
-			Object[] objects = null;
-			try {
-				objects = (Object[]) value;
-				// TODO us see if possible without catching exception
-			} catch (ClassCastException e) {
-				// store the primitive array without making
-				// it into a list.
-				if (Array.getLength(value) == 0) {
-					return null;
-				}
-				return value;
+			
+			if (Array.getLength(value) == 0) {
+				return null; // TODO should be based on some config criteria?
 			}
-			// convert array into arraylist
-			iterableValues = Arrays.asList(objects);
+
+			if (value.getClass().getComponentType().isPrimitive())
+				return value;
+			
+			iterableValues = Arrays.asList((Object[]) value);
 		} else {
 			// cast value to a common interface
 			iterableValues = (Iterable) value;
 		}
 		
 		List values = new ArrayList();
-		
 		if (f != null && f.getSubType() != null) {
 			for (Object o : iterableValues) {
 				values.add(chain.encode(f.getSubType(), o));

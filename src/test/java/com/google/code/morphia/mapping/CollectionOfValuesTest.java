@@ -26,6 +26,7 @@ public class CollectionOfValuesTest extends TestBase {
 		@Id
 		String id;
 
+		
 		@Embedded
 		List<List<String>> listOfList;
 	}

@@ -15,9 +15,7 @@ import com.google.code.morphia.mapping.validation.ConstraintViolation.Level;
  * 
  */
 public class NoId implements ClassConstraint {
-	
-	// FIXME discuss.
-	
+
 	@Override
 	public void check(MappedClass mc, Set<ConstraintViolation> ve) {
 		if (mc.getIdField() == null && mc.getEmbeddedAnnotation() == null) {

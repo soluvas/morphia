@@ -35,7 +35,7 @@ public class ConverterChain {
 		knownEncoders.add(new ShortConverter());
 		knownEncoders.add(new IntegerConverter());
 		knownEncoders.add(new SerializedObjectConverter());
-		knownEncoders.add(new ByteArrayConverter());
+		knownEncoders.add(new PrimitiveByteArrayConverter());
 		knownEncoders.add(new CharArrayConverter());
 		knownEncoders.add(new DateConverter());
 		knownEncoders.add(new KeyConverter());
@@ -43,27 +43,22 @@ public class ConverterChain {
 		knownEncoders.add(new MapOfValuesConverter(this));
 		knownEncoders.add(new CollectionOfValuesConverter(this));
 		
-		// last resort
+		// TODO discuss: maybe a config parameter? last resort
 		knownEncoders.add(new NullConverter());
 		
 	}
 	
 	public void fromDBObject(final DBObject dbObj, final MappedField mf, final Object targetEntity) {
-		// FIXME us
-		
 		Object object = dbObj.get(mf.getMappedFieldName());
 		if (object == null) {
 			handleAttributeNotPresentInDBObject(mf);
 		} else {
 			TypeConverter enc = getEncoder(mf);
 			mf.setFieldValue(targetEntity, enc.decode(mf.getType(), object, mf));
-			// FIXME handle uncaught
 		}
-		
 	}
 	
-	private void handleAttributeNotPresentInDBObject(final MappedField mf) {
-		
+	protected void handleAttributeNotPresentInDBObject(final MappedField mf) {
 	}
 	
 	private TypeConverter getEncoder(final MappedField mf) {
@@ -98,7 +93,7 @@ public class ConverterChain {
 	
 	public Object decode(Class c, Object fromDBObject) {
 		if (c == null)
-			c = fromDBObject.getClass();// FIXME find that rather weird
+			c = fromDBObject.getClass();
 		return getEncoder(c).decode(c, fromDBObject);
 	}
 	
