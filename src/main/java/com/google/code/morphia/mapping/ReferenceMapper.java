@@ -182,7 +182,7 @@ class ReferenceMapper {
 						mapper.datastoreProvider);
 				ProxiedEntityReferenceList referencesAsProxy = (ProxiedEntityReferenceList) references;
 				
-				// TODO test for existence could be done in one go
+				// FIXME us test for existence could be done in one go
 				// instead of one-by-one lookups.
 				
 				Object dbVal = dbObject.get(name);
