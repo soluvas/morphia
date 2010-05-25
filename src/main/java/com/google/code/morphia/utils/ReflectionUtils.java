@@ -40,7 +40,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
+import java.util.regex.Pattern;
 
+import org.bson.types.CodeWScope;
 import org.bson.types.ObjectId;
 
 import com.google.code.morphia.Key;
@@ -197,7 +199,7 @@ public class ReflectionUtils
                 || (type == long.class) || (type == Double.class) || (type == double.class) || (type == float.class)
                 || (type == Float.class) || (type == Boolean.class) || (type == boolean.class) || (type == Byte.class)
                 || (type == byte.class) || (type == Date.class) || (type == Locale.class) || (type == DBRef.class)
-                || (type == ObjectId.class) || type.isEnum() || (type == Key.class);
+                || (type == Pattern.class) || (type == CodeWScope.class) || (type == ObjectId.class) || (type == Key.class) || type.isEnum();
     }
 
     /**

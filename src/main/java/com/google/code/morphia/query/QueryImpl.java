@@ -2,12 +2,9 @@ package com.google.code.morphia.query;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -224,8 +221,7 @@ public class QueryImpl<T> implements Query<T> {
 		Class<?> type = (mappedValue != null) ? mappedValue.getClass() : null;
 		
 		//convert single values into lists for $in/$nin
-		if (type != null && (op == FilterOperator.IN || op == FilterOperator.NOT_IN) &&
-				!type.isArray() && !ReflectionUtils.implementsAnyInterface(type, Iterable.class, Collection.class, List.class, Set.class, Map.class)) {
+		if (type != null && (op == FilterOperator.IN || op == FilterOperator.NOT_IN) && !type.isArray()) {
 			mappedValue = Collections.singletonList(mappedValue);
 		}
 		
