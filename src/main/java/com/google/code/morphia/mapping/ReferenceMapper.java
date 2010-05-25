@@ -10,8 +10,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.bson.types.ObjectId;
-
 import com.google.code.morphia.Key;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.mapping.converter.ConverterChain;
@@ -123,9 +121,7 @@ class ReferenceMapper {
 			}
 			MappedClass mappedClass = mapper.getMappedClass(entity);
 			Object id = mappedClass.getIdField().get(entity);
-			// TODO scott: please help me with this one: why is that necessary?
-			ObjectId idStringAsObjectId = new ObjectId(id.toString());
-			Key key = new Key(mappedClass.getCollectionName(), idStringAsObjectId);
+			Key key = new Key(mappedClass.getCollectionName(), ReflectionUtils.asObjectIdMaybe(id));
 			return key;
 		} catch (IllegalAccessException iae) {
 			throw new RuntimeException(iae);

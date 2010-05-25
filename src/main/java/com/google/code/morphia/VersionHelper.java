@@ -10,7 +10,6 @@ package com.google.code.morphia;
 public class VersionHelper {
 	
 	public static long nextValue(Long oldVersion) {
-		// TODO is this granular enough?
 		long currentTimeMillis = System.currentTimeMillis();
 		// very unlikely, but you never know
 		if (oldVersion != null && oldVersion.longValue() == currentTimeMillis)
