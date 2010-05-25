@@ -14,8 +14,7 @@ import com.google.code.morphia.mapping.MappingException;
  * 
  */
 public class LocaleConverter extends TypeConverter {
-	// FIXME us needs testing
-	
+
 	@Override
 	boolean canHandle(Class c, MappedField optionalExtraInfo) {
 		return oneOf(c, Locale.class);
@@ -30,7 +29,7 @@ public class LocaleConverter extends TypeConverter {
 	Object encode(Object value, MappedField optionalExtraInfo) {
 		if (value == null)
 			return null;
-		return value.toString(); // TODO is that safe?
+		return value.toString();
 	}
 	
 	public static Locale parseLocale(final String localeString) {

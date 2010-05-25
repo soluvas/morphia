@@ -12,7 +12,7 @@ import com.google.code.morphia.mapping.MappingException;
 public class CharArrayConverter extends TypeConverter {
 	@Override
 	boolean canHandle(Class c, MappedField optionalExtraInfo) {
-		return oneOf(c, char[].class); // TODO add Byte[]
+		return oneOf(c, char[].class);
 	}
 	
 	@Override
