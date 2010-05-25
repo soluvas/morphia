@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.junit.Test;
 
@@ -121,6 +122,12 @@ public class TestQuery  extends TestBase {
 		assertNull(ds.find(ContainsPhotoKey.class, "photo", 1).get());
 	}
 	
+	@Test
+	public void testRegexQuery() throws Exception {
+		ds.save(new PhotoWithKeywords());
+		assertNotNull(ds.find(PhotoWithKeywords.class).disableValidation().filter("keywords.keyword", Pattern.compile("california")).get());
+		assertNull(ds.find(PhotoWithKeywords.class, "keywords.keyword",  Pattern.compile("blah")).get());
+	}
 	
 	@Test
 	public void testDeepQuery() throws Exception {
