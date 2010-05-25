@@ -41,7 +41,7 @@ public class ConverterChain {
 		knownEncoders.add(new KeyConverter());
 		knownEncoders.add(new DBRefConverter());
 		knownEncoders.add(new MapOfValuesConverter(this));
-		knownEncoders.add(new CollectionOfValuesConverter(this));
+		knownEncoders.add(new CollectionConverter(this));
 		
 		// TODO discuss: maybe a config parameter? last resort
 		knownEncoders.add(new NullConverter());

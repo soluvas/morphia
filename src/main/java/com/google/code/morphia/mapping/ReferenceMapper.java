@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import com.google.code.morphia.Datastore;
 import com.google.code.morphia.Key;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.mapping.converter.ConverterChain;
@@ -152,7 +153,7 @@ class ReferenceMapper {
 			
 			Object resolvedObject = null;
 			if (refAnn.lazy() && LazyFeatureDependencies.assertDependencyFullFilled()) {
-				if (exists(dbRef)) {
+				if (exists(referenceObjClass, dbRef)) {
 					resolvedObject = createOrReuseProxy(referenceObjClass, dbRef);
 				} else {
 					if (!refAnn.ignoreMissing()) {
@@ -244,9 +245,9 @@ class ReferenceMapper {
 		}
 	}
 	
-	boolean exists(final DBRef dbRef) {
-		// FIXME us: that is cheaper to implement!
-		return dbRef.fetch() != null;
+	boolean exists(Class c, final DBRef dbRef) {
+		Datastore ds = mapper.datastoreProvider.get();
+		return ds.createQuery(c).filter("_id", dbRef.getId()).countAll() == 1;
 	}
 	
 	Object resolveObject(final DBRef dbRef, final Class referenceObjClass, final boolean ignoreMissing,
@@ -269,7 +270,7 @@ class ReferenceMapper {
 	
 	private void addToReferenceList(final MappedField mf, final Reference refAnn,
 			final ProxiedEntityReferenceList referencesAsProxy, final DBRef dbRef) {
-		if (!exists(dbRef)) {
+		if (!exists(mf.getSubType(), dbRef)) {
 			if (!refAnn.ignoreMissing()) {
 				throw new MappingException("The reference(" + dbRef.toString() + ") could not be fetched for "
 						+ mf.getFullName());

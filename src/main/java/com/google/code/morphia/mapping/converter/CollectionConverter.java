@@ -18,10 +18,10 @@ import com.google.code.morphia.utils.ReflectionUtils;
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  */
-public class CollectionOfValuesConverter extends TypeConverter {
+public class CollectionConverter extends TypeConverter {
 	private final ConverterChain chain;
 	
-	public CollectionOfValuesConverter(ConverterChain chain) {
+	public CollectionConverter(ConverterChain chain) {
 		this.chain = chain;
 	}
 	

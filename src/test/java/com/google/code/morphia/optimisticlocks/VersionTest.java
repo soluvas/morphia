@@ -5,12 +5,13 @@ package com.google.code.morphia.optimisticlocks;
 
 import java.util.ConcurrentModificationException;
 
-import com.google.code.morphia.annotations.PreSave;
+import com.google.code.morphia.annotations.Entity;
+import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.Version;
 import com.google.code.morphia.mapping.lazy.JUnit3TestBase;
+import com.google.code.morphia.mapping.validation.ConstraintViolationException;
 import com.google.code.morphia.testutil.AssertedFailure;
 import com.google.code.morphia.utils.AbstractMongoEntity;
-import com.mongodb.DBObject;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
@@ -32,7 +33,26 @@ public class VersionTest extends JUnit3TestBase {
 		
 		String text;
 	}
+	
+	@Entity
+	static class InvalidVersionUse {
+		@Id
+		String id;
+		@Version
+		long version1;
+		@Version
+		long version2;
+		
+	}
 
+	public void testInvalidVersionUse() throws Exception {
+		new AssertedFailure(ConstraintViolationException.class) {
+			public void thisMustFail() throws Throwable {
+				morphia.map(InvalidVersionUse.class);
+			}
+		};
+
+	}
 	public void testVersions() throws Exception {
 		ALongPrimitive a = new ALongPrimitive();
 		assertEquals(0, a.hubba);
