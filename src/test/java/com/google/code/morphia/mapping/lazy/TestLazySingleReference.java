@@ -1,5 +1,9 @@
 package com.google.code.morphia.mapping.lazy;
 
+import junit.framework.Assert;
+
+import org.junit.Test;
+
 import com.google.code.morphia.Key;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.mapping.lazy.proxy.LazyReferenceFetchingException;
@@ -7,7 +11,7 @@ import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReference;
 import com.google.code.morphia.utils.AbstractMongoEntity;
 
 public class TestLazySingleReference extends ProxyTestBase {
-
+	@Test
 	public final void testCreateProxy() {
 		RootEntity root = new RootEntity();
 		ReferencedEntity referenced = new ReferencedEntity();
@@ -21,9 +25,9 @@ public class TestLazySingleReference extends ProxyTestBase {
 		root = ds.get(root);
 
 		assertNotFetched(root.r);
-		assertEquals("bar", root.r.getFoo());
+		Assert.assertEquals("bar", root.r.getFoo());
 		assertFetched(root.r);
-		assertEquals("bar", root.r.getFoo());
+		Assert.assertEquals("bar", root.r.getFoo());
 
 		// now remove it from DB
 		ds.delete(root.r);
@@ -34,13 +38,14 @@ public class TestLazySingleReference extends ProxyTestBase {
 		try {
 			// must fail
 			root.r.getFoo();
-			fail("Expected Exception did not happen");
+			Assert.fail("Expected Exception did not happen");
 		} catch (LazyReferenceFetchingException expected) {
 			// fine
 		}
 
 	}
-
+	
+	@Test
 	public final void testShortcutInterface() {
 		RootEntity root = new RootEntity();
 		ReferencedEntity reference = new ReferencedEntity();
@@ -58,7 +63,7 @@ public class TestLazySingleReference extends ProxyTestBase {
 
 		assertIsProxy(p);
 		assertNotFetched(p);
-		assertEquals(keyAsString, ((ProxiedEntityReference) p).__getKey().getId().toString());
+		Assert.assertEquals(keyAsString, ((ProxiedEntityReference) p).__getKey().getId().toString());
 		// still unfetched?
 		assertNotFetched(p);
 		p.getFoo();
@@ -79,7 +84,7 @@ public class TestLazySingleReference extends ProxyTestBase {
 		assertNotFetched(p);
 	}
 
-
+	@Test
 	public final void testSameProxy() {
 		RootEntity root = new RootEntity();
 		ReferencedEntity reference = new ReferencedEntity();
@@ -92,9 +97,10 @@ public class TestLazySingleReference extends ProxyTestBase {
 		ds.save(root);
 
 		root = ds.get(root);
-		assertSame(root.r, root.secondReference);
+		Assert.assertSame(root.r, root.secondReference);
 	}
-
+	
+	@Test
 	public final void testSerialization() {
 		RootEntity e1 = new RootEntity();
 		ReferencedEntity e2 = new ReferencedEntity();
@@ -108,12 +114,12 @@ public class TestLazySingleReference extends ProxyTestBase {
 		e1 = deserialize(ds.get(e1));
 
 		assertNotFetched(e1.r);
-		assertEquals("bar", e1.r.getFoo());
+		Assert.assertEquals("bar", e1.r.getFoo());
 		assertFetched(e1.r);
 
 		e1 = deserialize(e1);
 		assertNotFetched(e1.r);
-		assertEquals("bar", e1.r.getFoo());
+		Assert.assertEquals("bar", e1.r.getFoo());
 		assertFetched(e1.r);
 
 	}

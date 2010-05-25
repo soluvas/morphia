@@ -3,8 +3,10 @@
  */
 package com.google.code.morphia.mapping.validation.classrules;
 
+import org.junit.Test;
+
+import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.Version;
-import com.google.code.morphia.mapping.lazy.JUnit3TestBase;
 import com.google.code.morphia.mapping.validation.ConstraintViolationException;
 import com.google.code.morphia.testutil.AssertedFailure;
 import com.google.code.morphia.utils.AbstractMongoEntity;
@@ -13,7 +15,7 @@ import com.google.code.morphia.utils.AbstractMongoEntity;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  *
  */
-public class MultipleVersionsTest extends JUnit3TestBase {
+public class MultipleVersionsTest extends TestBase {
 	
 	public static class Fail1 extends AbstractMongoEntity {
 		@Version
@@ -26,7 +28,8 @@ public class MultipleVersionsTest extends JUnit3TestBase {
 		@Version
 		long v1;
 	}
-
+	
+	@Test
 	public void testCheck() {
 		new AssertedFailure(ConstraintViolationException.class) {
 			public void thisMustFail() throws Throwable {

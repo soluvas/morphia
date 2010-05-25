@@ -8,8 +8,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import junit.framework.Assert;
+
 import org.junit.Ignore;
 
+import com.google.code.morphia.TestBase;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedReference;
 
 /**
@@ -17,14 +20,14 @@ import com.google.code.morphia.mapping.lazy.proxy.ProxiedReference;
  *
  */
 @Ignore
-public class ProxyTestBase extends JUnit3TestBase {
+public class ProxyTestBase extends TestBase {
 
 	protected void assertFetched(final Object e) {
-		assertTrue(isFetched(e));
+		Assert.assertTrue(isFetched(e));
 	}
 
 	protected void assertNotFetched(final Object e) {
-		assertFalse(isFetched(e));
+		Assert.assertFalse(isFetched(e));
 	}
 
 	protected boolean isFetched(final Object e) {
@@ -36,7 +39,7 @@ public class ProxyTestBase extends JUnit3TestBase {
 	}
 
 	protected void assertIsProxy(Object p) {
-		assertTrue(p instanceof ProxiedReference);
+		Assert.assertTrue(p instanceof ProxiedReference);
 	}
 
 	protected <T> T deserialize(final Object t) {

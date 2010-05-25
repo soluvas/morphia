@@ -3,14 +3,18 @@
  */
 package com.google.code.morphia.mapping.converter;
 
-import com.google.code.morphia.mapping.lazy.JUnit3TestBase;
+import junit.framework.Assert;
+
+import org.junit.Test;
+
+import com.google.code.morphia.TestBase;
 import com.google.code.morphia.utils.AbstractMongoEntity;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  *
  */
-public class NastyEnumTest extends JUnit3TestBase {
+public class NastyEnumTest extends TestBase {
 	public enum NastyEnum {
 		A {
 			@Override
@@ -30,13 +34,14 @@ public class NastyEnumTest extends JUnit3TestBase {
 		NastyEnum e2 = NastyEnum.B;
 		NastyEnum e3 = null;
 	}
-
+	
+	@Test
 	public void testNastyEnumPerisistence() throws Exception {
 		NastyEnumEntity n = new NastyEnumEntity();
 		ds.save(n);
 		n = ds.get(n);
-		assertSame(NastyEnum.A, n.e1);
-		assertSame(NastyEnum.B, n.e2);
-		assertNull(n.e3);
+		Assert.assertSame(NastyEnum.A, n.e1);
+		Assert.assertSame(NastyEnum.B, n.e2);
+		Assert.assertNull(n.e3);
 	}
 }

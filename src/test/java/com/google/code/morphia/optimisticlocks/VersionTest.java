@@ -5,10 +5,14 @@ package com.google.code.morphia.optimisticlocks;
 
 import java.util.ConcurrentModificationException;
 
+import junit.framework.Assert;
+
+import org.junit.Test;
+
+import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.Version;
-import com.google.code.morphia.mapping.lazy.JUnit3TestBase;
 import com.google.code.morphia.mapping.validation.ConstraintViolationException;
 import com.google.code.morphia.testutil.AssertedFailure;
 import com.google.code.morphia.utils.AbstractMongoEntity;
@@ -17,7 +21,7 @@ import com.google.code.morphia.utils.AbstractMongoEntity;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  *
  */
-public class VersionTest extends JUnit3TestBase {
+public class VersionTest extends TestBase {
 	
 
 	public static class ALongPrimitive extends AbstractMongoEntity {
@@ -44,7 +48,8 @@ public class VersionTest extends JUnit3TestBase {
 		long version2;
 		
 	}
-
+	
+	@Test
 	public void testInvalidVersionUse() throws Exception {
 		new AssertedFailure(ConstraintViolationException.class) {
 			public void thisMustFail() throws Throwable {
@@ -53,25 +58,28 @@ public class VersionTest extends JUnit3TestBase {
 		};
 
 	}
+	
+	@Test
 	public void testVersions() throws Exception {
 		ALongPrimitive a = new ALongPrimitive();
-		assertEquals(0, a.hubba);
+		Assert.assertEquals(0, a.hubba);
 		ds.save(a);
-		assertTrue(a.hubba > 0);
+		Assert.assertTrue(a.hubba > 0);
 		long version1 = a.hubba;
 		
 		ds.save(a);
-		assertTrue(a.hubba > 0);
+		Assert.assertTrue(a.hubba > 0);
 		long version2 = a.hubba;
 		
-		assertFalse(version1 == version2);
+		Assert.assertFalse(version1 == version2);
 	}
 	
+	@Test
 	public void testConcurrentModDetection() throws Exception {
 		morphia.map(ALongPrimitive.class);
 
 		ALongPrimitive a = new ALongPrimitive();
-		assertEquals(0, a.hubba);
+		Assert.assertEquals(0, a.hubba);
 		ds.save(a);
 		final ALongPrimitive a1 = a;
 		
@@ -85,10 +93,11 @@ public class VersionTest extends JUnit3TestBase {
 			}
 		};
 	}
-
+	
+	@Test
 	public void testConcurrentModDetectionLong() throws Exception {
 		ALong a = new ALong();
-		assertEquals(null, (Long) a.v);
+		Assert.assertEquals(null, (Long) a.v);
 		ds.save(a);
 		final ALong a1 = a;
 		

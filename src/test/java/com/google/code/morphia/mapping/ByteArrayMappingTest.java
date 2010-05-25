@@ -3,16 +3,18 @@
  */
 package com.google.code.morphia.mapping;
 
+import junit.framework.Assert;
+
 import org.junit.Test;
 
+import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.Id;
-import com.google.code.morphia.mapping.lazy.JUnit3TestBase;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  *
  */
-public class ByteArrayMappingTest extends JUnit3TestBase {
+public class ByteArrayMappingTest extends TestBase {
 	public static class ContainsByteArray {
 		@Id
 		String id;
@@ -31,9 +33,9 @@ public class ByteArrayMappingTest extends JUnit3TestBase {
 	
 		for (int i = 0; i < test.length; i++) {
 			Byte c = test[i];
-			assertEquals(c, entity.ba[i]);
+			Assert.assertEquals(c, entity.ba[i]);
 		}
-		assertNotNull(loaded.id);
+		Assert.assertNotNull(loaded.id);
 	}
 	
 	

@@ -3,17 +3,19 @@
  */
 package com.google.code.morphia.mapping;
 
+import junit.framework.Assert;
+
 import org.junit.Test;
 
 import com.google.code.morphia.Key;
+import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.Id;
-import com.google.code.morphia.mapping.lazy.JUnit3TestBase;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  *
  */
-public class CharacterMappingTest extends JUnit3TestBase {
+public class CharacterMappingTest extends TestBase {
 	public static class ContainsChar {
 		@Id
 		String id;
@@ -47,8 +49,8 @@ public class CharacterMappingTest extends JUnit3TestBase {
 		entity.c = testChar;
 		Key<ContainsChar> savedKey = ds.save(entity);
 		ContainsChar loaded = ds.get(ContainsChar.class, savedKey.getId());
-		assertEquals(testChar, loaded.c);
-		assertNotNull(loaded.id);
+		Assert.assertEquals(testChar, loaded.c);
+		Assert.assertNotNull(loaded.id);
 	}
 	
 	@Test
@@ -59,8 +61,8 @@ public class CharacterMappingTest extends JUnit3TestBase {
 		entity.c = testChar;
 		Key<ContainsCharacter> savedKey = ds.save(entity);
 		ContainsCharacter loaded = ds.get(ContainsCharacter.class, savedKey.getId());
-		assertEquals(testChar, loaded.c);
-		assertNotNull(loaded.id);
+		Assert.assertEquals(testChar, loaded.c);
+		Assert.assertNotNull(loaded.id);
 	}
 	
 	@Test
@@ -74,9 +76,9 @@ public class CharacterMappingTest extends JUnit3TestBase {
 		
 		for (int i = 0; i < testChar.length; i++) {
 			char c = testChar[i];
-			assertEquals(c, entity.c[i]);
+			Assert.assertEquals(c, entity.c[i]);
 		}
-		assertNotNull(entity.id);
+		Assert.assertNotNull(entity.id);
 	}
 	
 	@Test
@@ -88,9 +90,9 @@ public class CharacterMappingTest extends JUnit3TestBase {
 		ds.save(entity);
 		entity = ds.get(entity);
 		
-		assertEquals(testChar[0], entity.c[0]);
-		assertEquals(testChar[1], entity.c[1]);
-		assertNotNull(entity.id);
+		Assert.assertEquals(testChar[0], entity.c[0]);
+		Assert.assertEquals(testChar[1], entity.c[1]);
+		Assert.assertNotNull(entity.id);
 	}
 
 }

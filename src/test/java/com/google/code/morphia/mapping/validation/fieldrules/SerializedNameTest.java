@@ -3,10 +3,14 @@
  */
 package com.google.code.morphia.mapping.validation.fieldrules;
 
+import junit.framework.Assert;
+
+import org.junit.Test;
+
+import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.PreSave;
 import com.google.code.morphia.annotations.Serialized;
 import com.google.code.morphia.annotations.Transient;
-import com.google.code.morphia.mapping.lazy.JUnit3TestBase;
 import com.google.code.morphia.utils.AbstractMongoEntity;
 import com.mongodb.DBObject;
 
@@ -14,7 +18,7 @@ import com.mongodb.DBObject;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  *
  */
-public class SerializedNameTest extends JUnit3TestBase {
+public class SerializedNameTest extends TestBase {
 	public static class E extends AbstractMongoEntity {
 		@Serialized("changedName")
 		byte[] b = "foo".getBytes();
@@ -29,12 +33,12 @@ public class SerializedNameTest extends JUnit3TestBase {
 		String document;
 	}
 	
-
+	@Test
 	public void testCheck() {
 		
 		E e = new E();
 		ds.save(e);
 		
-		assertTrue(e.document.contains("changedName"));
+		Assert.assertTrue(e.document.contains("changedName"));
 	}
 }

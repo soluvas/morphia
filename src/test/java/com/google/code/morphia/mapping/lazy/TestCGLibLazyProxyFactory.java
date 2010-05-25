@@ -1,10 +1,15 @@
 package com.google.code.morphia.mapping.lazy;
 
+import junit.framework.Assert;
+
+import org.junit.Test;
+
 import com.google.code.morphia.Key;
 import com.google.code.morphia.utils.AbstractMongoEntity;
 
 public class TestCGLibLazyProxyFactory extends ProxyTestBase
-{
+ {
+	@Test
 	public final void testCreateProxy()
 	{
 		final E e = new E();
@@ -14,12 +19,12 @@ public class TestCGLibLazyProxyFactory extends ProxyTestBase
 				new DefaultDatastoreProvider());
 
 		assertNotFetched(eProxy);
-		assertEquals("bar", eProxy.getFoo());
+		Assert.assertEquals("bar", eProxy.getFoo());
 		assertFetched(eProxy);
 
 		eProxy = deserialize(eProxy);
 		assertNotFetched(eProxy);
-		assertEquals("bar", eProxy.getFoo());
+		Assert.assertEquals("bar", eProxy.getFoo());
 		assertFetched(eProxy);
 
 	}

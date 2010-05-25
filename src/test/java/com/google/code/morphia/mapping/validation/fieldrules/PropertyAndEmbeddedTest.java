@@ -3,11 +3,15 @@
  */
 package com.google.code.morphia.mapping.validation.fieldrules;
 
+import junit.framework.Assert;
+
+import org.junit.Test;
+
+import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.PreSave;
 import com.google.code.morphia.annotations.Property;
 import com.google.code.morphia.annotations.Transient;
-import com.google.code.morphia.mapping.lazy.JUnit3TestBase;
 import com.google.code.morphia.mapping.validation.ConstraintViolationException;
 import com.google.code.morphia.testutil.AssertedFailure;
 import com.google.code.morphia.utils.AbstractMongoEntity;
@@ -17,7 +21,7 @@ import com.mongodb.DBObject;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  *
  */
-public class PropertyAndEmbeddedTest extends JUnit3TestBase {
+public class PropertyAndEmbeddedTest extends TestBase {
 	public static class E extends AbstractMongoEntity {
 		@Embedded("myFunkyR")
 		R r = new R();
@@ -42,13 +46,13 @@ public class PropertyAndEmbeddedTest extends JUnit3TestBase {
 		String foo = "bar";
 	}
 	
-
+	@Test
 	public void testCheck() {
 		
 		E e = new E();
 		ds.save(e);
 		
-		assertTrue(e.document.contains("myFunkyR"));
+		Assert.assertTrue(e.document.contains("myFunkyR"));
 		
 		new AssertedFailure(ConstraintViolationException.class) {
 			public void thisMustFail() throws Throwable {

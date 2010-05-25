@@ -3,7 +3,10 @@ package com.google.code.morphia.mapping.lazy;
 import java.util.HashMap;
 import java.util.Map;
 
+import junit.framework.Assert;
+
 import org.bson.types.ObjectId;
+import org.junit.Test;
 
 import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.Reference;
@@ -11,7 +14,7 @@ import com.google.code.morphia.utils.AbstractMongoEntity;
 
 public class TestReferenceMap extends ProxyTestBase
 {
-	
+	@Test
 	public final void testCreateProxy()
 	{
 		A a = new A();
@@ -27,25 +30,25 @@ public class TestReferenceMap extends ProxyTestBase
 		
 		assertIsProxy(a.bs);
 		assertNotFetched(a.bs);
-		assertEquals(3, a.bs.size());
+		Assert.assertEquals(3, a.bs.size());
 		assertFetched(a.bs);
 		
 		B b1read = a.bs.get("b1");
-		assertNotNull(b1read);
+		Assert.assertNotNull(b1read);
 		
-		assertEquals(b1, a.bs.get("b1"));
-		assertEquals(b1, a.bs.get("b1+"));
+		Assert.assertEquals(b1, a.bs.get("b1"));
+		Assert.assertEquals(b1, a.bs.get("b1+"));
 		// currently fails:
 		// assertSame(a.bs.get("b1"), a.bs.get("b1+"));
-		assertNotNull(a.bs.get("b2"));
+		Assert.assertNotNull(a.bs.get("b2"));
 		
 		a = deserialize(a);
 		assertNotFetched(a.bs);
-		assertEquals(3, a.bs.size());
+		Assert.assertEquals(3, a.bs.size());
 		assertFetched(a.bs);
-		assertEquals(b1, a.bs.get("b1"));
-		assertEquals(b1, a.bs.get("b1+"));
-		assertNotNull(a.bs.get("b2"));
+		Assert.assertEquals(b1, a.bs.get("b1"));
+		Assert.assertEquals(b1, a.bs.get("b1+"));
+		Assert.assertNotNull(a.bs.get("b2"));
 		
 		// make sure, saving does not fetch
 		a = deserialize(a);

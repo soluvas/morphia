@@ -5,7 +5,11 @@ package com.google.code.morphia.mapping.converter;
 
 import java.util.EnumSet;
 
-import com.google.code.morphia.mapping.lazy.JUnit3TestBase;
+import junit.framework.Assert;
+
+import org.junit.Test;
+
+import com.google.code.morphia.TestBase;
 import com.google.code.morphia.query.Query;
 import com.google.code.morphia.utils.AbstractMongoEntity;
 
@@ -13,7 +17,7 @@ import com.google.code.morphia.utils.AbstractMongoEntity;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  *
  */
-public class EnumSetTest extends JUnit3TestBase {
+public class EnumSetTest extends TestBase {
 	public enum NastyEnum {
 		A {
 			@Override
@@ -35,35 +39,36 @@ public class EnumSetTest extends JUnit3TestBase {
 		EnumSet<NastyEnum> empty = EnumSet.noneOf(NastyEnum.class);
 		EnumSet<NastyEnum> isNull;
 	}
-
+	
+	@Test
 	public void testNastyEnumPerisistence() throws Exception {
 		NastyEnumEntity n = new NastyEnumEntity();
 		ds.save(n);
 		n = ds.get(n);
 		
-		assertNull(n.isNull);
-		assertNotNull(n.empty);
-		assertNotNull(n.in);
-		assertNotNull(n.out);
+		Assert.assertNull(n.isNull);
+		Assert.assertNotNull(n.empty);
+		Assert.assertNotNull(n.in);
+		Assert.assertNotNull(n.out);
 		
-		assertEquals(0, n.empty.size());
-		assertEquals(3, n.in.size());
-		assertEquals(1, n.out.size());
+		Assert.assertEquals(0, n.empty.size());
+		Assert.assertEquals(3, n.in.size());
+		Assert.assertEquals(1, n.out.size());
 		
-		assertTrue(n.in.contains(NastyEnum.B));
-		assertTrue(n.in.contains(NastyEnum.C));
-		assertTrue(n.in.contains(NastyEnum.D));
-		assertFalse(n.in.contains(NastyEnum.A));
+		Assert.assertTrue(n.in.contains(NastyEnum.B));
+		Assert.assertTrue(n.in.contains(NastyEnum.C));
+		Assert.assertTrue(n.in.contains(NastyEnum.D));
+		Assert.assertFalse(n.in.contains(NastyEnum.A));
 		
-		assertTrue(n.out.contains(NastyEnum.A));
-		assertFalse(n.out.contains(NastyEnum.B));
-		assertFalse(n.out.contains(NastyEnum.C));
-		assertFalse(n.out.contains(NastyEnum.D));
+		Assert.assertTrue(n.out.contains(NastyEnum.A));
+		Assert.assertFalse(n.out.contains(NastyEnum.B));
+		Assert.assertFalse(n.out.contains(NastyEnum.C));
+		Assert.assertFalse(n.out.contains(NastyEnum.D));
 		
 		Query<NastyEnumEntity> q = ds.find(NastyEnumEntity.class, "in", NastyEnum.C);
-		assertEquals(1, q.countAll());
+		Assert.assertEquals(1, q.countAll());
 		q = ds.find(NastyEnumEntity.class, "out", NastyEnum.C);
-		assertEquals(0, q.countAll());
+		Assert.assertEquals(0, q.countAll());
 
 	}
 }

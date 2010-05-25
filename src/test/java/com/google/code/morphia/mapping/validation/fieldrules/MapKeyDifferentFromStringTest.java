@@ -6,10 +6,12 @@ package com.google.code.morphia.mapping.validation.fieldrules;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.Test;
+
+import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.annotations.Serialized;
-import com.google.code.morphia.mapping.lazy.JUnit3TestBase;
 import com.google.code.morphia.testutil.AssertedFailure;
 import com.google.code.morphia.utils.AbstractMongoEntity;
 
@@ -17,7 +19,7 @@ import com.google.code.morphia.utils.AbstractMongoEntity;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  * 
  */
-public class MapKeyDifferentFromStringTest extends JUnit3TestBase {
+public class MapKeyDifferentFromStringTest extends TestBase {
 	
 	public static class MapWithWrongKeyType1 extends AbstractMongoEntity {
 		@Serialized
@@ -37,6 +39,7 @@ public class MapKeyDifferentFromStringTest extends JUnit3TestBase {
 		
 	}
 	
+	@Test
 	public void testCheck() {
 		morphia.map(MapWithWrongKeyType1.class);
 		

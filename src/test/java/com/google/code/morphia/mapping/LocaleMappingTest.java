@@ -8,15 +8,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+import junit.framework.Assert;
+
+import org.junit.Test;
+
+import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Id;
-import com.google.code.morphia.mapping.lazy.JUnit3TestBase;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  * 
  */
-public class LocaleMappingTest extends JUnit3TestBase {
+public class LocaleMappingTest extends TestBase {
 	
 	public static class E {
 		@Id
@@ -29,6 +33,7 @@ public class LocaleMappingTest extends JUnit3TestBase {
 		Locale[] l3;
 	}
 	
+	@Test
 	public void testLocaleMapping() throws Exception {
 		E e = new E();
 		e.l1 = Locale.CANADA_FRENCH;
@@ -37,16 +42,16 @@ public class LocaleMappingTest extends JUnit3TestBase {
 		
 		ds.save(e);
 		e = ds.get(e);
-
-		assertEquals(Locale.CANADA_FRENCH, e.l1);
-
-		assertEquals(2, e.l2.size());
-		assertEquals(Locale.GERMANY, e.l2.get(0));
-		assertEquals(Locale.TRADITIONAL_CHINESE, e.l2.get(1));
-
-		assertEquals(2, e.l3.length);
-		assertEquals(Locale.TRADITIONAL_CHINESE, e.l3[0]);
-		assertEquals(Locale.FRENCH, e.l3[1]);
+		
+		Assert.assertEquals(Locale.CANADA_FRENCH, e.l1);
+		
+		Assert.assertEquals(2, e.l2.size());
+		Assert.assertEquals(Locale.GERMANY, e.l2.get(0));
+		Assert.assertEquals(Locale.TRADITIONAL_CHINESE, e.l2.get(1));
+		
+		Assert.assertEquals(2, e.l3.length);
+		Assert.assertEquals(Locale.TRADITIONAL_CHINESE, e.l3[0]);
+		Assert.assertEquals(Locale.FRENCH, e.l3[1]);
 
 	}
 }
