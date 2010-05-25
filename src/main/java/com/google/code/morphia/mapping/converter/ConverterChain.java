@@ -36,6 +36,7 @@ public class ConverterChain {
 		knownEncoders.add(new IntegerConverter());
 		knownEncoders.add(new SerializedObjectConverter());
 		knownEncoders.add(new ByteArrayConverter());
+		knownEncoders.add(new CharArrayConverter());
 		knownEncoders.add(new DateConverter());
 		knownEncoders.add(new KeyConverter());
 		knownEncoders.add(new DBRefConverter());

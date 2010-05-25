@@ -8,22 +8,20 @@ import com.google.code.morphia.mapping.MappingException;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
- * 
  */
-public class CharacterConverter extends TypeConverter {
-	
+public class CharArrayConverter extends TypeConverter {
 	@Override
 	boolean canHandle(Class c, MappedField optionalExtraInfo) {
-		return oneOf(c, Character.class, char.class);
+		return oneOf(c, char[].class); // TODO add Byte[]
 	}
 	
 	@Override
 	Object decode(Class targetClass, Object fromDBObject, MappedField optionalExtraInfo) throws MappingException {
-		return fromDBObject.toString().charAt(0);
+		return fromDBObject.toString().toCharArray();
 	}
 	
 	@Override
 	Object encode(Object value, MappedField optionalExtraInfo) {
-		return String.valueOf(value);
+		return new String((char[]) value);
 	}
 }
