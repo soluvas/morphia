@@ -221,7 +221,7 @@ public class QueryImpl<T> implements Query<T> {
 		Class<?> type = (mappedValue != null) ? mappedValue.getClass() : null;
 		
 		//convert single values into lists for $in/$nin
-		if (type != null && (op == FilterOperator.IN || op == FilterOperator.NOT_IN) && !type.isArray()) {
+		if (type != null && (op == FilterOperator.IN || op == FilterOperator.NOT_IN) && !type.isArray() && !ReflectionUtils.implementsAnyInterface(type, Iterable.class) ) {
 			mappedValue = Collections.singletonList(mappedValue);
 		}
 		
