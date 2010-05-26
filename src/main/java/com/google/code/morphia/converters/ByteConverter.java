@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.google.code.morphia.mapping.converter;
+package com.google.code.morphia.converters;
 
 import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.MappingException;
@@ -10,22 +10,23 @@ import com.google.code.morphia.mapping.MappingException;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  * 
  */
-public class ShortConverter extends TypeConverter {
+@SuppressWarnings("unchecked")
+public class ByteConverter extends TypeConverter {
 	@Override
 	boolean canHandle(Class c, MappedField optionalExtraInfo) {
-		return oneOf(c, short.class, Short.class);
+		return oneOf(c, Byte.class, byte.class);
 	}
 	
 	@Override
 	Object decode(Class targetClass, Object val, MappedField optionalExtraInfo) throws MappingException {
 		Object dbValue = val;
 		if (dbValue instanceof Double) {
-			return ((Double) dbValue).shortValue();
+			return ((Double) dbValue).byteValue();
 		} else if (dbValue instanceof Integer) {
-			return ((Integer) dbValue).shortValue();
+			return ((Integer) dbValue).byteValue();
 		}
 		String sVal = val.toString();
-		return Short.parseShort(sVal);
+		return Byte.parseByte(sVal);
 	}
 	
 }

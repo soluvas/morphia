@@ -22,6 +22,7 @@ import com.google.code.morphia.annotations.Id;
  */
 public class LocaleMappingTest extends TestBase {
 	
+	@SuppressWarnings("unchecked")
 	public static class E {
 		@Id
 		String id;

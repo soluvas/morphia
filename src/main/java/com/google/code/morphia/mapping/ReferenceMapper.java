@@ -13,7 +13,7 @@ import java.util.Map;
 import com.google.code.morphia.Datastore;
 import com.google.code.morphia.Key;
 import com.google.code.morphia.annotations.Reference;
-import com.google.code.morphia.mapping.converter.ConverterChain;
+import com.google.code.morphia.converters.DefaultConverters;
 import com.google.code.morphia.mapping.lazy.LazyFeatureDependencies;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReference;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceList;
@@ -23,17 +23,18 @@ import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBRef;
 
+@SuppressWarnings("unchecked")
 class ReferenceMapper {
 	
 	private final Mapper mapper;
-	private final ConverterChain chain;
+	private final DefaultConverters converters;
 	
-	public ReferenceMapper(Mapper mapper, ConverterChain chain) {
+	public ReferenceMapper(Mapper mapper, DefaultConverters converters) {
 		this.mapper = mapper;
-		this.chain = chain;
+		this.converters = converters;
 	}
 	
-	void mapReferencesToDBObject(final Object entity, final MappedField mf, final BasicDBObject dbObject) {
+	void toDBObject(final Object entity, final MappedField mf, final BasicDBObject dbObject) {
 		
 		String name = mf.getName();
 		
@@ -104,7 +105,7 @@ class ReferenceMapper {
 				}
 			} else {
 				for (Map.Entry<Object, Object> entry : map.entrySet()) {
-					String strKey = chain.encode(entry.getKey()).toString();
+					String strKey = converters.encode(entry.getKey()).toString();
 					values.put(strKey, getKey(entry.getValue()).toRef());
 				}
 			}
@@ -129,7 +130,7 @@ class ReferenceMapper {
 		}
 	}
 	
-	void mapReferencesFromDBObject(final BasicDBObject dbObject, final MappedField mf, final Object entity) {
+	void fromDBObject(final BasicDBObject dbObject, final MappedField mf, final Object entity) {
 		String name = mf.getName();
 		
 		Class fieldType = mf.getType();

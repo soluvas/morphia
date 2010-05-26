@@ -11,7 +11,7 @@ import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.PreSave;
 import com.google.code.morphia.annotations.Serialized;
 import com.google.code.morphia.annotations.Transient;
-import com.google.code.morphia.utils.AbstractMongoEntity;
+import com.google.code.morphia.utils.AbstractEntity;
 import com.mongodb.DBObject;
 
 /**
@@ -19,7 +19,7 @@ import com.mongodb.DBObject;
  *
  */
 public class SerializedNameTest extends TestBase {
-	public static class E extends AbstractMongoEntity {
+	public static class E extends AbstractEntity {
 		@Serialized("changedName")
 		byte[] b = "foo".getBytes();
 		

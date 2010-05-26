@@ -10,20 +10,20 @@ import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.annotations.Serialized;
 import com.google.code.morphia.mapping.validation.ConstraintViolationException;
 import com.google.code.morphia.testutil.AssertedFailure;
-import com.google.code.morphia.utils.AbstractMongoEntity;
+import com.google.code.morphia.utils.AbstractEntity;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  *
  */
 public class ReferenceAndSerializableTest extends TestBase {
-	public static class E extends AbstractMongoEntity {
+	public static class E extends AbstractEntity {
 		@Reference
 		@Serialized
 		R r;
 	}
 	
-	public static class R extends AbstractMongoEntity {
+	public static class R extends AbstractEntity {
 	}
 	
 	@Test

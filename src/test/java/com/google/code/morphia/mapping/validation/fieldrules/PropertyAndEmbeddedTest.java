@@ -14,7 +14,7 @@ import com.google.code.morphia.annotations.Property;
 import com.google.code.morphia.annotations.Transient;
 import com.google.code.morphia.mapping.validation.ConstraintViolationException;
 import com.google.code.morphia.testutil.AssertedFailure;
-import com.google.code.morphia.utils.AbstractMongoEntity;
+import com.google.code.morphia.utils.AbstractEntity;
 import com.mongodb.DBObject;
 
 /**
@@ -22,7 +22,7 @@ import com.mongodb.DBObject;
  *
  */
 public class PropertyAndEmbeddedTest extends TestBase {
-	public static class E extends AbstractMongoEntity {
+	public static class E extends AbstractEntity {
 		@Embedded("myFunkyR")
 		R r = new R();
 		
@@ -36,7 +36,7 @@ public class PropertyAndEmbeddedTest extends TestBase {
 		String document;
 	}
 	
-	public static class E2 extends AbstractMongoEntity {
+	public static class E2 extends AbstractEntity {
 		@Embedded
 		@Property("myFunkyR")
 		String s;

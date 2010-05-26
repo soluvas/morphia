@@ -15,7 +15,7 @@ import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.Version;
 import com.google.code.morphia.mapping.validation.ConstraintViolationException;
 import com.google.code.morphia.testutil.AssertedFailure;
-import com.google.code.morphia.utils.AbstractMongoEntity;
+import com.google.code.morphia.utils.AbstractEntity;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
@@ -24,14 +24,14 @@ import com.google.code.morphia.utils.AbstractMongoEntity;
 public class VersionTest extends TestBase {
 	
 
-	public static class ALongPrimitive extends AbstractMongoEntity {
+	public static class ALongPrimitive extends AbstractEntity {
 		@Version
 		long hubba;
 		
 		String text;
 	}
 	
-	public static class ALong extends AbstractMongoEntity {
+	public static class ALong extends AbstractEntity {
 		@Version
 		Long v;
 		

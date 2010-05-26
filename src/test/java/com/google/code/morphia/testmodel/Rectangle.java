@@ -17,13 +17,13 @@
 package com.google.code.morphia.testmodel;
 
 import com.google.code.morphia.annotations.Property;
-import com.google.code.morphia.utils.AbstractMongoEntity;
+import com.google.code.morphia.utils.AbstractEntity;
 
 /**
  *
  * @author Olafur Gauti Gudmundsson
  */
-public class Rectangle extends AbstractMongoEntity implements Shape {
+public class Rectangle extends AbstractEntity implements Shape {
 	private static final long serialVersionUID = 1L;
 	
 	@Property

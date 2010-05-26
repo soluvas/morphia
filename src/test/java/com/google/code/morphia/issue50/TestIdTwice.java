@@ -7,7 +7,7 @@ import org.junit.Test;
 import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.mapping.validation.ConstraintViolationException;
-import com.google.code.morphia.utils.AbstractMongoEntity;
+import com.google.code.morphia.utils.AbstractEntity;
 
 public class TestIdTwice extends TestBase {
 
@@ -21,7 +21,7 @@ public class TestIdTwice extends TestBase {
 		}
 	}
 
-	public static class A extends AbstractMongoEntity {
+	public static class A extends AbstractEntity {
 		@Id
 		String extraId;
 		@Id

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.google.code.morphia.mapping.converter;
+package com.google.code.morphia.converters;
 
 import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.MappingException;
@@ -10,19 +10,19 @@ import com.google.code.morphia.mapping.MappingException;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  * 
  */
-public class LongConverter extends TypeConverter {
+public class IntegerConverter extends TypeConverter {
 	
 	@Override
 	boolean canHandle(Class c, MappedField optionalExtraInfo) {
-		return oneOf(c, long.class, Long.class);
+		return oneOf(c, int.class, Integer.class);
 	}
 	
 	@Override
 	Object decode(Class targetClass, Object val, MappedField optionalExtraInfo) throws MappingException {
 		if (val instanceof String) {
-			return Long.parseLong((String) val);
+			return Integer.parseInt((String) val);
 		} else {
-			return ((Number) val).longValue();
+			return ((Number) val).intValue();
 		}
 		
 	}

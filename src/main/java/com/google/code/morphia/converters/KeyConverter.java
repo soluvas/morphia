@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.google.code.morphia.mapping.converter;
+package com.google.code.morphia.converters;
 
 import com.google.code.morphia.Key;
 import com.google.code.morphia.mapping.MappedField;

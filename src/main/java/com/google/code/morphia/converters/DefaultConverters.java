@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.google.code.morphia.mapping.converter;
+package com.google.code.morphia.converters;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -14,12 +14,13 @@ import com.mongodb.DBObject;
  * 
  * @author Uwe Schaefer, (us@thomas-daily.de)
  */
-public class ConverterChain {
+@SuppressWarnings("unchecked")
+public class DefaultConverters {
 	
 	private List<TypeConverter> knownEncoders = new LinkedList<TypeConverter>();
 	
 	// constr. will change
-	public ConverterChain() {
+	public DefaultConverters() {
 		
 		knownEncoders.add(new EnumSetConverter());
 		knownEncoders.add(new ObjectIdConverter());

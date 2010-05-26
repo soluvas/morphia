@@ -13,26 +13,26 @@ import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.annotations.Serialized;
 import com.google.code.morphia.testutil.AssertedFailure;
-import com.google.code.morphia.utils.AbstractMongoEntity;
+import com.google.code.morphia.utils.AbstractEntity;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  *
  */
 public class MapNotSerializableTest extends TestBase {
-	public static class Map1 extends AbstractMongoEntity {
+	public static class Map1 extends AbstractEntity {
 		@Serialized
 		Map<Integer, String> shouldBeOk = new HashMap();
 		
 	}
 	
-	public static class Map2 extends AbstractMongoEntity {
+	public static class Map2 extends AbstractEntity {
 		@Reference
 		Map<Integer, E1> shouldBeOk = new HashMap();
 		
 	}
 	
-	public static class Map3 extends AbstractMongoEntity {
+	public static class Map3 extends AbstractEntity {
 		@Embedded
 		Map<E2, Integer> shouldBeOk = new HashMap();
 		

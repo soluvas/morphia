@@ -8,7 +8,7 @@ import com.google.code.morphia.Key;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.mapping.lazy.proxy.LazyReferenceFetchingException;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReference;
-import com.google.code.morphia.utils.AbstractMongoEntity;
+import com.google.code.morphia.utils.AbstractEntity;
 
 public class TestLazySingleReference extends ProxyTestBase {
 	@Test
@@ -124,7 +124,7 @@ public class TestLazySingleReference extends ProxyTestBase {
 
 	}
 
-	public static class RootEntity extends AbstractMongoEntity {
+	public static class RootEntity extends AbstractEntity {
 		@Reference(lazy = true)
 		ReferencedEntity r;
 		@Reference(lazy = true)
@@ -132,7 +132,7 @@ public class TestLazySingleReference extends ProxyTestBase {
 
 	}
 
-	public static class ReferencedEntity extends AbstractMongoEntity {
+	public static class ReferencedEntity extends AbstractEntity {
 		private String foo;
 
 		public void setFoo(final String string) {

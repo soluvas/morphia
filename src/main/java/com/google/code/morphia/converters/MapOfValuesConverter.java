@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.google.code.morphia.mapping.converter;
+package com.google.code.morphia.converters;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,9 +15,9 @@ import com.google.code.morphia.utils.ReflectionUtils;
  */
 public class MapOfValuesConverter extends TypeConverter {
 	
-	private final ConverterChain chain;
+	private final DefaultConverters chain;
 	
-	public MapOfValuesConverter(ConverterChain chain) {
+	public MapOfValuesConverter(DefaultConverters chain) {
 		this.chain = chain;
 	}
 	

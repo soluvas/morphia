@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.google.code.morphia.mapping.converter;
+package com.google.code.morphia.converters;
 
 import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.MappingException;
@@ -10,16 +10,19 @@ import com.google.code.morphia.mapping.MappingException;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  * 
  */
-public class NullConverter extends TypeConverter {
+public class StringConverter extends TypeConverter {
 	
 	@Override
 	boolean canHandle(Class c, MappedField optionalExtraInfo) {
-		return true;
+		return oneOf(c, String.class);
 	}
 	
 	@Override
 	Object decode(Class targetClass, Object fromDBObject, MappedField optionalExtraInfo) throws MappingException {
-		return fromDBObject;
+		if (fromDBObject instanceof String) {
+			return (String) fromDBObject;
+		}
+		return fromDBObject.toString();
 	}
 	
 }

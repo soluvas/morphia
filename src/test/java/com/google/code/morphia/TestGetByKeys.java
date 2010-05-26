@@ -10,7 +10,7 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import com.google.code.morphia.utils.AbstractMongoEntity;
+import com.google.code.morphia.utils.AbstractEntity;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
@@ -32,7 +32,7 @@ public class TestGetByKeys extends TestBase {
 		Assert.assertFalse(i.hasNext());
 	}
 	
-	public static class A extends AbstractMongoEntity {
+	public static class A extends AbstractEntity {
 		String foo = "bar";
 	}
 

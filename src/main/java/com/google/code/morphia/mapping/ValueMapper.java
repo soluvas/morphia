@@ -3,23 +3,23 @@
  */
 package com.google.code.morphia.mapping;
 
-import com.google.code.morphia.mapping.converter.ConverterChain;
+import com.google.code.morphia.converters.DefaultConverters;
 import com.mongodb.BasicDBObject;
 
 class ValueMapper
 {
 
-	private final ConverterChain chain;
+	private final DefaultConverters converters;
 	
-	public ValueMapper(ConverterChain chain) {
-		this.chain = chain;
+	public ValueMapper(DefaultConverters converters) {
+		this.converters = converters;
 	}
 
-	void mapValuesFromDBObject(final BasicDBObject dbObject, final MappedField mf, final Object entity)
+	void fromDBObject(final BasicDBObject dbObject, final MappedField mf, final Object entity)
     {
         try
         {
-			chain.fromDBObject(dbObject, mf, entity);
+			converters.fromDBObject(dbObject, mf, entity);
         }
         catch (Exception e)
         {
@@ -27,11 +27,11 @@ class ValueMapper
         }
     }
 
-    void mapValuesToDBObject(final Object entity, final MappedField mf, final BasicDBObject dbObject)
+    void toDBObject(final Object entity, final MappedField mf, final BasicDBObject dbObject)
     {
         try
         {
-			chain.toDBObject(entity, mf, dbObject);
+			converters.toDBObject(entity, mf, dbObject);
         }
         catch (Exception e)
         {

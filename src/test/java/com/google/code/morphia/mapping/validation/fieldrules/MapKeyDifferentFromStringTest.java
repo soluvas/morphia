@@ -13,7 +13,7 @@ import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.annotations.Serialized;
 import com.google.code.morphia.testutil.AssertedFailure;
-import com.google.code.morphia.utils.AbstractMongoEntity;
+import com.google.code.morphia.utils.AbstractEntity;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
@@ -21,19 +21,19 @@ import com.google.code.morphia.utils.AbstractMongoEntity;
  */
 public class MapKeyDifferentFromStringTest extends TestBase {
 	
-	public static class MapWithWrongKeyType1 extends AbstractMongoEntity {
+	public static class MapWithWrongKeyType1 extends AbstractEntity {
 		@Serialized
 		Map<Integer, Integer> shouldBeOk = new HashMap();
 		
 	}
 	
-	public static class MapWithWrongKeyType2 extends AbstractMongoEntity {
+	public static class MapWithWrongKeyType2 extends AbstractEntity {
 		@Reference
 		Map<Integer, Integer> shouldBeOk = new HashMap();
 		
 	}
 	
-	public static class MapWithWrongKeyType3 extends AbstractMongoEntity {
+	public static class MapWithWrongKeyType3 extends AbstractEntity {
 		@Embedded
 		Map<Integer, Integer> shouldBeOk = new HashMap();
 		

@@ -1,28 +1,27 @@
 /**
  * 
  */
-package com.google.code.morphia.mapping.converter;
+package com.google.code.morphia.converters;
 
 import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.MappingException;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
- * 
  */
-public class StringConverter extends TypeConverter {
-	
+public class CharArrayConverter extends TypeConverter {
 	@Override
 	boolean canHandle(Class c, MappedField optionalExtraInfo) {
-		return oneOf(c, String.class);
+		return oneOf(c, char[].class);
 	}
 	
 	@Override
 	Object decode(Class targetClass, Object fromDBObject, MappedField optionalExtraInfo) throws MappingException {
-		if (fromDBObject instanceof String) {
-			return (String) fromDBObject;
-		}
-		return fromDBObject.toString();
+		return fromDBObject.toString().toCharArray();
 	}
 	
+	@Override
+	Object encode(Object value, MappedField optionalExtraInfo) {
+		return new String((char[]) value);
+	}
 }

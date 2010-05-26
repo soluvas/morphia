@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.google.code.morphia.mapping.converter;
+package com.google.code.morphia.converters;
 
 import java.util.EnumSet;
 
@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import com.google.code.morphia.TestBase;
 import com.google.code.morphia.query.Query;
-import com.google.code.morphia.utils.AbstractMongoEntity;
+import com.google.code.morphia.utils.AbstractEntity;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
@@ -33,7 +33,7 @@ public class EnumSetTest extends TestBase {
 		C, D;
 	}
 	
-	public static class NastyEnumEntity extends AbstractMongoEntity {
+	public static class NastyEnumEntity extends AbstractEntity {
 		EnumSet<NastyEnum> in = EnumSet.of(NastyEnum.B, NastyEnum.C, NastyEnum.D);
 		EnumSet<NastyEnum> out = EnumSet.of(NastyEnum.A);
 		EnumSet<NastyEnum> empty = EnumSet.noneOf(NastyEnum.class);

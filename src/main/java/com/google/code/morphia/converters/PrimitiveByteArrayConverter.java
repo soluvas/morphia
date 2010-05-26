@@ -1,25 +1,23 @@
 /**
  * 
  */
-package com.google.code.morphia.mapping.converter;
+package com.google.code.morphia.converters;
 
 import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.MappingException;
-import com.mongodb.DBRef;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  */
-public class DBRefConverter extends TypeConverter {
-	
+public class PrimitiveByteArrayConverter extends TypeConverter {
 	@Override
 	boolean canHandle(Class c, MappedField optionalExtraInfo) {
-		return oneOf(c, DBRef.class);
+		return oneOf(c, byte[].class);
 	}
 	
 	@Override
 	Object decode(Class targetClass, Object fromDBObject, MappedField optionalExtraInfo) throws MappingException {
-		return (DBRef) fromDBObject;
+		return fromDBObject; // as it comes
 	}
 	
 }

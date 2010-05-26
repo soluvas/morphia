@@ -8,7 +8,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import com.google.code.morphia.annotations.Reference;
-import com.google.code.morphia.utils.AbstractMongoEntity;
+import com.google.code.morphia.utils.AbstractEntity;
 
 public class TestReferenceCollection extends ProxyTestBase
 {
@@ -55,7 +55,7 @@ public class TestReferenceCollection extends ProxyTestBase
 
    
 
-    public static class A extends AbstractMongoEntity
+    public static class A extends AbstractEntity
     {
 		{
 			System.out.println(this.getClass().getName());
@@ -68,7 +68,7 @@ public class TestReferenceCollection extends ProxyTestBase
 
     }
 
-    public static class B extends AbstractMongoEntity
+    public static class B extends AbstractEntity
     {
         private String foo;
 

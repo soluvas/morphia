@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.Reference;
-import com.google.code.morphia.utils.AbstractMongoEntity;
+import com.google.code.morphia.utils.AbstractEntity;
 
 public class TestReferenceMap extends ProxyTestBase
 {
@@ -59,7 +59,7 @@ public class TestReferenceMap extends ProxyTestBase
 	
 	
 	
-	public static class A extends AbstractMongoEntity
+	public static class A extends AbstractEntity
 	{
 		@Reference(lazy = true)
 		Map<String, B> bs = new HashMap<String, B>();

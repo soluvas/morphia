@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.google.code.morphia.mapping.converter;
+package com.google.code.morphia.converters;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -14,6 +14,7 @@ import com.google.code.morphia.mapping.MappingException;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  * 
  */
+@SuppressWarnings("unchecked")
 public class EnumSetConverter extends TypeConverter {
 	
 	private EnumConverter ec = new EnumConverter();

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.google.code.morphia.mapping.converter;
+package com.google.code.morphia.converters;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -18,10 +18,11 @@ import com.google.code.morphia.utils.ReflectionUtils;
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  */
+@SuppressWarnings("unchecked")
 public class CollectionConverter extends TypeConverter {
-	private final ConverterChain chain;
+	private final DefaultConverters chain;
 	
-	public CollectionConverter(ConverterChain chain) {
+	public CollectionConverter(DefaultConverters chain) {
 		this.chain = chain;
 	}
 	

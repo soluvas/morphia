@@ -1,14 +1,14 @@
 /**
  * 
  */
-package com.google.code.morphia.mapping.converter;
+package com.google.code.morphia.converters;
 
 import junit.framework.Assert;
 
 import org.junit.Test;
 
 import com.google.code.morphia.TestBase;
-import com.google.code.morphia.utils.AbstractMongoEntity;
+import com.google.code.morphia.utils.AbstractEntity;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
@@ -29,7 +29,7 @@ public class NastyEnumTest extends TestBase {
 		}
 	}
 	
-	public static class NastyEnumEntity extends AbstractMongoEntity {
+	public static class NastyEnumEntity extends AbstractEntity {
 		NastyEnum e1 = NastyEnum.A;
 		NastyEnum e2 = NastyEnum.B;
 		NastyEnum e3 = null;

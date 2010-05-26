@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.google.code.morphia.mapping.converter;
+package com.google.code.morphia.converters;
 
 import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.MappingException;
@@ -9,6 +9,7 @@ import com.google.code.morphia.mapping.MappingException;
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  */
+@SuppressWarnings("unchecked")
 public abstract class TypeConverter {
 	abstract boolean canHandle(Class c, MappedField optionalExtraInfo);
 	

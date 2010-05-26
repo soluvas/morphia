@@ -33,7 +33,7 @@ import com.google.code.morphia.annotations.PreSave;
 import com.google.code.morphia.annotations.Property;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.annotations.Serialized;
-import com.google.code.morphia.mapping.converter.ConverterChain;
+import com.google.code.morphia.converters.DefaultConverters;
 import com.google.code.morphia.mapping.lazy.CGLibLazyProxyFactory;
 import com.google.code.morphia.mapping.lazy.DatastoreProvider;
 import com.google.code.morphia.mapping.lazy.DefaultDatastoreProvider;
@@ -65,14 +65,14 @@ public class Mapper {
 	private final ReferenceMapper referenceMapper;
 	private final EmbeddedMapper embeddedMapper;
 	private final ValueMapper valueMapper;
-	private final ConverterChain chain;
+	private final DefaultConverters converters;
 
 	public Mapper() {
-		chain = new ConverterChain();// FIXME us should be exposed to be
+		converters = new DefaultConverters();// FIXME us should be exposed to be
 										// configurable
-		valueMapper = new ValueMapper(chain);
-		embeddedMapper = new EmbeddedMapper(this, chain);
-		referenceMapper = new ReferenceMapper(this, chain);
+		valueMapper = new ValueMapper(converters);
+		embeddedMapper = new EmbeddedMapper(this, converters);
+		referenceMapper = new ReferenceMapper(this, converters);
 	}
 
 	public void addInterceptor(final EntityInterceptor ei) {
@@ -150,7 +150,7 @@ public class Mapper {
 		// update id field, if there.
 		if ((mc.getIdField() != null) && (dbId != null)) {
 			try {
-				Object dbIdValue = chain.decode(mc.getIdField().getType(), dbId);
+				Object dbIdValue = converters.decode(mc.getIdField().getType(), dbId);
 				Object idValue = mc.getIdField().get(entity);
 				if (idValue != null) {
 					// The entity already had an id set. Check to make sure it
@@ -203,7 +203,7 @@ public class Mapper {
 			return null;
 		}
 		Class origClass = javaObj.getClass();
-		Object newObj = chain.encode(origClass, javaObj);
+		Object newObj = converters.encode(origClass, javaObj);
 		Class type = newObj.getClass();
 		boolean bSameType = origClass.equals(type);
 		boolean bSingleValue = true;
@@ -264,18 +264,18 @@ public class Mapper {
 				if (mf.hasAnnotation(Id.class)) {
 					Object dbVal = mf.getFieldValue(entity);
 					if (dbVal != null) {
-						dbObject.put(ID_KEY, chain.encode(ReflectionUtils
+						dbObject.put(ID_KEY, converters.encode(ReflectionUtils
 								.asObjectIdMaybe(dbVal)));
 					}
 				} else if (mf.hasAnnotation(Reference.class)) {
-					referenceMapper.mapReferencesToDBObject(entity, mf, dbObject);
+					referenceMapper.toDBObject(entity, mf, dbObject);
 
 				} else if (mf.hasAnnotation(Embedded.class) && !mf.isTypeMongoCompatible()) {
-					embeddedMapper.mapEmbeddedToDBObject(entity, mf, dbObject, involvedObjects);
+					embeddedMapper.toDBObject(entity, mf, dbObject, involvedObjects);
 
 				} else if (mf.hasAnnotation(Property.class) || mf.hasAnnotation(Serialized.class)
 						|| mf.isTypeMongoCompatible()) {
-					valueMapper.mapValuesToDBObject(entity, mf, dbObject);
+					valueMapper.toDBObject(entity, mf, dbObject);
 
 				} else {
 					logger.warning("Ignoring field: " + mf.getFullName() + " [type:" + mf.getType().getSimpleName()
@@ -315,18 +315,18 @@ public class Mapper {
 			for (MappedField mf : mc.getPersistenceFields()) {
 				if (mf.hasAnnotation(Id.class)) {
 					if (dbObject.get(ID_KEY) != null) {
-						mf.setFieldValue(entity, chain.decode(mf.getType(), dbObject.get(ID_KEY)));
+						mf.setFieldValue(entity, converters.decode(mf.getType(), dbObject.get(ID_KEY)));
 					}
 
 				} else if (mf.hasAnnotation(Reference.class)) {
-					referenceMapper.mapReferencesFromDBObject(dbObject, mf, entity);
+					referenceMapper.fromDBObject(dbObject, mf, entity);
 					
 				} else if (mf.hasAnnotation(Embedded.class) && !mf.isTypeMongoCompatible()) {
-					embeddedMapper.mapEmbeddedFromDBObject(dbObject, mf, entity);
+					embeddedMapper.fromDBObject(dbObject, mf, entity);
 					
 				} else if (mf.hasAnnotation(Property.class) || mf.hasAnnotation(Serialized.class)
 						|| mf.isTypeMongoCompatible()) {
-					valueMapper.mapValuesFromDBObject(dbObject, mf, entity);
+					valueMapper.fromDBObject(dbObject, mf, entity);
 					
 				} else {
 					logger.warning("Ignoring field: " + mf.getFullName() + " [type:" + mf.getType().getName() + "]");

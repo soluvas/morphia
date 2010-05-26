@@ -22,17 +22,17 @@ import java.io.Serializable;
 import com.google.code.morphia.annotations.Id;
 
 /**
- *
+ * Example for a base class to all entities.
  * @author Olafur Gauti Gudmundsson
  */
 
-public abstract class AbstractMongoEntity implements Serializable {
+public abstract class AbstractEntity implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	/** The id for this instance */
 	@Id protected String id;
 
-    public AbstractMongoEntity() {
+    public AbstractEntity() {
     }
 
     public String getId() {

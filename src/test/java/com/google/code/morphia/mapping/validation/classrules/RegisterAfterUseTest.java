@@ -13,15 +13,16 @@ import org.junit.Test;
 import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Property;
-import com.google.code.morphia.utils.AbstractMongoEntity;
+import com.google.code.morphia.utils.AbstractEntity;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  *
  */
+@SuppressWarnings("unchecked")
 public class RegisterAfterUseTest extends TestBase {
 	
-	public static class Broken extends AbstractMongoEntity {
+	public static class Broken extends AbstractEntity {
 		@Property("foo")
 		@Embedded("bar")
 		ArrayList l;

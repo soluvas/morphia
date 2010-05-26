@@ -12,21 +12,22 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.code.morphia.mapping.converter.ConverterChain;
+import com.google.code.morphia.converters.DefaultConverters;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
+@SuppressWarnings("unchecked")
 class EmbeddedMapper {
 	private final Mapper mapper;
-	private final ConverterChain chain;
+	private final DefaultConverters converters;
 	
-	public EmbeddedMapper(Mapper mapper, ConverterChain chain) {
+	public EmbeddedMapper(Mapper mapper, DefaultConverters converters) {
 		this.mapper = mapper;
-		this.chain = chain;
+		this.converters = converters;
 	}
 	
-	void mapEmbeddedToDBObject(final Object entity, final MappedField mf, final BasicDBObject dbObject,
+	void toDBObject(final Object entity, final MappedField mf, final BasicDBObject dbObject,
 			final LinkedHashMap<Object, DBObject> involvedObjects) {
 		String name = mf.getName();
 		
@@ -82,7 +83,7 @@ class EmbeddedMapper {
 					convertedVal.removeField(Mapper.CLASS_NAME_FIELDNAME);
 				}
 				
-				String strKey = chain.encode(entry.getKey()).toString();
+				String strKey = converters.encode(entry.getKey()).toString();
 				values.put(strKey, convertedVal);
 			}
 			if (values.size() > 0) {
@@ -91,7 +92,7 @@ class EmbeddedMapper {
 		}
 	}
 	
-	void mapEmbeddedFromDBObject(final BasicDBObject dbObject, final MappedField mf, final Object entity) {
+	void fromDBObject(final BasicDBObject dbObject, final MappedField mf, final Object entity) {
 		String name = mf.getName();
 		
 		Class fieldType = mf.getType();
@@ -157,7 +158,7 @@ class EmbeddedMapper {
 				
 				newEntity = mapper.mapDBObjectToEntity((BasicDBObject) entry.getValue(), newEntity);
 				// TODO Add Lifecycle call for newEntity
-				Object objKey = chain.decode(mf.getMapKeyType(), entry.getKey());
+				Object objKey = converters.decode(mf.getMapKeyType(), entry.getKey());
 				map.put(objKey, newEntity);
 			}
 		}

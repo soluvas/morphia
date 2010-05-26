@@ -14,8 +14,8 @@ import com.thoughtworks.proxy.kit.ObjectReference;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  * 
  */
-public abstract class AbstractReference implements Serializable,
-ObjectReference, ProxiedReference {
+@SuppressWarnings("unchecked")
+public abstract class AbstractReference implements Serializable, ObjectReference, ProxiedReference {
 
 	protected final DatastoreProvider p;
 	protected final boolean ignoreMissing;

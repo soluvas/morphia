@@ -9,7 +9,7 @@ import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.Version;
 import com.google.code.morphia.mapping.validation.ConstraintViolationException;
 import com.google.code.morphia.testutil.AssertedFailure;
-import com.google.code.morphia.utils.AbstractMongoEntity;
+import com.google.code.morphia.utils.AbstractEntity;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
@@ -17,14 +17,14 @@ import com.google.code.morphia.utils.AbstractMongoEntity;
  */
 public class MultipleVersionsTest extends TestBase {
 	
-	public static class Fail1 extends AbstractMongoEntity {
+	public static class Fail1 extends AbstractEntity {
 		@Version
 		long v1;
 		@Version
 		long v2;
 	}
 
-	public static class OK1 extends AbstractMongoEntity {
+	public static class OK1 extends AbstractEntity {
 		@Version
 		long v1;
 	}
