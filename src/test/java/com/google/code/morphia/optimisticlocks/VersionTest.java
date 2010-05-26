@@ -25,6 +25,8 @@ public class VersionTest extends TestBase {
 	
 
 	public static class ALongPrimitive extends AbstractEntity {
+		private static final long serialVersionUID = 1L;
+
 		@Version
 		long hubba;
 		
@@ -32,6 +34,7 @@ public class VersionTest extends TestBase {
 	}
 	
 	public static class ALong extends AbstractEntity {
+		private static final long serialVersionUID = 1L;
 		@Version
 		Long v;
 		

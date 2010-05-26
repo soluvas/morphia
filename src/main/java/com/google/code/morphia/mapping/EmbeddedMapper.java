@@ -28,15 +28,15 @@ class EmbeddedMapper {
 	}
 	
 	void toDBObject(final Object entity, final MappedField mf, final BasicDBObject dbObject,
-			final LinkedHashMap<Object, DBObject> involvedObjects) {
+			final LinkedHashMap<Object, DBObject> involvedObjects, MapperOptions opts) {
 		String name = mf.getName();
 		
 		Object fieldValue = mf.getFieldValue(entity);
 		
 		if (mf.isMap()) {
-			writeMapToDBObject(mf, dbObject, involvedObjects, name, fieldValue);
+			writeMap(mf, dbObject, involvedObjects, name, fieldValue, opts);
 		} else if (mf.isMultipleValues()) {
-			writeCollectionToDBObject(mf, dbObject, involvedObjects, name, fieldValue);
+			writeCollection(mf, dbObject, involvedObjects, name, fieldValue, opts);
 		} else {
 			DBObject dbObj = fieldValue == null ? null : mapper.toDBObject(fieldValue, involvedObjects);
 			if (dbObj != null) {
@@ -45,15 +45,15 @@ class EmbeddedMapper {
 					dbObj.removeField(Mapper.CLASS_NAME_FIELDNAME);
 				}
 				
-				if (dbObj.keySet().size() > 0) {
+				if (dbObj.keySet().size() > 0 || opts.storeEmpties) {
 					dbObject.put(name, dbObj);
 				}
 			}
 		}
 	}
 
-	private void writeCollectionToDBObject(final MappedField mf, final BasicDBObject dbObject,
-			final LinkedHashMap<Object, DBObject> involvedObjects, String name, Object fieldValue) {
+	private void writeCollection(final MappedField mf, final BasicDBObject dbObject,
+			final LinkedHashMap<Object, DBObject> involvedObjects, String name, Object fieldValue, MapperOptions opts) {
 		Iterable coll = (Iterable) fieldValue;
 		if (coll != null) {
 			List values = new ArrayList();
@@ -64,14 +64,14 @@ class EmbeddedMapper {
 				}
 				values.add(dbObj);
 			}
-			if (values.size() > 0) {
+			if (values.size() > 0 || opts.storeEmpties) {
 				dbObject.put(name, values);
 			}
 		}
 	}
 
-	private void writeMapToDBObject(final MappedField mf, final BasicDBObject dbObject,
-			final LinkedHashMap<Object, DBObject> involvedObjects, String name, Object fieldValue) {
+	private void writeMap(final MappedField mf, final BasicDBObject dbObject,
+			final LinkedHashMap<Object, DBObject> involvedObjects, String name, Object fieldValue, MapperOptions opts) {
 		Map<String, Object> map = (Map<String, Object>) fieldValue;
 		if (map != null) {
 			BasicDBObject values = new BasicDBObject();
@@ -86,7 +86,7 @@ class EmbeddedMapper {
 				String strKey = converters.encode(entry.getKey()).toString();
 				values.put(strKey, convertedVal);
 			}
-			if (values.size() > 0) {
+			if (values.size() > 0 || opts.storeEmpties) {
 				dbObject.put(name, values);
 			}
 		}
@@ -99,15 +99,15 @@ class EmbeddedMapper {
 		try {
 			
 			if (mf.isMap()) {
-				readMapFromDBObject(dbObject, mf, entity, name);
+				readMap(dbObject, mf, entity, name);
 			} else if (mf.isMultipleValues()) {
-				readCollectionFromDBObject(dbObject, mf, entity, name);
+				readCollection(dbObject, mf, entity, name);
 			} else {
 				// single document
 				if (dbObject.containsField(name)) {
 					BasicDBObject dbVal = (BasicDBObject) dbObject.get(name);
 					Object refObj = ReflectionUtils.createInstance(fieldType, dbVal);
-					refObj = mapper.mapDBObjectToEntity(dbVal, refObj);
+					refObj = mapper.fromDb(dbVal, refObj);
 					if (refObj != null) {
 						mf.setFieldValue(entity, refObj);
 					}
@@ -118,7 +118,7 @@ class EmbeddedMapper {
 		}
 	}
 
-	private void readCollectionFromDBObject(final BasicDBObject dbObject, final MappedField mf, final Object entity,
+	private void readCollection(final BasicDBObject dbObject, final MappedField mf, final Object entity,
 			String name) {
 		// multiple documents in a List
 		Class newEntityType = mf.getSubType();
@@ -133,7 +133,7 @@ class EmbeddedMapper {
 			
 			for (BasicDBObject dbObj : dbVals) {
 				Object newEntity = ReflectionUtils.createInstance(newEntityType, dbObj);
-				newEntity = mapper.mapDBObjectToEntity(dbObj, newEntity);
+				newEntity = mapper.fromDb(dbObj, newEntity);
 				values.add(newEntity);
 			}
 		}
@@ -147,7 +147,7 @@ class EmbeddedMapper {
 		}
 	}
 
-	private void readMapFromDBObject(final BasicDBObject dbObject, final MappedField mf, final Object entity,
+	private void readMap(final BasicDBObject dbObject, final MappedField mf, final Object entity,
 			String name) {
 		Map map = (Map) ReflectionUtils.newInstance(mf.getCTor(), HashMap.class);
 		
@@ -156,7 +156,7 @@ class EmbeddedMapper {
 			for (Map.Entry entry : dbVal.entrySet()) {
 				Object newEntity = ReflectionUtils.createInstance(mf.getSubType(), (BasicDBObject) entry.getValue());
 				
-				newEntity = mapper.mapDBObjectToEntity((BasicDBObject) entry.getValue(), newEntity);
+				newEntity = mapper.fromDb((BasicDBObject) entry.getValue(), newEntity);
 				// TODO Add Lifecycle call for newEntity
 				Object objKey = converters.decode(mf.getMapKeyType(), entry.getKey());
 				map.put(objKey, newEntity);

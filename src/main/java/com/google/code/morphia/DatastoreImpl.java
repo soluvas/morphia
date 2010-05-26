@@ -558,10 +558,10 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 		Mapper mapr = morphia.getMapper();
 		MappedClass mc = mapr.getMappedClass(entity);
 		
-		mapr.updateKeyInfo(entity, dbObj.get(Mapper.ID_KEY), dbColl.getName());
+		mapr.updateKeyInfo(entity, dbObj.get(Mapper.ID_KEY));
 		
-		mc.callLifecycleMethods(PostPersist.class, entity, dbObj, mapr);
 		firePostPersistForChildren(involvedObjects, mapr);
+		mc.callLifecycleMethods(PostPersist.class, entity, dbObj, mapr);
 	}
 	
 	private <T> UpdateResults<T> update(Query<T> query, UpdateOperations ops, boolean createIfMissing, boolean multi) {

@@ -34,23 +34,23 @@ class ReferenceMapper {
 		this.converters = converters;
 	}
 	
-	void toDBObject(final Object entity, final MappedField mf, final BasicDBObject dbObject) {
+	void toDBObject(final Object entity, final MappedField mf, final BasicDBObject dbObject, MapperOptions opts) {
 		
 		String name = mf.getName();
 		
 		Object fieldValue = mf.getFieldValue(entity);
 		
 		if (mf.isMap()) {
-			writeMapOfReferencesToDBObject(mf, dbObject, name, fieldValue);
+			writeMap(mf, dbObject, name, fieldValue, opts);
 		} else if (mf.isMultipleValues()) {
-			writeCollectionOfReferenceToDBObject(mf, dbObject, name, fieldValue);
+			writeCollection(mf, dbObject, name, fieldValue, opts);
 		} else {
-			writeSingleReferenceToDBObject(dbObject, name, fieldValue);
+			writeSingle(dbObject, name, fieldValue);
 		}
 		
 	}
 	
-	private void writeSingleReferenceToDBObject(final BasicDBObject dbObject, String name, Object fieldValue) {
+	private void writeSingle(final BasicDBObject dbObject, String name, Object fieldValue) {
 		if (fieldValue != null) {
 			DBRef dbrefFromKey = getKey(fieldValue).toRef();
 			dbObject.put(name, dbrefFromKey);
@@ -58,16 +58,13 @@ class ReferenceMapper {
 		}
 	}
 	
-	private void writeCollectionOfReferenceToDBObject(final MappedField mf, final BasicDBObject dbObject, String name,
-			Object fieldValue) {
+	private void writeCollection(final MappedField mf, final BasicDBObject dbObject, String name, Object fieldValue, MapperOptions opts) {
 		if (fieldValue != null) {
 			List values = new ArrayList();
 			
 			if (ProxyHelper.isProxy(fieldValue) && ProxyHelper.isUnFetched(fieldValue)) {
 				ProxiedEntityReferenceList p = (ProxiedEntityReferenceList) fieldValue;
 				List<Key<?>> getKeysAsList = p.__getKeysAsList();
-				Class c = p.__getReferenceObjClass();
-				String collectionName = mapper.getCollectionName(c);
 				for (Key<?> key : getKeysAsList) {
 					values.add(key.toRef());
 				}
@@ -83,14 +80,13 @@ class ReferenceMapper {
 					}
 				}
 			}
-			if (values.size() > 0) {
+			if (values.size() > 0 || opts.storeEmpties) {
 				dbObject.put(name, values);
 			}
 		}
 	}
 	
-	private void writeMapOfReferencesToDBObject(final MappedField mf, final BasicDBObject dbObject, String name,
-			Object fieldValue) {
+	private void writeMap(final MappedField mf, final BasicDBObject dbObject, String name, Object fieldValue, MapperOptions opts) {
 		Map<Object, Object> map = (Map<Object, Object>) fieldValue;
 		if ((map != null)) {
 			Map values = (Map) ReflectionUtils.newInstance(mf.getCTor(), HashMap.class);
@@ -109,7 +105,7 @@ class ReferenceMapper {
 					values.put(strKey, getKey(entry.getValue()).toRef());
 				}
 			}
-			if (values.size() > 0) {
+			if (values.size() > 0 || opts.storeEmpties) {
 				dbObject.put(name, values);
 			}
 		}
@@ -137,16 +133,16 @@ class ReferenceMapper {
 		
 		Reference refAnn = mf.getAnnotation(Reference.class);
 		if (mf.isMap()) {
-			readMapOfReferencesFromDBObject(dbObject, mf, entity, name, refAnn);
+			readMap(dbObject, mf, entity, name, refAnn);
 		} else if (mf.isMultipleValues()) {
-			readCollectionOfReferencesFromDBObject(dbObject, mf, entity, name, refAnn);
+			readCollection(dbObject, mf, entity, name, refAnn);
 		} else {
-			readSingleReferenceFromDBObject(dbObject, mf, entity, name, fieldType, refAnn);
+			readSingle(dbObject, mf, entity, name, fieldType, refAnn);
 		}
 		
 	}
 	
-	private void readSingleReferenceFromDBObject(final BasicDBObject dbObject, final MappedField mf,
+	private void readSingle(final BasicDBObject dbObject, final MappedField mf,
 			final Object entity, String name, Class fieldType, Reference refAnn) {
 		Class referenceObjClass = fieldType;
 		if (dbObject.containsField(name)) {
@@ -171,7 +167,7 @@ class ReferenceMapper {
 		}
 	}
 	
-	private void readCollectionOfReferencesFromDBObject(final BasicDBObject dbObject, final MappedField mf,
+	private void readCollection(final BasicDBObject dbObject, final MappedField mf,
 			final Object entity, String name, Reference refAnn) {
 		// multiple references in a List
 		Class referenceObjClass = mf.getSubType();
@@ -216,7 +212,7 @@ class ReferenceMapper {
 							}
 						} else {
 							Object refObj = ReflectionUtils.createInstance(referenceObjClass, refDbObject);
-							refObj = mapper.mapDBObjectToEntity(refDbObject, refObj);
+							refObj = mapper.fromDb(refDbObject, refObj);
 							references.add(refObj);
 						}
 					}
@@ -230,7 +226,7 @@ class ReferenceMapper {
 						}
 					} else {
 						Object newEntity = ReflectionUtils.createInstance(referenceObjClass, refDbObject);
-						newEntity = mapper.mapDBObjectToEntity(refDbObject, newEntity);
+						newEntity = mapper.fromDb(refDbObject, newEntity);
 						// TODO Add Lifecycle call for newEntity
 						references.add(newEntity);
 					}
@@ -248,7 +244,7 @@ class ReferenceMapper {
 	
 	boolean exists(Class c, final DBRef dbRef) {
 		Datastore ds = mapper.datastoreProvider.get();
-		return ds.createQuery(c).filter("_id", dbRef.getId()).countAll() == 1;
+		return ds.createQuery(c).filter(Mapper.ID_KEY, dbRef.getId()).countAll() == 1;
 	}
 	
 	Object resolveObject(final DBRef dbRef, final Class referenceObjClass, final boolean ignoreMissing,
@@ -257,7 +253,7 @@ class ReferenceMapper {
 		
 		if (refDbObject != null) {
 			Object refObj = ReflectionUtils.createInstance(referenceObjClass, refDbObject);
-			refObj = mapper.mapDBObjectToEntity(refDbObject, refObj);
+			refObj = mapper.fromDb(refDbObject, refObj);
 			return refObj;
 		}
 		
@@ -269,8 +265,7 @@ class ReferenceMapper {
 		}
 	}
 	
-	private void addToReferenceList(final MappedField mf, final Reference refAnn,
-			final ProxiedEntityReferenceList referencesAsProxy, final DBRef dbRef) {
+	private void addToReferenceList(final MappedField mf, final Reference refAnn, final ProxiedEntityReferenceList referencesAsProxy, final DBRef dbRef) {
 		if (!exists(mf.getSubType(), dbRef)) {
 			if (!refAnn.ignoreMissing()) {
 				throw new MappingException("The reference(" + dbRef.toString() + ") could not be fetched for "
@@ -281,7 +276,7 @@ class ReferenceMapper {
 		}
 	}
 	
-	private void readMapOfReferencesFromDBObject(final BasicDBObject dbObject, final MappedField mf,
+	private void readMap(final BasicDBObject dbObject, final MappedField mf,
 			final Object entity,
 			final String name, final Reference refAnn) {
 		Class referenceObjClass = mf.getSubType();

@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.google.code.morphia.mapping.MappedField;
+import com.google.code.morphia.mapping.MapperOptions;
 import com.mongodb.DBObject;
 
 /**
@@ -45,21 +46,22 @@ public class DefaultConverters {
 		knownEncoders.add(new CollectionConverter(this));
 		
 		// TODO discuss: maybe a config parameter? last resort
-		knownEncoders.add(new NullConverter());
+		knownEncoders.add(new PassthroughConverter());
 		
 	}
 	
 	public void fromDBObject(final DBObject dbObj, final MappedField mf, final Object targetEntity) {
 		Object object = dbObj.get(mf.getMappedFieldName());
 		if (object == null) {
-			handleAttributeNotPresentInDBObject(mf);
+			processMissingField(mf);
 		} else {
 			TypeConverter enc = getEncoder(mf);
 			mf.setFieldValue(targetEntity, enc.decode(mf.getType(), object, mf));
 		}
 	}
 	
-	protected void handleAttributeNotPresentInDBObject(final MappedField mf) {
+	protected void processMissingField(final MappedField mf) {
+		//we ignore missing values.
 	}
 	
 	private TypeConverter getEncoder(final MappedField mf) {
@@ -81,12 +83,12 @@ public class DefaultConverters {
 		throw new ConverterNotFoundException("Cannot find encoder for " + c.getName());
 	}
 	
-	public void toDBObject(final Object containingObject, final MappedField mf, final DBObject dbObj) {
+	public void toDBObject(final Object containingObject, final MappedField mf, final DBObject dbObj, MapperOptions opts) {
 		TypeConverter enc = getEncoder(mf);
 		Object fieldValue = mf.getFieldValue(containingObject);
 		Object encoded = enc.encode(fieldValue, mf);
-		if (encoded == null) {
-			// TODO include null based on annotation?
+		if (encoded == null && opts.storeNulls) {
+			dbObj.put(mf.getMappedFieldName(), null);
 		} else {
 			dbObj.put(mf.getMappedFieldName(), encoded);
 		}

@@ -124,8 +124,7 @@ public class MappedField {
 			// TODO isn´t that actual validation?
 			
 			if (!isMongoType && !isSingleValue && (subType == null || subType.equals(Object.class))) {
-				log
-				.warning("The multi-valued field '"
+				log.warning("The multi-valued field '"
 						+ getFullName()
 						+ "' is a possible heterogenous collection. It cannot be verified. Please declare a valid type to get rid of this warning.");
 				isMongoType = true;

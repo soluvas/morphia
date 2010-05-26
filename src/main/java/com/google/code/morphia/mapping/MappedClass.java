@@ -9,6 +9,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -137,7 +138,10 @@ public class MappedClass {
 				idField = field;
 				MappedField mf = new MappedField(idField);
 				persistenceFields.add(mf);
-			} else if (field.isAnnotationPresent(Transient.class)) {
+			} else if (field.isAnnotationPresent(Transient.class) || 
+					(mapr.getOptions().actLikeSerializer && ((field.getModifiers() & Modifier.TRANSIENT) == Modifier.TRANSIENT))) {
+				continue;
+			} else if (mapr.getOptions().ignoreFinals && ((field.getModifiers() & Modifier.FINAL) == Modifier.FINAL)) {
 				continue;
 			} else if (	field.isAnnotationPresent(Property.class) ||
 					field.isAnnotationPresent(Reference.class) ||
@@ -146,7 +150,10 @@ public class MappedClass {
 					ReflectionUtils.implementsInterface(field.getType(), Serializable.class)) {
 				persistenceFields.add(new MappedField(field));
 			} else {
-				log.warning("Ignoring (will not persist) field: " + clazz.getName() + "." + field.getName() + " [type:" + field.getType().getName() + "]");
+				if(mapr.getOptions().defaultFieldAnnotation != null)
+					persistenceFields.add(new MappedField(field));					
+				else
+					log.warning("Ignoring (will not persist) field: " + clazz.getName() + "." + field.getName() + " [type:" + field.getType().getName() + "]");
 			}
 		}
 	}

@@ -36,7 +36,6 @@ public class MorphiaIterator<T> implements Iterable<T>, Iterator<T>{
 	public T next() {
 		if(!hasNext()) throw new NoSuchElementException();
 		T entity = (T) m.fromDBObject(clazz, (BasicDBObject) wrapped.next());
-		m.updateKeyInfo(entity, null, kind);
 		return (T) entity;
 	}
 	

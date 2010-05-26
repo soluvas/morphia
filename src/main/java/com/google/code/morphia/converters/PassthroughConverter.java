@@ -10,7 +10,7 @@ import com.google.code.morphia.mapping.MappingException;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  * 
  */
-public class NullConverter extends TypeConverter {
+public class PassthroughConverter extends TypeConverter {
 	
 	@Override
 	boolean canHandle(Class c, MappedField optionalExtraInfo) {

@@ -65,8 +65,7 @@ public class DAO<T,K extends Serializable> {
 		if (lastErr.get("err") != null)
 			throw new MappingException("Error: " + lastErr.toString());
 
-		
-		morphia.getMapper().updateKeyInfo(entity, dbObj.get(Mapper.ID_KEY) ,collectionName);
+		morphia.getMapper().updateKeyInfo(entity, dbObj.get(Mapper.ID_KEY));
         morphia.getMapper().getMappedClass(entity).callLifecycleMethods(PostPersist.class, entity, dbObj, morphia.getMapper());
     }
 

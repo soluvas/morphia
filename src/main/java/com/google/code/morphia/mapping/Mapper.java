@@ -11,6 +11,7 @@
 
 package com.google.code.morphia.mapping;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -63,27 +64,31 @@ public class Mapper {
 	final ThreadLocal<Map<String, Object>> proxyCache = new ThreadLocal<Map<String, Object>>();
 	private final ConcurrentLinkedQueue<EntityInterceptor> interceptors = new ConcurrentLinkedQueue<EntityInterceptor>();
 
-	private final ReferenceMapper referenceMapper;
-	private final EmbeddedMapper embeddedMapper;
-	private final ValueMapper valueMapper;
-	private final DefaultConverters converters;
-
-	public Mapper() {
-		converters = new DefaultConverters();// FIXME us should be exposed to be
-										// configurable
-		valueMapper = new ValueMapper(converters);
-		embeddedMapper = new EmbeddedMapper(this, converters);
-		referenceMapper = new ReferenceMapper(this, converters);
-	}
-
-	public void addInterceptor(final EntityInterceptor ei) {
+	//TODO: make these configurable
+	private final DefaultConverters converters = new DefaultConverters();;
+	private final ReferenceMapper referenceMapper = new ReferenceMapper(this, converters);
+	private final EmbeddedMapper embeddedMapper = new EmbeddedMapper(this, converters);
+	private final ValueMapper valueMapper = new ValueMapper(converters);
+	final LazyProxyFactory proxyFactory = LazyFeatureDependencies.testDependencyFullFilled() ? new CGLibLazyProxyFactory() : null;
+	DatastoreProvider datastoreProvider = new DefaultDatastoreProvider();
+	MapperOptions opts = new MapperOptions();
+	
+	/** <p>Adds an {@link EntityInterceptor} </p>*/
+ 	public void addInterceptor(final EntityInterceptor ei) {
 		interceptors.add(ei);
 	}
 
+	/** <p>Gets list of {@link EntityInterceptor}s </p> */
 	public Collection<EntityInterceptor> getInterceptors() {
 		return interceptors;
 	}
 
+	public MapperOptions getOptions() {
+		return this.opts;
+	}
+	public void setOptions(MapperOptions options) {
+		this.opts = options;
+	}
 	public boolean isMapped(final Class c) {
 		return mappedClasses.containsKey(c.getName());
 	}
@@ -105,8 +110,8 @@ public class Mapper {
 	}
 
 	/**
-	 * Gets the mapped class for the object (type). If it isn't mapped, create a
-	 * new class and cache it (without validating).
+	 * <p>Gets the {@link MappedClass} for the object (type). If it isn't mapped, create a
+	 * new class and cache it (without validating).</p>
 	 */
 	public MappedClass getMappedClass(final Object obj) {
 		if (obj == null) {
@@ -137,21 +142,19 @@ public class Mapper {
 
 	
 	/**
-	 * Updates the {@code @Id} and {@code @CollectionName} fields.
+	 *<p> Updates the @{@link Id} fields.</p>
 	 * 
 	 * @param entity
 	 *            The object to update
-	 * @param dbId
+	 * @param rawIdValue
 	 *            Value to update with; null means skip
-	 * @param dbNs
-	 *            Value to update with; null or empty means skip
 	 */
-	public void updateKeyInfo(final Object entity, final Object dbId, final String dbNs) {
+	public void updateKeyInfo(final Object entity, final Object rawIdValue) {
 		MappedClass mc = getMappedClass(entity);
 		// update id field, if there.
-		if ((mc.getIdField() != null) && (dbId != null)) {
+		if ((mc.getIdField() != null) && (rawIdValue != null)) {
 			try {
-				Object dbIdValue = converters.decode(mc.getIdField().getType(), dbId);
+				Object dbIdValue = converters.decode(mc.getIdField().getType(), rawIdValue);
 				Object idValue = mc.getIdField().get(entity);
 				if (idValue != null) {
 					// The entity already had an id set. Check to make sure it
@@ -187,7 +190,7 @@ public class Mapper {
 		Object entity = null;
 		try {
 			entity = ReflectionUtils.createInstance(entityClass, dbObject);
-			mapDBObjectToEntity(dbObject, entity);
+			fromDb(dbObject, entity);
 		} finally {
 			entityCache.remove();
 			proxyCache.remove();
@@ -196,8 +199,8 @@ public class Mapper {
 	}
 
 	/**
-	 * converts a java object to a mongo object (possibly a DBObject for complex
-	 * mappings)
+	 * <p>Converts a java object to a mongo-compatible object (possibly a DBObject for complex mappings) </p>
+	 * <p>Used by query/update operations</p>
 	 */
 	public Object toMongoObject(final Object javaObj) {
 		if (javaObj == null) {
@@ -244,7 +247,7 @@ public class Mapper {
 	}
 
 	/**
-	 * converts an entity to a DBObject
+	 * <p> Converts an entity (POJO) to a DBObject </p>
 	 */
 	public DBObject toDBObject(Object entity, final LinkedHashMap<Object, DBObject> involvedObjects) {
 		
@@ -262,26 +265,30 @@ public class Mapper {
 		dbObject = (BasicDBObject) mc.callLifecycleMethods(PrePersist.class, entity, dbObject, this);
 		for (MappedField mf : mc.getPersistenceFields()) {
 			try {
-				if (mf.hasAnnotation(Id.class)) {
-					Object dbVal = mf.getFieldValue(entity);
-					if (dbVal != null) {
-						dbObject.put(ID_KEY, converters.encode(ReflectionUtils
-								.asObjectIdMaybe(dbVal)));
+				Class<? extends Annotation> annType = opts.defaultFieldAnnotation;
+				boolean foundAnnotation = false;
+				//get the annotation from the field.
+				for(Class<? extends Annotation> testType : new Class[] {Id.class, Property.class, Embedded.class, Serialized.class, Reference.class})
+					if (mf.hasAnnotation(testType)) {
+						annType = testType; foundAnnotation = true; break;
 					}
-				} else if (mf.hasAnnotation(Reference.class)) {
-					referenceMapper.toDBObject(entity, mf, dbObject);
-
-				} else if (mf.hasAnnotation(Embedded.class) && !mf.isTypeMongoCompatible()) {
-					embeddedMapper.toDBObject(entity, mf, dbObject, involvedObjects);
-
-				} else if (mf.hasAnnotation(Property.class) || mf.hasAnnotation(Serialized.class)
-						|| mf.isTypeMongoCompatible()) {
-					valueMapper.toDBObject(entity, mf, dbObject);
-
-				} else {
-					logger.warning("Ignoring field: " + mf.getFullName() + " [type:" + mf.getType().getSimpleName()
-							+ "]");
+				if (Id.class.equals(annType)) {
+					Object dbVal = mf.getFieldValue(entity);
+					if (dbVal != null)
+						dbObject.put(ID_KEY, converters.encode(ReflectionUtils.asObjectIdMaybe(dbVal)));
+				} else if (Property.class.equals(annType) || Serialized.class.equals(annType) || mf.isTypeMongoCompatible())
+					valueMapper.toDBObject(entity, mf, dbObject, opts);
+				else if (Reference.class.equals(annType))
+					referenceMapper.toDBObject(entity, mf, dbObject, opts);
+				else if (Embedded.class.equals(annType)) {
+					embeddedMapper.toDBObject(entity, mf, dbObject, involvedObjects, opts);
+					if (!foundAnnotation)
+						logger.fine("No annotation was found, embedding " + mf);
+					
+				}else {	
+					logger.warning("Ignoring field: " + mf.getFullName() + " [type:" + mf.getType().getSimpleName() + "]");
 				}
+
 			} catch (Exception e) {
 				throw new MappingException("Error mapping field:" + mf.getFullName(), e);
 			}
@@ -295,7 +302,7 @@ public class Mapper {
 	
 
 
-	Object mapDBObjectToEntity(BasicDBObject dbObject, final Object entity) {
+	Object fromDb(BasicDBObject dbObject, final Object entity) {
 		// check the history key (a key is the namespace + id)
 		String cacheKey = (!dbObject.containsField(ID_KEY)) ? null : "[" + dbObject.getString(ID_KEY) + "]";
 		if (entityCache.get() == null) {
@@ -318,20 +325,14 @@ public class Mapper {
 					if (dbObject.get(ID_KEY) != null) {
 						mf.setFieldValue(entity, converters.decode(mf.getType(), dbObject.get(ID_KEY)));
 					}
-
-				} else if (mf.hasAnnotation(Reference.class)) {
-					referenceMapper.fromDBObject(dbObject, mf, entity);
-					
-				} else if (mf.hasAnnotation(Embedded.class) && !mf.isTypeMongoCompatible()) {
-					embeddedMapper.fromDBObject(dbObject, mf, entity);
-					
-				} else if (mf.hasAnnotation(Property.class) || mf.hasAnnotation(Serialized.class)
-						|| mf.isTypeMongoCompatible()) {
+				} else if (mf.hasAnnotation(Property.class) || mf.hasAnnotation(Serialized.class) || mf.isTypeMongoCompatible())
 					valueMapper.fromDBObject(dbObject, mf, entity);
-					
-				} else {
+				else if (mf.hasAnnotation(Embedded.class))
+					embeddedMapper.fromDBObject(dbObject, mf, entity);
+				else if (mf.hasAnnotation(Reference.class))
+					referenceMapper.fromDBObject(dbObject, mf, entity);
+				else 
 					logger.warning("Ignoring field: " + mf.getFullName() + " [type:" + mf.getType().getName() + "]");
-				}
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -339,12 +340,5 @@ public class Mapper {
 
 		mc.callLifecycleMethods(PostLoad.class, entity, dbObject, this);
 		return entity;
-	}
-	
-	// could be made configurable
-	final LazyProxyFactory proxyFactory = LazyFeatureDependencies.testDependencyFullFilled() ? new CGLibLazyProxyFactory()
-			: null;
-	// could be made configurable
-	DatastoreProvider datastoreProvider = new DefaultDatastoreProvider();
-
+	}	
 }

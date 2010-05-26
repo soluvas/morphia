@@ -27,11 +27,11 @@ class ValueMapper
         }
     }
 
-    void toDBObject(final Object entity, final MappedField mf, final BasicDBObject dbObject)
+    void toDBObject(final Object entity, final MappedField mf, final BasicDBObject dbObject, MapperOptions opts)
     {
         try
         {
-			converters.toDBObject(entity, mf, dbObject);
+			converters.toDBObject(entity, mf, dbObject, opts);
         }
         catch (Exception e)
         {

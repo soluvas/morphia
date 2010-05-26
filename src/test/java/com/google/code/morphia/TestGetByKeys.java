@@ -33,6 +33,7 @@ public class TestGetByKeys extends TestBase {
 	}
 	
 	public static class A extends AbstractEntity {
+		private static final long serialVersionUID = 1L;
 		String foo = "bar";
 	}
 
