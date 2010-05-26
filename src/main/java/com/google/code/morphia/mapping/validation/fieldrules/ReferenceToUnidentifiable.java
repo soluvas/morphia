@@ -18,10 +18,10 @@ import com.google.code.morphia.mapping.validation.ConstraintViolation.Level;
  */
 public class ReferenceToUnidentifiable extends FieldConstraint {
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	protected void check(MappedClass mc, MappedField mf, Set<ConstraintViolation> ve) {
 		if (mf.hasAnnotation(Reference.class)) {
-			// TODO what if class is unmapped?
 			Class realType = (mf.isSingleValue()) ? mf.getType() : mf.getSubType();
 			if ((!realType.isInterface() && mc.getMapper().getMappedClass(realType).getIdField() == null))
 				ve.add(new ConstraintViolation(Level.FATAL, mc, mf, mf.getFullName() + " is annotated as a @"

@@ -80,7 +80,7 @@ public class CollectionConverter extends TypeConverter {
 		if (value.getClass().isArray()) {
 			
 			if (Array.getLength(value) == 0) {
-				return null; // TODO should be based on some config criteria?
+				return value;
 			}
 
 			if (value.getClass().getComponentType().isPrimitive())

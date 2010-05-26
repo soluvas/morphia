@@ -157,7 +157,6 @@ class EmbeddedMapper {
 				Object newEntity = ReflectionUtils.createInstance(mf.getSubType(), (BasicDBObject) entry.getValue());
 				
 				newEntity = mapper.fromDb((BasicDBObject) entry.getValue(), newEntity);
-				// TODO Add Lifecycle call for newEntity
 				Object objKey = converters.decode(mf.getMapKeyType(), entry.getKey());
 				map.put(objKey, newEntity);
 			}

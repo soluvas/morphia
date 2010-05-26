@@ -227,7 +227,6 @@ class ReferenceMapper {
 					} else {
 						Object newEntity = ReflectionUtils.createInstance(referenceObjClass, refDbObject);
 						newEntity = mapper.fromDb(refDbObject, newEntity);
-						// TODO Add Lifecycle call for newEntity
 						references.add(newEntity);
 					}
 				}
