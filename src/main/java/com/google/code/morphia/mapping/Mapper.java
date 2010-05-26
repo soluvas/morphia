@@ -37,6 +37,7 @@ import com.google.code.morphia.converters.DefaultConverters;
 import com.google.code.morphia.mapping.lazy.CGLibLazyProxyFactory;
 import com.google.code.morphia.mapping.lazy.DatastoreProvider;
 import com.google.code.morphia.mapping.lazy.DefaultDatastoreProvider;
+import com.google.code.morphia.mapping.lazy.LazyFeatureDependencies;
 import com.google.code.morphia.mapping.lazy.LazyProxyFactory;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedReference;
 import com.google.code.morphia.mapping.lazy.proxy.ProxyHelper;
@@ -341,7 +342,8 @@ public class Mapper {
 	}
 	
 	// could be made configurable
-	final LazyProxyFactory proxyFactory = new CGLibLazyProxyFactory();
+	final LazyProxyFactory proxyFactory = LazyFeatureDependencies.testDependencyFullFilled() ? new CGLibLazyProxyFactory()
+			: null;
 	// could be made configurable
 	DatastoreProvider datastoreProvider = new DefaultDatastoreProvider();
 
