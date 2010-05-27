@@ -8,15 +8,16 @@ import java.util.Collection;
 import java.util.Map;
 
 import com.google.code.morphia.Key;
-import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceMap;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReference;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceList;
+import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceMap;
 import com.google.code.morphia.mapping.lazy.proxy.SerializableCollectionObjectReference;
 import com.google.code.morphia.mapping.lazy.proxy.SerializableEntityObjectReference;
 import com.google.code.morphia.mapping.lazy.proxy.SerializableMapObjectReference;
 import com.thoughtworks.proxy.factory.CglibProxyFactory;
+import com.thoughtworks.proxy.toys.delegate.DelegationMode;
 import com.thoughtworks.proxy.toys.dispatch.Dispatching;
-import com.thoughtworks.proxy.toys.hotswap.HotSwapping;
+import com.thoughtworks.proxy.toys.hotswap.HotSwappingInvoker;
 
 /**
  * i have to admit, there are plenty of open questions for me on that
@@ -35,14 +36,16 @@ public class CGLibLazyProxyFactory implements LazyProxyFactory {
 		CglibProxyFactory factory = new CglibProxyFactory();
 		SerializableEntityObjectReference objectReference = new SerializableEntityObjectReference(
 				targetClass, p, key);
-		T backend = (T) HotSwapping.object(new Class[] { targetClass,
-				Serializable.class }, factory, objectReference, true);
+		
+		
+		T backend = (T) new HotSwappingInvoker(new Class[] { targetClass, Serializable.class }, factory,
+				objectReference, DelegationMode.SIGNATURE).proxy();
 
-		T proxy = (T) Dispatching.object(
-				new Class[] { ProxiedEntityReference.class, targetClass,
-						Serializable.class }, new Object[] { objectReference,
-						backend }, factory);
 
+		T proxy = Dispatching.proxy(targetClass,
+				new Class[] { ProxiedEntityReference.class, targetClass, Serializable.class }).with(objectReference,
+				backend).build(factory);
+		
 		return proxy;
 
 	}
@@ -55,14 +58,13 @@ public class CGLibLazyProxyFactory implements LazyProxyFactory {
 		Class<? extends Collection> targetClass = listToProxy.getClass();
 		SerializableCollectionObjectReference objectReference = new SerializableCollectionObjectReference(
 				listToProxy, referenceObjClass, ignoreMissing, p);
-		T backend = (T) HotSwapping.object(new Class[] { targetClass,
-				Serializable.class }, factory, objectReference, true);
 
-		T proxy = (T) Dispatching.object(new Class[] {
-				ProxiedEntityReferenceList.class, targetClass,
-				Serializable.class },
-				new Object[] { objectReference, backend }, factory);
-
+		T backend = (T) new HotSwappingInvoker(new Class[] { targetClass, Serializable.class }, factory,
+				objectReference, DelegationMode.SIGNATURE).proxy();
+		T proxy = (T) Dispatching.proxy(targetClass,
+				new Class[] { ProxiedEntityReferenceList.class, targetClass, Serializable.class }).with(
+				objectReference, backend).build(factory);
+		
 		return proxy;
 
 	}
@@ -75,12 +77,12 @@ public class CGLibLazyProxyFactory implements LazyProxyFactory {
 		Class<? extends Map> targetClass = mapToProxy.getClass();
 		SerializableMapObjectReference objectReference = new SerializableMapObjectReference(
 				mapToProxy, referenceObjClass, ignoreMissing, p);
-		T backend = (T) HotSwapping.object(new Class[] { targetClass,
-				Serializable.class }, factory, objectReference, true);
 
-		T proxy = (T) Dispatching.object(new Class[] { ProxiedEntityReferenceMap.class,
-				targetClass, Serializable.class }, new Object[] {
-				objectReference, backend }, factory);
+		T backend = (T) new HotSwappingInvoker(new Class[] { targetClass, Serializable.class }, factory,
+				objectReference, DelegationMode.SIGNATURE).proxy();
+		T proxy = (T) Dispatching.proxy(targetClass,
+				new Class[] { ProxiedEntityReferenceMap.class, targetClass, Serializable.class }).with(objectReference,
+				backend).build(factory);
 
 		return proxy;
 
