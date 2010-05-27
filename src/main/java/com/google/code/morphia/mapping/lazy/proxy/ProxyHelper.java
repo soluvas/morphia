@@ -22,7 +22,11 @@ public class ProxyHelper {
 	}
 	
 	public static boolean isProxy(Object entity) {
-		return (entity != null && entity instanceof ProxiedReference);
+		return (entity != null && isProxied(entity.getClass()));
+	}
+	
+	public static boolean isProxied(Class<?> clazz) {
+		return ProxiedReference.class.isAssignableFrom(clazz);
 	}
 
 	public static Class getReferentClass(Object entity) {
