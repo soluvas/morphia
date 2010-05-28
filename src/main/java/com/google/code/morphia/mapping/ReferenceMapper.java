@@ -14,6 +14,10 @@ import com.google.code.morphia.Datastore;
 import com.google.code.morphia.Key;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.converters.DefaultConverters;
+import com.google.code.morphia.mapping.cache.EntityCacheKey;
+import com.google.code.morphia.mapping.cache.ProxyCacheKey;
+import com.google.code.morphia.mapping.cache.first.FirstLevelEntityCache;
+import com.google.code.morphia.mapping.cache.first.FirstLevelProxyCache;
 import com.google.code.morphia.mapping.lazy.LazyFeatureDependencies;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReference;
 import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceList;
@@ -52,7 +56,7 @@ class ReferenceMapper {
 	
 	private void writeSingle(final BasicDBObject dbObject, String name, Object fieldValue) {
 		if (fieldValue != null) {
-			DBRef dbrefFromKey = getKey(fieldValue).toRef();
+			DBRef dbrefFromKey = getKey(fieldValue).toRef(mapper);
 			dbObject.put(name, dbrefFromKey);
 
 		}
@@ -66,17 +70,17 @@ class ReferenceMapper {
 				ProxiedEntityReferenceList p = (ProxiedEntityReferenceList) fieldValue;
 				List<Key<?>> getKeysAsList = p.__getKeysAsList();
 				for (Key<?> key : getKeysAsList) {
-					values.add(key.toRef());
+					values.add(key.toRef(mapper));
 				}
 			} else {
 				
 				if (mf.getType().isArray()) {
 					for (Object o : (Object[]) fieldValue) {
-						values.add(getKey(o).toRef());
+						values.add(getKey(o).toRef(mapper));
 					}
 				} else {
 					for (Object o : (Iterable) fieldValue) {
-						values.add(getKey(o).toRef());
+						values.add(getKey(o).toRef(mapper));
 					}
 				}
 			}
@@ -97,12 +101,12 @@ class ReferenceMapper {
 				Map<String, Key<?>> refMap = proxy.__getReferenceMap();
 				for (Map.Entry<String, Key<?>> entry : refMap.entrySet()) {
 					String strKey = entry.getKey();
-					values.put(strKey, entry.getValue().toRef());
+					values.put(strKey, entry.getValue().toRef(mapper));
 				}
 			} else {
 				for (Map.Entry<Object, Object> entry : map.entrySet()) {
 					String strKey = converters.encode(entry.getKey()).toString();
-					values.put(strKey, getKey(entry.getValue()).toRef());
+					values.put(strKey, getKey(entry.getValue()).toRef(mapper));
 				}
 			}
 			if (values.size() > 0 || opts.storeEmpties) {
@@ -248,11 +252,19 @@ class ReferenceMapper {
 	
 	Object resolveObject(final DBRef dbRef, final Class referenceObjClass, final boolean ignoreMissing,
 			final MappedField mf) {
+		
+		FirstLevelEntityCache entityCache = mapper.getFirstLevelCacheProvider().getEntityCache();
+		EntityCacheKey ck = new EntityCacheKey(referenceObjClass, dbRef.getId().toString());
+		Object cached = entityCache.get(ck);
+		if (cached != null)
+			return cached;
+		
 		BasicDBObject refDbObject = (BasicDBObject) dbRef.fetch();
 		
 		if (refDbObject != null) {
 			Object refObj = ReflectionUtils.createInstance(referenceObjClass, refDbObject);
 			refObj = mapper.fromDb(refDbObject, refObj);
+			entityCache.put(ck, refObj);
 			return refObj;
 		}
 		
@@ -305,19 +317,18 @@ class ReferenceMapper {
 	}
 	
 	private Object createOrReuseProxy(final Class referenceObjClass, final DBRef dbRef) {
-		Map<String, Object> cache = mapper.proxyCache.get();
-		String cacheKey = createCacheKey(dbRef);
-		Object proxyAlreadyCreated = cache.get(cacheKey);
+		
+		FirstLevelProxyCache proxyCache = mapper.getFirstLevelCacheProvider().getProxyCache();
+		ProxyCacheKey cacheKey = new ProxyCacheKey(dbRef);
+		Object proxyAlreadyCreated = proxyCache.get(cacheKey);
 		if (proxyAlreadyCreated != null) {
 			return proxyAlreadyCreated;
 		}
 		
 		Object newProxy = mapper.proxyFactory.createProxy(referenceObjClass, new Key(dbRef), mapper.datastoreProvider);
-		cache.put(cacheKey, newProxy);
+		proxyCache.put(cacheKey, newProxy);
 		return newProxy;
 	}
 	
-	private String createCacheKey(DBRef dbRef) {
-		return dbRef.getId().toString();
-	}
+
 }

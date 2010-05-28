@@ -14,7 +14,6 @@ package com.google.code.morphia.mapping;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +34,11 @@ import com.google.code.morphia.annotations.Property;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.annotations.Serialized;
 import com.google.code.morphia.converters.DefaultConverters;
+import com.google.code.morphia.mapping.cache.CacheKey;
+import com.google.code.morphia.mapping.cache.EntityCacheKey;
+import com.google.code.morphia.mapping.cache.first.DefaultFirstLevelCacheProvider;
+import com.google.code.morphia.mapping.cache.first.FirstLevelCacheProvider;
+import com.google.code.morphia.mapping.cache.first.FirstLevelEntityCache;
 import com.google.code.morphia.mapping.lazy.CGLibLazyProxyFactory;
 import com.google.code.morphia.mapping.lazy.DatastoreProvider;
 import com.google.code.morphia.mapping.lazy.DefaultDatastoreProvider;
@@ -52,6 +56,7 @@ import com.mongodb.DBObject;
  */
 @SuppressWarnings("unchecked")
 public class Mapper {
+
 	public static final Logger logger = Logger.getLogger(Mapper.class.getName());
 
 	public static final String ID_KEY = "_id";
@@ -60,25 +65,34 @@ public class Mapper {
 
 	/** Set of classes that have been validated for mapping by this mapper */
 	private final ConcurrentHashMap<String, MappedClass> mappedClasses = new ConcurrentHashMap<String, MappedClass>();
-	private final ThreadLocal<Map<String, Object>> entityCache = new ThreadLocal<Map<String, Object>>();
-	final ThreadLocal<Map<String, Object>> proxyCache = new ThreadLocal<Map<String, Object>>();
 	private final ConcurrentLinkedQueue<EntityInterceptor> interceptors = new ConcurrentLinkedQueue<EntityInterceptor>();
-
-	//TODO: make these configurable
+	
+	// TODO: make these configurable
 	private final DefaultConverters converters = new DefaultConverters();;
 	private final ReferenceMapper referenceMapper = new ReferenceMapper(this, converters);
 	private final EmbeddedMapper embeddedMapper = new EmbeddedMapper(this, converters);
 	private final ValueMapper valueMapper = new ValueMapper(converters);
-	final LazyProxyFactory proxyFactory = LazyFeatureDependencies.testDependencyFullFilled() ? new CGLibLazyProxyFactory() : null;
+	final LazyProxyFactory proxyFactory = LazyFeatureDependencies.testDependencyFullFilled() ? new CGLibLazyProxyFactory()
+			: null;
 	DatastoreProvider datastoreProvider = new DefaultDatastoreProvider();
 	MapperOptions opts = new MapperOptions();
+	// TODO make configurable
+	private FirstLevelCacheProvider firstLevelCacheProvider = new DefaultFirstLevelCacheProvider();
 	
-	/** <p>Adds an {@link EntityInterceptor} </p>*/
- 	public void addInterceptor(final EntityInterceptor ei) {
+	/**
+	 * <p>
+	 * Adds an {@link EntityInterceptor}
+	 * </p>
+	 */
+	public void addInterceptor(final EntityInterceptor ei) {
 		interceptors.add(ei);
 	}
-
-	/** <p>Gets list of {@link EntityInterceptor}s </p> */
+	
+	/**
+	 * <p>
+	 * Gets list of {@link EntityInterceptor}s
+	 * </p>
+	 */
 	public Collection<EntityInterceptor> getInterceptors() {
 		return interceptors;
 	}
@@ -86,9 +100,11 @@ public class Mapper {
 	public MapperOptions getOptions() {
 		return this.opts;
 	}
+
 	public void setOptions(MapperOptions options) {
 		this.opts = options;
 	}
+
 	public boolean isMapped(final Class c) {
 		return mappedClasses.containsKey(c.getName());
 	}
@@ -110,8 +126,10 @@ public class Mapper {
 	}
 
 	/**
-	 * <p>Gets the {@link MappedClass} for the object (type). If it isn't mapped, create a
-	 * new class and cache it (without validating).</p>
+	 * <p>
+	 * Gets the {@link MappedClass} for the object (type). If it isn't mapped,
+	 * create a new class and cache it (without validating).
+	 * </p>
 	 */
 	public MappedClass getMappedClass(final Object obj) {
 		if (obj == null) {
@@ -139,10 +157,11 @@ public class Mapper {
 		MappedClass mc = getMappedClass(object);
 		return mc.getCollectionName();
 	}
-
 	
 	/**
-	 *<p> Updates the @{@link Id} fields.</p>
+	 *<p>
+	 * Updates the @{@link Id} fields.
+	 * </p>
 	 * 
 	 * @param entity
 	 *            The object to update
@@ -185,22 +204,28 @@ public class Mapper {
 			return null;
 		}
 
-		entityCache.set(new HashMap<String, Object>());
-		proxyCache.set(new HashMap<String, Object>());
 		Object entity = null;
 		try {
 			entity = ReflectionUtils.createInstance(entityClass, dbObject);
 			fromDb(dbObject, entity);
 		} finally {
-			entityCache.remove();
-			proxyCache.remove();
+			// TODO ugly, but tmp. here to keep compatibility
+			if (this.firstLevelCacheProvider instanceof DefaultFirstLevelCacheProvider) {
+				DefaultFirstLevelCacheProvider d = (DefaultFirstLevelCacheProvider) this.firstLevelCacheProvider;
+				d.release();
+			}
 		}
 		return entity;
 	}
 
 	/**
-	 * <p>Converts a java object to a mongo-compatible object (possibly a DBObject for complex mappings) </p>
-	 * <p>Used by query/update operations</p>
+	 * <p>
+	 * Converts a java object to a mongo-compatible object (possibly a DBObject
+	 * for complex mappings)
+	 * </p>
+	 * <p>
+	 * Used by query/update operations
+	 * </p>
 	 */
 	public Object toMongoObject(final Object javaObj) {
 		if (javaObj == null) {
@@ -247,7 +272,9 @@ public class Mapper {
 	}
 
 	/**
-	 * <p> Converts an entity (POJO) to a DBObject </p>
+	 * <p>
+	 * Converts an entity (POJO) to a DBObject
+	 * </p>
 	 */
 	public DBObject toDBObject(Object entity, final LinkedHashMap<Object, DBObject> involvedObjects) {
 		
@@ -267,16 +294,20 @@ public class Mapper {
 			try {
 				Class<? extends Annotation> annType = opts.defaultFieldAnnotation;
 				boolean foundAnnotation = false;
-				//get the annotation from the field.
-				for(Class<? extends Annotation> testType : new Class[] {Id.class, Property.class, Embedded.class, Serialized.class, Reference.class})
+				// get the annotation from the field.
+				for (Class<? extends Annotation> testType : new Class[] { Id.class, Property.class, Embedded.class,
+						Serialized.class, Reference.class })
 					if (mf.hasAnnotation(testType)) {
-						annType = testType; foundAnnotation = true; break;
+						annType = testType;
+						foundAnnotation = true;
+						break;
 					}
 				if (Id.class.equals(annType)) {
 					Object dbVal = mf.getFieldValue(entity);
 					if (dbVal != null)
 						dbObject.put(ID_KEY, converters.encode(ReflectionUtils.asObjectIdMaybe(dbVal)));
-				} else if (Property.class.equals(annType) || Serialized.class.equals(annType) || mf.isTypeMongoCompatible())
+				} else if (Property.class.equals(annType) || Serialized.class.equals(annType)
+						|| mf.isTypeMongoCompatible())
 					valueMapper.toDBObject(entity, mf, dbObject, opts);
 				else if (Reference.class.equals(annType))
 					referenceMapper.toDBObject(entity, mf, dbObject, opts);
@@ -285,8 +316,9 @@ public class Mapper {
 					if (!foundAnnotation)
 						logger.fine("No annotation was found, embedding " + mf);
 					
-				}else {	
-					logger.warning("Ignoring field: " + mf.getFullName() + " [type:" + mf.getType().getSimpleName() + "]");
+				} else {
+					logger.warning("Ignoring field: " + mf.getFullName() + " [type:" + mf.getType().getSimpleName()
+							+ "]");
 				}
 
 			} catch (Exception e) {
@@ -300,21 +332,37 @@ public class Mapper {
 		return dbObject;
 	}
 	
-
-
 	Object fromDb(BasicDBObject dbObject, final Object entity) {
 		// check the history key (a key is the namespace + id)
-		String cacheKey = (!dbObject.containsField(ID_KEY)) ? null : "[" + dbObject.getString(ID_KEY) + "]";
-		if (entityCache.get() == null) {
-			entityCache.set(new HashMap<String, Object>());
-		}
-		if (cacheKey != null) {
-			if (entityCache.get().containsKey(cacheKey)) {
-				return entityCache.get().get(cacheKey);
-			} else {
-				entityCache.get().put(cacheKey, entity);
+		
+		if (dbObject.containsField(ID_KEY)) {
+			if (getMappedClass(entity).getIdField() != null) {
+				
+				String id = dbObject.getString(ID_KEY);
+				CacheKey ck = new EntityCacheKey(entity.getClass(), id);
+				FirstLevelEntityCache entityCache = firstLevelCacheProvider.getEntityCache();
+				Object cachedInstance = entityCache.get(ck);
+				if (cachedInstance != null)
+					return cachedInstance;
+				else
+					entityCache.put(ck, entity); // to avoid stackOverflow in
+													// Recursive refs
+
 			}
 		}
+
+		// String cacheKey = (!dbObject.containsField(ID_KEY)) ? null : "[" +
+		// dbObject.getString(ID_KEY) + "]";
+		// if (entityCache.get() == null) {
+		// entityCache.set(new HashMap<String, Object>());
+		// }
+		// if (cacheKey != null) {
+		// if (entityCache.get().containsKey(cacheKey)) {
+		// return entityCache.get().get(cacheKey);
+		// } else {
+		// entityCache.get().put(cacheKey, entity);
+		// }
+		// }
 
 		MappedClass mc = getMappedClass(entity);
 		
@@ -325,20 +373,35 @@ public class Mapper {
 					if (dbObject.get(ID_KEY) != null) {
 						mf.setFieldValue(entity, converters.decode(mf.getType(), dbObject.get(ID_KEY)));
 					}
-				} else if (mf.hasAnnotation(Property.class) || mf.hasAnnotation(Serialized.class) || mf.isTypeMongoCompatible())
+				} else if (mf.hasAnnotation(Property.class) || mf.hasAnnotation(Serialized.class)
+						|| mf.isTypeMongoCompatible())
 					valueMapper.fromDBObject(dbObject, mf, entity);
 				else if (mf.hasAnnotation(Embedded.class))
 					embeddedMapper.fromDBObject(dbObject, mf, entity);
 				else if (mf.hasAnnotation(Reference.class))
 					referenceMapper.fromDBObject(dbObject, mf, entity);
-				else 
+				else
 					logger.warning("Ignoring field: " + mf.getFullName() + " [type:" + mf.getType().getName() + "]");
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 
+		if (dbObject.containsField(ID_KEY)) {
+			if (getMappedClass(entity).getIdField() != null) {
+				
+				String id = dbObject.getString(ID_KEY);
+				CacheKey ck = new EntityCacheKey(entity.getClass(), id);
+				FirstLevelEntityCache entityCache = firstLevelCacheProvider.getEntityCache();
+
+					entityCache.put(ck, entity);
+			}
+		}
 		mc.callLifecycleMethods(PostLoad.class, entity, dbObject, this);
 		return entity;
-	}	
+	}
+	
+	public FirstLevelCacheProvider getFirstLevelCacheProvider() {
+		return firstLevelCacheProvider;
+	}
 }
