@@ -53,6 +53,6 @@ public class SerializableCollectionObjectReference<T> extends AbstractReference 
 	
 	@Override
 	protected void beforeWriteObject() {
-		((List<T>) object).clear();
+		((Collection<T>) object).clear();
 	}
 }
