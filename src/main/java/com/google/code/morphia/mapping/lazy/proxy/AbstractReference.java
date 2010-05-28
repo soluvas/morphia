@@ -33,12 +33,12 @@ public abstract class AbstractReference implements Serializable, ObjectReference
 
 	@Override
 	public final synchronized Object get() {
-		if(isFetched) {
+		if (isFetched) {
 			return object;
 		}
 
 		object = fetch();
-		isFetched=true;
+		isFetched = true;
 		return object;
 	}
 
@@ -64,8 +64,8 @@ public abstract class AbstractReference implements Serializable, ObjectReference
 		// excessive hoop-jumping in order not to have to recreate the
 		// instance.
 		// as soon as weÂ´d have an ObjectFactory, that would be unnecessary
-		isFetched = false;
 		beforeWriteObject();
+		isFetched = false;
 		out.defaultWriteObject();
 	}
 

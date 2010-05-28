@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.code.morphia.Datastore;
 import com.google.code.morphia.Key;
 import com.google.code.morphia.mapping.lazy.DatastoreProvider;
 
@@ -53,6 +54,21 @@ public class SerializableCollectionObjectReference<T> extends AbstractReference 
 	
 	@Override
 	protected void beforeWriteObject() {
-		((Collection<T>) object).clear();
+		if (!__isFetched())
+			return;
+		else {
+			syncKeys();
+			((Collection<T>) object).clear();
+		}
+	}
+	
+	private void syncKeys() {
+		
+		Datastore ds = p.get();
+		
+		listOfKeys.clear();
+		for (Object e : ((Collection) object)) {
+			listOfKeys.add(ds.getKey(e));
+		}
 	}
 }
