@@ -58,6 +58,7 @@ public class Key<T> implements Serializable, Comparable<Key<?>>
 		this.id = ref.getId();
 	}
 	
+	@Deprecated
 	public DBRef toRef() {
 		if (kind == null) throw new IllegalStateException("missing collect-name; please call toRef(Mapper)");
 		return new DBRef(null, kind, id);

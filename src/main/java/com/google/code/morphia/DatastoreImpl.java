@@ -17,6 +17,8 @@ import com.google.code.morphia.mapping.MappedClass;
 import com.google.code.morphia.mapping.MappedField;
 import com.google.code.morphia.mapping.Mapper;
 import com.google.code.morphia.mapping.MappingException;
+import com.google.code.morphia.mapping.cache.EntityCacheKey;
+import com.google.code.morphia.mapping.cache.first.FirstLevelEntityCache;
 import com.google.code.morphia.mapping.lazy.DatastoreHolder;
 import com.google.code.morphia.mapping.lazy.proxy.ProxyHelper;
 import com.google.code.morphia.query.Query;
@@ -60,7 +62,6 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 		// VERY discussable
 		DatastoreHolder.getInstance().set(this);
 	}
-
 	
 	@Override
 	public <T, V> DBRef createRef(Class<T> clazz, V id) {
@@ -102,6 +103,11 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 	
 	@Override
 	public <T, V> void delete(Class<T> clazz, V id) {
+		
+		FirstLevelEntityCache ec = morphia.getMapper().getFirstLevelCacheProvider().getEntityCache();
+		EntityCacheKey ck = new EntityCacheKey(clazz, id.toString());
+		ec.removeByKey(ck);
+
 		DBCollection dbColl = getCollection(clazz);
 		delete(dbColl, id);
 	}
@@ -244,7 +250,6 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 		return new QueryImpl<T>(clazz, getCollection(clazz), this);
 	}
 	
-	
 	@Override
 	public <T> Query<T> find(String kind, Class<T> clazz) {
 		return new QueryImpl<T>(clazz, getDB().getCollection(kind), this);
@@ -290,13 +295,16 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 		}
 		return find(clazz, Mapper.ID_KEY + " in", objIds);
 	}
+
 	@Override
 	public <T> List<T> getByKeys(Iterable<Key<T>> keys) {
 		return this.getByKeys((Class<T>) null, keys);
 	}
 	
-	@Override
+	// TODO scott: should return a collection, to make obvious, that it has no
+	// predefined order?
 	public <T> List<T> getByKeys(Class<T> clazz, Iterable<Key<T>> keys) {
+		
 		Map<String, List<Key>> kindMap = new HashMap<String, List<Key>>();
 		List<T> results = new ArrayList<T>();
 		// String clazzKind = (clazz==null) ? null :
@@ -345,6 +353,15 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 	@Override
 	public <T> T getByKey(Class<T> clazz, Key<T> key) {
 		Mapper mapr = morphia.getMapper();
+		//		
+		// TODO us experimental
+		FirstLevelEntityCache ec = mapr.getFirstLevelCacheProvider().getEntityCache();
+		EntityCacheKey ck = new EntityCacheKey(clazz, key.getId().toString());
+		Object cached = ec.get(ck);
+		if (cached != null) {
+			return (T) cached;
+		}
+
 		String kind = mapr.getCollectionName(clazz);
 		String keyKind = key.updateKind(mapr);
 		if (!kind.equals(keyKind))
@@ -366,6 +383,7 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 		String collName = morphia.getMapper().getCollectionName(clazz);
 		return getDB().getCollection(collName);
 	}
+
 	public DBCollection getCollection(Object obj) {
 		String collName = morphia.getMapper().getCollectionName(obj);
 		return getDB().getCollection(collName);
@@ -441,18 +459,21 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 		return savedKeys;
 	}
 	
-	
 	protected <T> Key<T> save(DBCollection dbColl, T entity) {
+
+		entity = ProxyHelper.unwrap(entity);
+		Mapper mapr = morphia.getMapper();
+		MappedClass mc = mapr.getMappedClass(entity);
+		
+
+
 		DB db = dbColl.getDB();
 		// TODO scary message from driver ... db.requestStart();
-		try{
-			entity = ProxyHelper.unwrap(entity);
-			Mapper mapr = morphia.getMapper();
-			MappedClass mc = mapr.getMappedClass(entity);
+		try {
 			
+
 			LinkedHashMap<Object, DBObject> involvedObjects = new LinkedHashMap<Object, DBObject>();
 			DBObject dbObj = mapr.toDBObject(entity, involvedObjects);
-			
 			
 			if (mc.hasVersionField()) {
 				String versionKeyName = mc.getMappedVersionField().getMappedFieldName();
@@ -462,15 +483,15 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 				if (oldVersion != null && oldVersion > 0) {
 					Object idValue = dbObj.get(Mapper.ID_KEY);
 					
-					UpdateResults<T> res = update(find((Class<T>) entity.getClass(), Mapper.ID_KEY, idValue).filter(versionKeyName, oldVersion),
-							dbObj, false, false);
+					UpdateResults<T> res = update(find((Class<T>) entity.getClass(), Mapper.ID_KEY, idValue).filter(
+							versionKeyName, oldVersion), dbObj, false, false);
 					
 					if (res.getHadError())
 						throw new MappingException("Error: " + res.getError());
 					
 					if (res.getUpdatedCount() != 1)
-						throw new ConcurrentModificationException("Entity of class " + entity.getClass().getName() + " (id='" + idValue
-								+ "',version='" + oldVersion + "') was concurrently updated.");
+						throw new ConcurrentModificationException("Entity of class " + entity.getClass().getName()
+								+ " (id='" + idValue + "',version='" + oldVersion + "') was concurrently updated.");
 				} else {
 					dbColl.save(dbObj);
 				}
@@ -486,13 +507,20 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 			if (lastErr.get("err") != null)
 				throw new MappingException("Error: " + lastErr.toString());
 			
-			
 			postSaveOperations(entity, dbObj, dbColl, involvedObjects);
+			
+			//			
+			// TODO us experimental
+			FirstLevelEntityCache ec = mapr.getFirstLevelCacheProvider().getEntityCache();
+			EntityCacheKey ck = new EntityCacheKey(entity.getClass(), mc.getMappedIdField().getFieldValue(entity)
+					.toString());
+			ec.removeByKey(ck);
 
-			return new Key<T>(dbColl.getName(), getId(entity));
-		}
-		finally{
-		     // TODO scary message from driver ... db.requestDone();
+			Key<T> key = new Key<T>(dbColl.getName(), getId(entity));
+			key.setKindClass((Class<? extends T>) entity.getClass());
+			return key;
+		} finally {
+			// TODO scary message from driver ... db.requestDone();
 		}
 	}
 	
@@ -524,10 +552,12 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 	public UpdateOperations createUpdateOperation() {
 		return new UpdateOpsImpl(getMapper());
 	}
+
 	@Override
 	public <T> UpdateResults<T> update(Query<T> query, UpdateOperations ops, boolean createIfMissing) {
 		return update(query, ops, createIfMissing, false);
 	}
+
 	@Override
 	public <T> UpdateResults<T> update(Query<T> query, UpdateOperations ops) {
 		return update(query, ops, false, true);
@@ -554,7 +584,8 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 		return res;
 	}
 	
-	private <T> void postSaveOperations(Object entity, DBObject dbObj, DBCollection dbColl, LinkedHashMap<Object, DBObject> involvedObjects) {
+	private <T> void postSaveOperations(Object entity, DBObject dbObj, DBCollection dbColl,
+			LinkedHashMap<Object, DBObject> involvedObjects) {
 		Mapper mapr = morphia.getMapper();
 		MappedClass mc = mapr.getMappedClass(entity);
 		
