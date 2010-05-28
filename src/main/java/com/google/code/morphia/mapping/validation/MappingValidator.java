@@ -19,6 +19,7 @@ import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.annotations.Serialized;
 import com.google.code.morphia.mapping.MappedClass;
 import com.google.code.morphia.mapping.validation.ConstraintViolation.Level;
+import com.google.code.morphia.mapping.validation.classrules.ContainsEmbeddedWithId;
 import com.google.code.morphia.mapping.validation.classrules.DuplicatedAttributeNames;
 import com.google.code.morphia.mapping.validation.classrules.EmbeddedAndId;
 import com.google.code.morphia.mapping.validation.classrules.EmbeddedAndValue;
@@ -92,6 +93,7 @@ public class MappingValidator {
 		constraints.add(new EntityAndEmbed());
 		constraints.add(new EmbeddedAndValue());
 		constraints.add(new DuplicatedAttributeNames());
+		constraints.add(new ContainsEmbeddedWithId());
 		// field-level
 		constraints.add(new MisplacedProperty());
 		constraints.add(new ReferenceToUnidentifiable());
