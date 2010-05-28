@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.google.code.morphia.Datastore;
 import com.google.code.morphia.Key;
 import com.google.code.morphia.mapping.lazy.DatastoreProvider;
 
@@ -50,7 +51,22 @@ public class SerializableMapObjectReference extends AbstractReference implements
 
 	@Override
 	protected void beforeWriteObject() {
-		((Map) object).clear();
+		if (!__isFetched())
+			return;
+		else {
+			syncKeys();
+			((Map) object).clear();
+		}
+	}
+	
+	private void syncKeys() {
+		Datastore ds = p.get();
+		
+		this.keyMap.clear();
+		Map<String, Object> map = (Map) object;
+		for (Map.Entry<String, Object> e : map.entrySet()) {
+			keyMap.put(e.getKey(), ds.getKey(e.getValue()));
+		}
 	}
 
 	@Override

@@ -31,7 +31,16 @@ public class SerializableCollectionObjectReference<T> extends AbstractReference 
 		c.clear();
 		
 		int numberOfEntitiesExpected = listOfKeys.size();
-		List<T> retrievedEntities = p.get().getByKeys(referenceObjClass, (List) __getKeysAsList());
+		// does not retain order:
+		// List<T> retrievedEntities = p.get().getByKeys(referenceObjClass,
+		// (List) __getKeysAsList());
+		
+		// so we do it the lousy way: FIXME
+		List<T> retrievedEntities = new ArrayList<T>(listOfKeys.size());
+		Datastore ds = p.get();
+		for (Key<?> k : listOfKeys) {
+			retrievedEntities.add((T) ds.getByKey(referenceObjClass, k));
+		}
 		
 		if (!ignoreMissing && (numberOfEntitiesExpected != retrievedEntities.size())) {
 			throw new LazyReferenceFetchingException("During the lifetime of a proxy of type '"
@@ -63,7 +72,6 @@ public class SerializableCollectionObjectReference<T> extends AbstractReference 
 	}
 	
 	private void syncKeys() {
-		
 		Datastore ds = p.get();
 		
 		listOfKeys.clear();
