@@ -18,14 +18,14 @@ package com.google.code.morphia.testmodel;
 
 import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.annotations.Reference;
-import com.google.code.morphia.utils.AbstractEntity;
+import com.google.code.morphia.testutil.TestEntity;
 
 /**
  *
  * @author Olafur Gauti Gudmundsson
  */
 @Entity("stuff")
-public class RecursiveParent extends AbstractEntity {
+public class RecursiveParent extends TestEntity {
 	private static final long serialVersionUID = 1L;
 
 	@Reference

@@ -1,5 +1,6 @@
 package com.google.code.morphia;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
@@ -33,6 +34,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 import com.mongodb.Mongo;
@@ -111,12 +113,25 @@ public class DatastoreImpl implements Datastore, AdvancedDatastore {
 		DBCollection dbColl = getCollection(clazz);
 		delete(dbColl, id);
 	}
-	
 	@Override
 	public <T, V> void delete(Class<T> clazz, Iterable<V> ids) {
-		// TODO: see about batching deletes with remove({_id : {$in: [ids]}})
-		for (V id : ids)
-			delete(clazz, id);
+		DBCollection dbColl = getCollection(clazz);			
+		DBObject q = null;
+		//TODO: replace with cursor.getQuery() in next update of the driver (pull request in).
+		try {
+			DBCursor cursor = ((QueryImpl<T>) find(clazz, Mapper.ID_KEY, ids)).prepareCursor();
+			Field f = cursor.getClass().getField("_query");
+			f.setAccessible(true);
+			q = (DBObject) f.get(cursor);
+		} catch (Exception e) {
+			//do nothing, fall back to less efficient method below
+		}
+		
+		if ( q!=null )
+			dbColl.remove(q);
+		else
+			for (V id : ids)
+				delete(clazz, id);
 	}
 	
 	@Override

@@ -15,7 +15,7 @@ import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.Version;
 import com.google.code.morphia.mapping.validation.ConstraintViolationException;
 import com.google.code.morphia.testutil.AssertedFailure;
-import com.google.code.morphia.utils.AbstractEntity;
+import com.google.code.morphia.testutil.TestEntity;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
@@ -24,7 +24,7 @@ import com.google.code.morphia.utils.AbstractEntity;
 public class VersionTest extends TestBase {
 	
 
-	public static class ALongPrimitive extends AbstractEntity {
+	public static class ALongPrimitive extends TestEntity {
 		private static final long serialVersionUID = 1L;
 
 		@Version
@@ -33,7 +33,7 @@ public class VersionTest extends TestBase {
 		String text;
 	}
 	
-	public static class ALong extends AbstractEntity {
+	public static class ALong extends TestEntity {
 		private static final long serialVersionUID = 1L;
 		@Version
 		Long v;

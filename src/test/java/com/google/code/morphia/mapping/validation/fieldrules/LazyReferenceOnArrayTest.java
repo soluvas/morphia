@@ -9,7 +9,7 @@ import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.mapping.validation.ConstraintViolationException;
 import com.google.code.morphia.testutil.AssertedFailure;
-import com.google.code.morphia.utils.AbstractEntity;
+import com.google.code.morphia.testutil.TestEntity;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
@@ -17,12 +17,12 @@ import com.google.code.morphia.utils.AbstractEntity;
  */
 public class LazyReferenceOnArrayTest extends TestBase {
 	
-	public static class LazyOnArray extends AbstractEntity {
+	public static class LazyOnArray extends TestEntity {
 		@Reference(lazy = true)
 		R[] r;
 	}
 	
-	public static class R extends AbstractEntity {
+	public static class R extends TestEntity {
 	}
 	
 	@Test

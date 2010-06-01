@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import com.google.code.morphia.TestBase;
 import com.google.code.morphia.query.Query;
-import com.google.code.morphia.utils.AbstractEntity;
+import com.google.code.morphia.testutil.TestEntity;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
@@ -33,7 +33,7 @@ public class EnumSetTest extends TestBase {
 		C, D;
 	}
 	
-	public static class NastyEnumEntity extends AbstractEntity {
+	public static class NastyEnumEntity extends TestEntity {
 		EnumSet<NastyEnum> in = EnumSet.of(NastyEnum.B, NastyEnum.C, NastyEnum.D);
 		EnumSet<NastyEnum> out = EnumSet.of(NastyEnum.A);
 		EnumSet<NastyEnum> empty = EnumSet.noneOf(NastyEnum.class);

@@ -10,7 +10,7 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import com.google.code.morphia.utils.AbstractEntity;
+import com.google.code.morphia.testutil.TestEntity;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
@@ -32,7 +32,7 @@ public class TestGetByKeys extends TestBase {
 		Assert.assertFalse(i.hasNext());
 	}
 	
-	public static class A extends AbstractEntity {
+	public static class A extends TestEntity {
 		private static final long serialVersionUID = 1L;
 		String foo = "bar";
 	}

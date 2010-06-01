@@ -15,7 +15,7 @@
  */
 
 
-package com.google.code.morphia.utils;
+package com.google.code.morphia.testutil;
 
 import java.io.Serializable;
 
@@ -26,13 +26,13 @@ import com.google.code.morphia.annotations.Id;
  * @author Olafur Gauti Gudmundsson
  */
 
-public abstract class AbstractEntity implements Serializable {
+public abstract class TestEntity implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	/** The id for this instance */
 	@Id protected String id;
 
-    public AbstractEntity() {
+    public TestEntity() {
     }
 
     public String getId() {

@@ -4,7 +4,7 @@ import org.junit.Test;
 
 import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.Reference;
-import com.google.code.morphia.utils.AbstractEntity;
+import com.google.code.morphia.testutil.TestEntity;
 
 public class TestReferenceArray extends TestBase
 {
@@ -25,13 +25,13 @@ public class TestReferenceArray extends TestBase
     }
 
    
-    public static class A extends AbstractEntity
+    public static class A extends TestEntity
     {
         @Reference
         B[] bs = new B[2];
     }
 
-    public static class B extends AbstractEntity
+    public static class B extends TestEntity
     {
         String foo;
     }

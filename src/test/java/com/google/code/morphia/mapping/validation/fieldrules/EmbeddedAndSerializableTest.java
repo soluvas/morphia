@@ -10,14 +10,14 @@ import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Serialized;
 import com.google.code.morphia.mapping.validation.ConstraintViolationException;
 import com.google.code.morphia.testutil.AssertedFailure;
-import com.google.code.morphia.utils.AbstractEntity;
+import com.google.code.morphia.testutil.TestEntity;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  *
  */
 public class EmbeddedAndSerializableTest extends TestBase {
-	public static class E extends AbstractEntity {
+	public static class E extends TestEntity {
 		@Embedded
 		@Serialized
 		R r;

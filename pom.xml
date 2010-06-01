@@ -66,7 +66,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.4</version>
+			<version>4.8.1</version>
 			<type>jar</type>
 			<scope>test</scope>
 			<optional>false</optional>
@@ -123,6 +123,15 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.7</version>
+				<configuration>
+					<show>public</show>
+					<author>false</author>
+				</configuration>
+			</plugin>
         </plugins>
         <extensions>
             <extension>
@@ -132,6 +141,19 @@
             </extension>
         </extensions>
     </build>
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.7</version>
+				<configuration>
+<!--					<stylesheetfile>${basedir}/src/main/javadoc/stylesheet.css</stylesheetfile>-->
+					<show>public</show>
+				</configuration>
+			</plugin>
+		</plugins>
+	</reporting>
 
     <distributionManagement>
         <repository>

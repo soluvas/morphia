@@ -22,14 +22,14 @@ import java.util.Set;
 import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Reference;
-import com.google.code.morphia.utils.AbstractEntity;
+import com.google.code.morphia.testutil.TestEntity;
 
 /**
  *
  * @author Olafur Gauti Gudmundsson
  */
 @Entity("shapeshifters")
-public class ShapeShifter extends AbstractEntity {
+public class ShapeShifter extends TestEntity {
 	private static final long serialVersionUID = 1L;
 
 	@Embedded

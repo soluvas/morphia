@@ -13,7 +13,7 @@ import org.junit.Test;
 import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Property;
-import com.google.code.morphia.utils.AbstractEntity;
+import com.google.code.morphia.testutil.TestEntity;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
@@ -22,7 +22,7 @@ import com.google.code.morphia.utils.AbstractEntity;
 @SuppressWarnings("unchecked")
 public class RegisterAfterUseTest extends TestBase {
 	
-	public static class Broken extends AbstractEntity {
+	public static class Broken extends TestEntity {
 		@Property("foo")
 		@Embedded("bar")
 		ArrayList l;

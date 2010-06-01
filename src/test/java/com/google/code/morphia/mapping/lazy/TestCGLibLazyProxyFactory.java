@@ -5,7 +5,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import com.google.code.morphia.Key;
-import com.google.code.morphia.utils.AbstractEntity;
+import com.google.code.morphia.testutil.TestEntity;
 
 public class TestCGLibLazyProxyFactory extends ProxyTestBase
  {
@@ -28,7 +28,7 @@ public class TestCGLibLazyProxyFactory extends ProxyTestBase
 		assertFetched(eProxy);
 
 	}
-	public static class E extends AbstractEntity
+	public static class E extends TestEntity
 	{
 		private String foo;
 

@@ -11,12 +11,12 @@ import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.annotations.Transient;
-import com.google.code.morphia.utils.AbstractEntity;
+import com.google.code.morphia.testutil.TestEntity;
 
 public class TestEmptyEntityMapping extends TestBase
 {
     @Entity
-    static class A extends AbstractEntity{
+    static class A extends TestEntity{
     	private static final long serialVersionUID = 1L;
 		@Embedded
 		B b;

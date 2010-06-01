@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.bson.types.ObjectId;
+
 import com.google.code.morphia.Datastore;
 import com.google.code.morphia.DatastoreImpl;
 import com.google.code.morphia.Key;
@@ -73,7 +75,7 @@ public class QueryImpl<T> implements Query<T> {
 		return dbColl.getCount(getQueryObject());
 	}
 	
-	private DBCursor prepareCursor() {
+	public DBCursor prepareCursor() {
 		DBObject query = getQueryObject();
 		DBObject fields = getFieldsObject();
 		
@@ -274,7 +276,8 @@ public class QueryImpl<T> implements Query<T> {
 				//hack to let Long match long, and so on
 				!value.getClass().getSimpleName().toLowerCase().equals(mf.getType().getSimpleName().toLowerCase())) {
 			
-			if (mf.getSubType() == null || !value.getClass().isAssignableFrom(mf.getSubType())) {
+			if ((mf.getSubType() == null || !value.getClass().isAssignableFrom(mf.getSubType())) && 
+					!(mf.getType().equals(String.class) && value.getClass().equals(ObjectId.class))) {
 				Throwable t = new Throwable();
 				log.warning("Datatypes for the query may be inconsistent; searching with an instance of "
 						+ value.getClass().getName() + " when the field " + mf.getDeclaringClass().getName()+ "." + mf.getClassFieldName()

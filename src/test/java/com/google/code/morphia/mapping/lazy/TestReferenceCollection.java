@@ -11,7 +11,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import com.google.code.morphia.annotations.Reference;
-import com.google.code.morphia.utils.AbstractEntity;
+import com.google.code.morphia.testutil.TestEntity;
 
 public class TestReferenceCollection extends ProxyTestBase {
 	@Test
@@ -86,7 +86,7 @@ public class TestReferenceCollection extends ProxyTestBase {
 		
 	}
 	
-	public static class A extends AbstractEntity {
+	public static class A extends TestEntity {
 		@Reference(lazy = false)
 		Collection<B> bs = new LinkedList();
 
@@ -95,7 +95,7 @@ public class TestReferenceCollection extends ProxyTestBase {
 		
 	}
 	
-	public static class B extends AbstractEntity {
+	public static class B extends TestEntity {
 		private String foo;
 		
 		public void setFoo(final String string) {

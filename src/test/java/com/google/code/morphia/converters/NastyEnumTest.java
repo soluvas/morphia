@@ -8,7 +8,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import com.google.code.morphia.TestBase;
-import com.google.code.morphia.utils.AbstractEntity;
+import com.google.code.morphia.testutil.TestEntity;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
@@ -29,7 +29,7 @@ public class NastyEnumTest extends TestBase {
 		}
 	}
 	
-	public static class NastyEnumEntity extends AbstractEntity {
+	public static class NastyEnumEntity extends TestEntity {
 		NastyEnum e1 = NastyEnum.A;
 		NastyEnum e2 = NastyEnum.B;
 		NastyEnum e3 = null;

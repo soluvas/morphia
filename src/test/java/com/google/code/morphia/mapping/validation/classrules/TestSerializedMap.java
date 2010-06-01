@@ -13,7 +13,7 @@ import org.junit.Test;
 
 import com.google.code.morphia.TestBase;
 import com.google.code.morphia.annotations.Serialized;
-import com.google.code.morphia.utils.AbstractEntity;
+import com.google.code.morphia.testutil.TestEntity;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
@@ -21,13 +21,13 @@ import com.google.code.morphia.utils.AbstractEntity;
  */
 public class TestSerializedMap extends TestBase {
 	
-	public static class Map1 extends AbstractEntity {
+	public static class Map1 extends TestEntity {
 		@Serialized(disableCompression = false)
 		Map<Integer, Foo> shouldBeOk = new HashMap();
 		
 	}
 	
-	public static class Map2 extends AbstractEntity {
+	public static class Map2 extends TestEntity {
 		@Serialized(disableCompression = true)
 		Map<Integer, Foo> shouldBeOk = new HashMap();
 		
