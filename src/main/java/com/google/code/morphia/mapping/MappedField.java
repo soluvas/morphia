@@ -95,40 +95,51 @@ public class MappedField {
 			} catch (NoSuchMethodException e) {
 				throw new MappingException("No usable constructor for " + field.getType().getName(), e);
 			}
+		else {
+			// see if we can create intances of the type used for declaration
 			
-			this.name = getMappedFieldName();
-			Class type = f.getType();
-			if (type.isArray()
-					|| ReflectionUtils.implementsAnyInterface(field.getType(), Iterable.class, Collection.class,
-							List.class, Set.class, Map.class)) {
-				isSingleValue = false;
-				// subtype of Long[], List<Long> is Long
-				isMap = ReflectionUtils.implementsInterface(type, Map.class);
-				isSet = ReflectionUtils.implementsInterface(type, Set.class);
-				
-				// get the subtype T, T[]/List<T>/Map<?,T>
-				subType = (type.isArray()) ? type.getComponentType() : ReflectionUtils.getParameterizedClass(f, (isMap) ? 1
-						: 0);
-				if (isMap)
-					keyType = ReflectionUtils.getParameterizedClass(f, 0);
+			try {
+				ctor = field.getType().getDeclaredConstructor();
+				ctor.setAccessible(true);
+			} catch (NoSuchMethodException e) {
+				// never mind.
 			}
+		}
+		
+		this.name = getMappedFieldName();
+		Class type = f.getType();
+		if (type.isArray()
+				|| ReflectionUtils.implementsAnyInterface(field.getType(), Iterable.class, Collection.class,
+						List.class, Set.class, Map.class)) {
+			isSingleValue = false;
+			// subtype of Long[], List<Long> is Long
+			isMap = ReflectionUtils.implementsInterface(type, Map.class);
+			isSet = ReflectionUtils.implementsInterface(type, Set.class);
 			
-			// check the main type
-			isMongoType = ReflectionUtils.isPropertyType(type);
-			
-			// if the main type isn't supported by the Mongo, see if the subtype is
-			// works for Long[], List<Long>, Map<?, Long>etc.
-			if (!isMongoType && subType != null)
-				isMongoType = ReflectionUtils.isPropertyType(subType);
-			
-			// TODO isn´t that actual validation?
-			
-			if (!isMongoType && !isSingleValue && (subType == null || subType.equals(Object.class))) {
-				log.warning("The multi-valued field '"
-						+ getFullName()
-						+ "' is a possible heterogenous collection. It cannot be verified. Please declare a valid type to get rid of this warning.");
-				isMongoType = true;
-			}
+			// get the subtype T, T[]/List<T>/Map<?,T>
+			subType = (type.isArray()) ? type.getComponentType() : ReflectionUtils.getParameterizedClass(f, (isMap) ? 1
+					: 0);
+			if (isMap)
+				keyType = ReflectionUtils.getParameterizedClass(f, 0);
+		}
+		
+		// check the main type
+		isMongoType = ReflectionUtils.isPropertyType(type);
+		
+		// if the main type isn't supported by the Mongo, see if the subtype is
+		// works for Long[], List<Long>, Map<?, Long>etc.
+		if (!isMongoType && subType != null)
+			isMongoType = ReflectionUtils.isPropertyType(subType);
+		
+		// TODO isn´t that actual validation?
+		
+		if (!isMongoType && !isSingleValue && (subType == null || subType.equals(Object.class))) {
+			log
+					.warning("The multi-valued field '"
+							+ getFullName()
+							+ "' is a possible heterogenous collection. It cannot be verified. Please declare a valid type to get rid of this warning.");
+			isMongoType = true;
+		}
 	}
 	
 	/** Returns the name of the field's (key)name for mongodb */
