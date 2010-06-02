@@ -334,7 +334,7 @@ public class QueryImpl<T> implements Query<T> {
 				condition = condition.substring(1).trim();
 			}
 			
-			sort = sort.add(s, dir);
+			sort = sort.add(condition, dir);
 		}
 		return this;
 	}
