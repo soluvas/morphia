@@ -266,6 +266,50 @@ public class TestQuery  extends TestBase {
 	public void testNonexistantFindGet() throws Exception {
 		assertNull(ds.find(Hotel.class,"_id", -1).get());
 	}
+
+	@Test
+	public void testSimpleSort() throws Exception {
+		Rectangle[] rects = {	
+				new Rectangle(1, 10),
+				new Rectangle(3, 8),
+				new Rectangle(6, 10),
+				new Rectangle(10, 10),
+				new Rectangle(10, 1),
+		};
+		for(Rectangle rect: rects)
+			ds.save(rect);
+		
+		Rectangle r1 = ds.find(Rectangle.class).limit(1).order("width").get();
+		assertNotNull(r1);
+		assertEquals(1, r1.getWidth(), 0);
+
+		r1 = ds.find(Rectangle.class).limit(1).order("-width").get();
+		assertNotNull(r1);
+		assertEquals(10, r1.getWidth(), 0);
+	}
+	
+	@Test
+	public void testCompoudSort() throws Exception {
+		Rectangle[] rects = {	
+				new Rectangle(1, 10),
+				new Rectangle(3, 8),
+				new Rectangle(6, 10),
+				new Rectangle(10, 10),
+				new Rectangle(10, 1),
+		};
+		for(Rectangle rect: rects)
+			ds.save(rect);
+		
+		Rectangle r1 = ds.find(Rectangle.class).limit(1).order("width,-height").get();
+		assertNotNull(r1);
+		assertEquals(1, r1.getWidth(), 0);
+		assertEquals(10, r1.getHeight(), 0);
+
+		r1 = ds.find(Rectangle.class).limit(1).order("-height, -width").get();
+		assertNotNull(r1);
+		assertEquals(10, r1.getWidth(), 0);
+		assertEquals(10, r1.getHeight(), 0);
+	}
 	
 	@Test
 	public void testQueryCount() throws Exception {
