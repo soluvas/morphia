@@ -30,7 +30,6 @@ public class CGLibLazyProxyFactory implements LazyProxyFactory {
 	}
 
 	@SuppressWarnings( { "unchecked", "deprecation" })
-	@Override
 	public <T> T createProxy(final Class<T> targetClass, final Key<T> key,
 			final DatastoreProvider p) {
 		CglibProxyFactory factory = new CglibProxyFactory();
@@ -50,7 +49,6 @@ public class CGLibLazyProxyFactory implements LazyProxyFactory {
 
 	}
 
-	@Override
 	public <T extends Collection> T createListProxy(final T listToProxy,
 			final Class referenceObjClass, final boolean ignoreMissing,
 			final DatastoreProvider p) {
@@ -69,7 +67,6 @@ public class CGLibLazyProxyFactory implements LazyProxyFactory {
 
 	}
 
-	@Override
 	public <T extends Map> T createMapProxy(final T mapToProxy,
 			final Class referenceObjClass, final boolean ignoreMissing,
 			final DatastoreProvider p) {

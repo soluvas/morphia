@@ -14,7 +14,6 @@ import com.google.code.morphia.mapping.validation.ConstraintViolation.Level;
  */
 public class DuplicatedAttributeNames implements ClassConstraint {
 	
-	@Override
 	public void check(MappedClass mc, Set<ConstraintViolation> ve) {
 		Set<String> foundNames = new HashSet<String>();
 		Set<String> duplicates = new HashSet<String>();

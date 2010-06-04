@@ -28,7 +28,6 @@ public class SerializableMapObjectReference extends AbstractReference implements
 		keyMap = new LinkedHashMap<String, Key<?>>();
 	}
 
-	@Override
 	public void __put(final String key, final Key k) {
 		keyMap.put(key, k);
 	}
@@ -69,7 +68,6 @@ public class SerializableMapObjectReference extends AbstractReference implements
 		}
 	}
 
-	@Override
 	public Map<String, Key<?>> __getReferenceMap() {
 		return keyMap;
 	}

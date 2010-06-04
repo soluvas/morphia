@@ -56,7 +56,6 @@ public class SerializableCollectionObjectReference<T> extends AbstractReference 
 		return Collections.unmodifiableList(listOfKeys);
 	}
 	
-	@Override
 	public void __add(final Key key) {
 		listOfKeys.add(key);
 	}

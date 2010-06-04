@@ -19,7 +19,6 @@ import com.google.code.morphia.mapping.validation.ConstraintViolation.Level;
  */
 public class MultipleVersions implements ClassConstraint {
 	
-	@Override
 	public void check(MappedClass mc, Set<ConstraintViolation> ve) {
 		List<MappedField> versionFields = mc.getFieldsAnnotatedWith(Version.class);
 		if (versionFields.size() > 1)

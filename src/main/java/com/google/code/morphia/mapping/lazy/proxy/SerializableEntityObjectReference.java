@@ -19,7 +19,6 @@ implements ProxiedEntityReference {
 		this.key = key;
 	}
 
-	@Override
 	public Key __getKey() {
 		return key;
 	}

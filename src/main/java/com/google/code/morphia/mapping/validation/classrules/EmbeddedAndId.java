@@ -17,7 +17,6 @@ import com.google.code.morphia.mapping.validation.ConstraintViolation.Level;
  */
 public class EmbeddedAndId implements ClassConstraint {
 
-	@Override
 	public void check(MappedClass mc, Set<ConstraintViolation> ve) {
         if (mc.getEmbeddedAnnotation() != null && mc.getIdField() != null) {
 			ve.add(new ConstraintViolation(Level.FATAL, mc, "@" + Embedded.class.getSimpleName()

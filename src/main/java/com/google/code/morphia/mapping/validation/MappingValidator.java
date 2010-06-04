@@ -46,7 +46,6 @@ public class MappingValidator {
 	public void validate(List<MappedClass> classes) {
 		Set<ConstraintViolation> ve = new TreeSet<ConstraintViolation>(new Comparator<ConstraintViolation>() {
 			
-			@Override
 			public int compare(ConstraintViolation o1, ConstraintViolation o2) {
 				return o1.getLevel().ordinal() > o2.getLevel().ordinal() ? -1 : 1;
 			}
@@ -141,7 +140,6 @@ public class MappingValidator {
 			}
 		}
 		
-		@Override
 		public int compareTo(LogLine o) {
 			return v.getPrefix().compareTo(o.v.getPrefix());
 		}

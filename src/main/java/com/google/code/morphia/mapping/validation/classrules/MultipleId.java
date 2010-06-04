@@ -18,7 +18,6 @@ import com.google.code.morphia.mapping.validation.ConstraintViolation.Level;
  */
 public class MultipleId implements ClassConstraint {
 	
-	@Override
 	public void check(MappedClass mc, Set<ConstraintViolation> ve) {
 		
 		List<MappedField> idFields = mc.getFieldsAnnotatedWith(Id.class);

@@ -31,7 +31,6 @@ public abstract class AbstractReference implements Serializable, ObjectReference
 		this.ignoreMissing = ignoreMissing;
 	}
 
-	@Override
 	public final synchronized Object get() {
 		if (isFetched) {
 			return object;
@@ -44,12 +43,10 @@ public abstract class AbstractReference implements Serializable, ObjectReference
 
 	protected abstract Object fetch();
 
-	@Override
 	public final void set(final Object arg0) {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
 	public final boolean __isFetched() {
 		return isFetched;
 	}
@@ -76,7 +73,6 @@ public abstract class AbstractReference implements Serializable, ObjectReference
 		return referenceObjClass;
 	}
 
-	@Override
 	public Object __unwrap() {
 		return get();
 	}

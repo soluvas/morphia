@@ -16,7 +16,6 @@ import com.google.code.morphia.mapping.validation.ConstraintViolation;
  */
 public abstract class FieldConstraint implements ClassConstraint {
 	
-	@Override
 	public final void check(MappedClass mc, Set<ConstraintViolation> ve) {
 		for (MappedField mf : mc.getPersistenceFields()) {
 			check(mc, mf, ve);

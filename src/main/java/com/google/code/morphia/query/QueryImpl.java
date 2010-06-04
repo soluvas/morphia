@@ -73,7 +73,7 @@ public class QueryImpl<T> implements Query<T> {
 		return (sort == null) ? null : sort.get();
 	}
 	
-	@Override
+
 	public long countAll() {
 		return dbColl.getCount(getQueryObject());
 	}
@@ -98,13 +98,13 @@ public class QueryImpl<T> implements Query<T> {
 		return cursor;
 	}
 	
-	@Override
+
 	public Iterable<T> fetch() {
 		DBCursor cursor = prepareCursor();
 		return new MorphiaIterator<T>(cursor, ds.getMapper(), clazz, dbColl.getName());
 	}
 	
-	@Override
+
 	public Iterable<Key<T>> fetchKeys() {
 		BasicDBObjectBuilder oldFields = fields;
 		fields = new BasicDBObjectBuilder().add(Mapper.ID_KEY, true);
@@ -113,7 +113,7 @@ public class QueryImpl<T> implements Query<T> {
 		return new MorphiaKeyIterator<T>(cursor, ds.getMapper(), clazz, dbColl.getName());
 	}
 	
-	@Override
+
 	public List<T> asList() {
 		List<T> results = new ArrayList<T>();
 		for(T ent : fetch())
@@ -121,7 +121,7 @@ public class QueryImpl<T> implements Query<T> {
 		return results;
 	}
 	
-	@Override
+
 	public List<Key<T>> asKeyList() {
 		List<Key<T>> results = new ArrayList<Key<T>>();
 		for(Key<T> key : fetchKeys())
@@ -129,7 +129,7 @@ public class QueryImpl<T> implements Query<T> {
 		return results;
 	}
 	
-	@Override
+
 	public Iterable<T> fetchIdsOnly() {
 		fields = BasicDBObjectBuilder.start(Mapper.ID_KEY, 1);
 		return fetch();
@@ -172,7 +172,7 @@ public class QueryImpl<T> implements Query<T> {
 	}
 	
 	@SuppressWarnings("unchecked")
-	@Override
+
 	public Query<T> filter(String condition, Object value) {
 		String[] parts = condition.trim().split(" ");
 		if (parts.length < 1 || parts.length > 6)
@@ -243,9 +243,9 @@ public class QueryImpl<T> implements Query<T> {
 		return this;	
 	}
 	
-	@Override
+
 	public Query<T> enableValidation(){ validating = true; return this; }
-	@Override
+
 	public Query<T> disableValidation(){ validating = false; return this; }
 	
 	/** Validate the path, and value type, returning the mappedfield for the field at the path */
@@ -298,7 +298,7 @@ public class QueryImpl<T> implements Query<T> {
 		
 	}
 	
-	@Override
+
 	public T get() {
 		int oldLimit = limit;
 		limit = 1;
@@ -307,7 +307,7 @@ public class QueryImpl<T> implements Query<T> {
 		return (it.hasNext()) ? it.next() : null ;
 	}
 	
-	@Override
+
 	public Key<T> getKey() {
 		int oldLimit = limit;
 		limit = 1;
@@ -316,19 +316,19 @@ public class QueryImpl<T> implements Query<T> {
 		return (it.hasNext()) ?  it.next() : null;
 	}
 	
-	@Override
+
 	public Query<T> limit(int value) {
 		this.limit = value;
 		return this;
 	}
 	
-	@Override
+
 	public Query<T> offset(int value) {
 		this.offset = value;
 		return this;
 	}
 	
-	@Override
+
 	public Query<T> order(String condition) {
 		sort = BasicDBObjectBuilder.start();
 		String[] sorts = condition.split(",");
@@ -347,7 +347,7 @@ public class QueryImpl<T> implements Query<T> {
 		return this;
 	}
 	
-	@Override
+
 	public Iterator<T> iterator() {
 		return fetch().iterator();
 	}
@@ -361,67 +361,67 @@ public class QueryImpl<T> implements Query<T> {
 		protected final String fieldExpr;
 		protected final QueryImpl<T> query;
 		public FieldPartImpl(String fe, QueryImpl<T> q) {this.fieldExpr = fe; this.query=q;}
-		@Override
+
 		public Query<T> doesNotExist() {
 			query.filter("" + fieldExpr + " exists", 0);
 			return query;
 		}
-		@Override
+
 		public Query<T> equal(Object val) {
 			query.filter(fieldExpr + " =", val);
 			return query;
 		}
-		@Override
+
 		public Query<T> exists() {
 			query.filter("" + fieldExpr + " exists", true);
 			return query;
 		}
-		@Override
+
 		public Query<T> greaterThan(Object val) {
 			query.filter(fieldExpr + " >", val);
 			return query;
 		}
-		@Override
+
 		public Query<T> greaterThanOrEq(Object val) {
 			query.filter(fieldExpr + " >=", val);
 			return query;
 		}
-		@Override
+
 		public Query<T> hasThisOne(Object val) {
 			query.filter(fieldExpr + " =", val);
 			return query;
 		}
-		@Override
+
 		public Query<T> hasAllOf(Iterable<?> vals) {
 			query.filter(fieldExpr + " all", vals);
 			return query;
 		}
-		@Override
+
 		public Query<T> hasAnyOf(Iterable<?> vals) {
 			query.filter(fieldExpr + " in", vals);
 			return query;
 		}
-		@Override
+
 		public Query<T> hasThisElement(Object val) {
 			query.filter(fieldExpr + " elem", val);
 			return query;
 		}
-		@Override
+
 		public Query<T> hasNoneOf(Iterable<?> vals) {
 			query.filter(fieldExpr + " nin", vals);
 			return query;
 		}
-		@Override
+
 		public Query<T> lessThan(Object val) {
 			query.filter(fieldExpr + " <", val);
 			return query;
 		}
-		@Override
+
 		public Query<T> lessThanOrEq(Object val) {
 			query.filter(fieldExpr + " <=", val);
 			return query;
 		}
-		@Override
+
 		public Query<T> notEqual(Object val) {
 			query.filter(fieldExpr + " <>", val);
 			return query;
@@ -432,7 +432,7 @@ public class QueryImpl<T> implements Query<T> {
 		return new FieldPartImpl<T>(fieldExpr, this);
 	}
 	
-	@Override
+
 	public Query<T> hintIndex(String idxName) {
 		return null;
 	}

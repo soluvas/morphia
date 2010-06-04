@@ -41,7 +41,6 @@ public class Rectangle extends TestEntity implements Shape {
         this.width = width;
     }
 
-    @Override
     public double getArea() {
         return height * width;
     }

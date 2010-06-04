@@ -18,7 +18,6 @@ import com.google.code.morphia.mapping.validation.ConstraintViolation.Level;
  */
 public class EmbeddedAndValue implements ClassConstraint {
 	
-	@Override
 	public void check(MappedClass mc, Set<ConstraintViolation> ve) {
 		
 		if (mc.getEmbeddedAnnotation() != null && !mc.getEmbeddedAnnotation().value().equals(Mapper.IGNORED_FIELDNAME)) {

@@ -18,7 +18,6 @@ import com.google.code.morphia.mapping.validation.ConstraintViolation.Level;
  */
 public class EntityAndEmbed implements ClassConstraint {
 
-	@Override
 	public void check(MappedClass mc, Set<ConstraintViolation> ve) {
 		
 		if (mc.getEntityAnnotation() != null && mc.getEmbeddedAnnotation() != null) {

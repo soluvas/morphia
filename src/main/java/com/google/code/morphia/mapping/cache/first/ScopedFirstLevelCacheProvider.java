@@ -12,7 +12,6 @@ public class ScopedFirstLevelCacheProvider implements FirstLevelCacheProvider {
 	final static ThreadLocal<FirstLevelEntityCache> entityCacheLocal = new ThreadLocal<FirstLevelEntityCache>();
 	final static ThreadLocal<FirstLevelProxyCache> proxyCacheLocal = new ThreadLocal<FirstLevelProxyCache>();
 	
-	@Override
 	public FirstLevelEntityCache getEntityCache() {
 		FirstLevelEntityCache c = entityCacheLocal.get();
 		if (c == null) {
@@ -22,7 +21,6 @@ public class ScopedFirstLevelCacheProvider implements FirstLevelCacheProvider {
 		return c;
 	}
 	
-	@Override
 	public FirstLevelProxyCache getProxyCache() {
 		FirstLevelProxyCache c = proxyCacheLocal.get();
 		if (c == null) {

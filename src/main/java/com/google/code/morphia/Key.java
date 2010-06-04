@@ -113,7 +113,6 @@ public class Key<T> implements Serializable, Comparable<Key<?>>
 	 * </ol>
 	 */
 	@SuppressWarnings("unchecked")
-	@Override
 	public int compareTo(Key<?> other)
 	{
 		int cmp = 0;

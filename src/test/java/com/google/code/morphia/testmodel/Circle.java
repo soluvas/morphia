@@ -38,7 +38,6 @@ public class Circle extends TestEntity implements Shape {
         this.radius = radius;
     }
 
-    @Override
     public double getArea() {
         return Math.PI * (radius * radius);
     }

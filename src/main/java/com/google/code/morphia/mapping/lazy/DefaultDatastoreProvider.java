@@ -9,7 +9,6 @@ import com.google.code.morphia.Datastore;
  * @author uwe schaefer
  */
 public class DefaultDatastoreProvider implements DatastoreProvider {
-	@Override
 	public Datastore get() {
 		final Datastore datastore = DatastoreHolder.getInstance().get();
 		if (datastore == null) {
