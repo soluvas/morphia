@@ -300,12 +300,12 @@ public class TestQuery  extends TestBase {
 		for(Rectangle rect: rects)
 			ds.save(rect);
 		
-		Rectangle r1 = ds.find(Rectangle.class).limit(1).order("width,-height").get();
+		Rectangle r1 = ds.find(Rectangle.class).order("width,-height").get();
 		assertNotNull(r1);
 		assertEquals(1, r1.getWidth(), 0);
 		assertEquals(10, r1.getHeight(), 0);
 
-		r1 = ds.find(Rectangle.class).limit(1).order("-height, -width").get();
+		r1 = ds.find(Rectangle.class).order("-height, -width").get();
 		assertNotNull(r1);
 		assertEquals(10, r1.getWidth(), 0);
 		assertEquals(10, r1.getHeight(), 0);
@@ -347,4 +347,37 @@ public class TestQuery  extends TestBase {
 		ds.delete(ds.find(Rectangle.class, "height", 1D));
 		assertEquals(2, ds.getCount(Rectangle.class));
 	}
+
+	@Test
+	public void testRangeQuery() throws Exception {
+		Rectangle[] rects = {	
+				new Rectangle(1, 10),
+				new Rectangle(4, 2),
+				new Rectangle(6, 10),
+				new Rectangle(8, 5),
+				new Rectangle(10, 4),
+		};
+		for(Rectangle rect: rects)
+			ds.save(rect);
+		
+		assertEquals(4, ds.getCount(ds.createQuery(Rectangle.class).filter("height >", 3)));
+		assertEquals(3, ds.getCount(ds.createQuery(Rectangle.class).filter("height <", 7)));
+	}
+
+	@Test
+	public void testComplexRangeQuery() throws Exception {
+		Rectangle[] rects = {	
+				new Rectangle(1, 10),
+				new Rectangle(4, 2),
+				new Rectangle(6, 10),
+				new Rectangle(8, 5),
+				new Rectangle(10, 4),
+		};
+		for(Rectangle rect: rects)
+			ds.save(rect);
+		
+		assertEquals(2, ds.getCount(ds.createQuery(Rectangle.class).filter("height >", 3).filter("height <", 8)));
+		assertEquals(1, ds.getCount(ds.createQuery(Rectangle.class).filter("height >", 3).filter("height <", 8).filter("width", 10)));
+	}
+
 }
