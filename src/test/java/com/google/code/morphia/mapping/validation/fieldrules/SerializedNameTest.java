@@ -20,6 +20,10 @@ import com.mongodb.DBObject;
  */
 public class SerializedNameTest extends TestBase {
 	public static class E extends TestEntity {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		@Serialized("changedName")
 		byte[] b = "foo".getBytes();
 		

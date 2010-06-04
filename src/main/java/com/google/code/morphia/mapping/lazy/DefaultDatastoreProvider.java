@@ -9,6 +9,11 @@ import com.google.code.morphia.Datastore;
  * @author uwe schaefer
  */
 public class DefaultDatastoreProvider implements DatastoreProvider {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public Datastore get() {
 		final Datastore datastore = DatastoreHolder.getInstance().get();
 		if (datastore == null) {

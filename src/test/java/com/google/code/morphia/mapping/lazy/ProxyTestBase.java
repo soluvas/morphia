@@ -20,6 +20,7 @@ import com.google.code.morphia.mapping.lazy.proxy.ProxiedReference;
  *
  */
 @Ignore
+@SuppressWarnings("unchecked")
 public class ProxyTestBase extends TestBase {
 
 	protected void assertFetched(final Object e) {

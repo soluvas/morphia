@@ -18,12 +18,21 @@ import com.google.code.morphia.testutil.TestEntity;
  */
 public class ReferenceAndSerializableTest extends TestBase {
 	public static class E extends TestEntity {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		@Reference
 		@Serialized
 		R r;
 	}
 	
 	public static class R extends TestEntity {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 	}
 	
 	@Test

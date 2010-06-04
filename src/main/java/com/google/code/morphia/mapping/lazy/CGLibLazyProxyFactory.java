@@ -25,11 +25,11 @@ import com.thoughtworks.proxy.toys.hotswap.HotSwappingInvoker;
  * 
  * @author uwe schaefer
  */
+@SuppressWarnings("unchecked")
 public class CGLibLazyProxyFactory implements LazyProxyFactory {
 	public CGLibLazyProxyFactory() {
 	}
 
-	@SuppressWarnings( { "unchecked", "deprecation" })
 	public <T> T createProxy(final Class<T> targetClass, final Key<T> key,
 			final DatastoreProvider p) {
 		CglibProxyFactory factory = new CglibProxyFactory();

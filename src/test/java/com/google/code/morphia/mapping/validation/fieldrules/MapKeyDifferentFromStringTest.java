@@ -19,21 +19,25 @@ import com.google.code.morphia.testutil.TestEntity;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  * 
  */
+@SuppressWarnings("unchecked")
 public class MapKeyDifferentFromStringTest extends TestBase {
 	
 	public static class MapWithWrongKeyType1 extends TestEntity {
+		private static final long serialVersionUID = 1L;
 		@Serialized
 		Map<Integer, Integer> shouldBeOk = new HashMap();
 		
 	}
 	
 	public static class MapWithWrongKeyType2 extends TestEntity {
+		private static final long serialVersionUID = 1L;
 		@Reference
 		Map<Integer, Integer> shouldBeOk = new HashMap();
 		
 	}
 	
 	public static class MapWithWrongKeyType3 extends TestEntity {
+		private static final long serialVersionUID = 1L;
 		@Embedded
 		Map<Integer, Integer> shouldBeOk = new HashMap();
 		

@@ -13,6 +13,11 @@ import com.google.code.morphia.mapping.MappingException;
  */
 public class ConstraintViolationException extends MappingException {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public ConstraintViolationException(final Collection<ConstraintViolation> ve) {
 		super(createString(ve.toArray(new ConstraintViolation[ve.size()])));
 	}

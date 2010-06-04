@@ -19,15 +19,24 @@ import com.google.code.morphia.testutil.TestEntity;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  * 
  */
+@SuppressWarnings("unchecked")
 public class TestSerializedMap extends TestBase {
 	
 	public static class Map1 extends TestEntity {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		@Serialized(disableCompression = false)
 		Map<Integer, Foo> shouldBeOk = new HashMap();
 		
 	}
 	
 	public static class Map2 extends TestEntity {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		@Serialized(disableCompression = true)
 		Map<Integer, Foo> shouldBeOk = new HashMap();
 		
@@ -35,6 +44,10 @@ public class TestSerializedMap extends TestBase {
 	
 	public static class Foo implements Serializable {
 		
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		final String id;
 		
 		public Foo(String id) {

@@ -11,6 +11,7 @@ import com.google.code.morphia.Key;
 /**
  * @author uwe schaefer
  */
+@SuppressWarnings("unchecked")
 public interface LazyProxyFactory {
 	<T> T createProxy(Class<T> targetClass, final Key<T> key,
 			final DatastoreProvider p);

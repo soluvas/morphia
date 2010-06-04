@@ -13,6 +13,7 @@ import org.junit.Test;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.testutil.TestEntity;
 
+@SuppressWarnings("unchecked")
 public class TestReferenceCollection extends ProxyTestBase {
 	@Test
 	public final void testCreateProxy() {
@@ -87,6 +88,11 @@ public class TestReferenceCollection extends ProxyTestBase {
 	}
 	
 	public static class A extends TestEntity {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
 		@Reference(lazy = false)
 		Collection<B> bs = new LinkedList();
 
@@ -96,6 +102,10 @@ public class TestReferenceCollection extends ProxyTestBase {
 	}
 	
 	public static class B extends TestEntity {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		private String foo;
 		
 		public void setFoo(final String string) {

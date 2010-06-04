@@ -23,6 +23,10 @@ import com.mongodb.DBObject;
  */
 public class PropertyAndEmbeddedTest extends TestBase {
 	public static class E extends TestEntity {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		@Embedded("myFunkyR")
 		R r = new R();
 		
@@ -37,6 +41,10 @@ public class PropertyAndEmbeddedTest extends TestBase {
 	}
 	
 	public static class E2 extends TestEntity {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		@Embedded
 		@Property("myFunkyR")
 		String s;

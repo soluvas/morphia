@@ -15,6 +15,7 @@ import com.google.code.morphia.mapping.validation.ConstraintViolation.Level;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  * 
  */
+@SuppressWarnings("unchecked")
 public class LazyReferenceOnArray extends FieldConstraint {
 	
 	@Override

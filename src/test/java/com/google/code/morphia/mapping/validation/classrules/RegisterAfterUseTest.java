@@ -23,6 +23,10 @@ import com.google.code.morphia.testutil.TestEntity;
 public class RegisterAfterUseTest extends TestBase {
 	
 	public static class Broken extends TestEntity {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		@Property("foo")
 		@Embedded("bar")
 		ArrayList l;

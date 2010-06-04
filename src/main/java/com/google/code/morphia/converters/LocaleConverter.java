@@ -13,6 +13,7 @@ import com.google.code.morphia.mapping.MappingException;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  * 
  */
+@SuppressWarnings("unchecked")
 public class LocaleConverter extends TypeConverter {
 
 	@Override

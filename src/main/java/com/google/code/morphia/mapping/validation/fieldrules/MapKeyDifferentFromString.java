@@ -16,6 +16,7 @@ import com.google.code.morphia.utils.ReflectionUtils;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  * 
  */
+@SuppressWarnings("unchecked")
 public class MapKeyDifferentFromString extends FieldConstraint {
 	@Override
 	protected void check(MappedClass mc, MappedField mf, Set<ConstraintViolation> ve) {

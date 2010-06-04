@@ -17,13 +17,16 @@ import com.thoughtworks.proxy.kit.ObjectReference;
 @SuppressWarnings("unchecked")
 public abstract class AbstractReference implements Serializable, ObjectReference, ProxiedReference {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	protected final DatastoreProvider p;
 	protected final boolean ignoreMissing;
 	protected Object object;
 	private boolean isFetched = false;
 	protected final Class referenceObjClass;
 
-	@SuppressWarnings("unchecked")
 	protected AbstractReference(final DatastoreProvider p,
 			final Class referenceObjClass, final boolean ignoreMissing) {
 		this.p = p;

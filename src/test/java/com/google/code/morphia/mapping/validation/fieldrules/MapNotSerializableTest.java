@@ -19,20 +19,24 @@ import com.google.code.morphia.testutil.TestEntity;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  *
  */
+@SuppressWarnings("unchecked")
 public class MapNotSerializableTest extends TestBase {
 	public static class Map1 extends TestEntity {
+ 		private static final long serialVersionUID = 1L;
 		@Serialized
 		Map<Integer, String> shouldBeOk = new HashMap();
 		
 	}
 	
 	public static class Map2 extends TestEntity {
+		private static final long serialVersionUID = 1L;
 		@Reference
 		Map<Integer, E1> shouldBeOk = new HashMap();
 		
 	}
 	
 	public static class Map3 extends TestEntity {
+		private static final long serialVersionUID = 1L;
 		@Embedded
 		Map<E2, Integer> shouldBeOk = new HashMap();
 		

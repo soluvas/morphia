@@ -18,6 +18,10 @@ import com.google.code.morphia.testutil.TestEntity;
  */
 public class EmbeddedAndSerializableTest extends TestBase {
 	public static class E extends TestEntity {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		@Embedded
 		@Serialized
 		R r;

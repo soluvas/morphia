@@ -31,6 +31,11 @@ public class MapImplTest extends TestBase{
 		
 	}
 	public static class MyMap<V,T> extends HashMap<String,String>{
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		
 	}
 	

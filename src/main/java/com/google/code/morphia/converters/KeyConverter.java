@@ -12,6 +12,7 @@ import com.mongodb.DBRef;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  * 
  */
+@SuppressWarnings("unchecked")
 public class KeyConverter extends TypeConverter {
 	
 	@Override
@@ -24,6 +25,7 @@ public class KeyConverter extends TypeConverter {
 		return new Key((DBRef) o);
 	}
 	
+	@SuppressWarnings("deprecation")
 	@Override
 	Object encode(Object t, MappedField optionalExtraInfo) {
 		if (t == null)

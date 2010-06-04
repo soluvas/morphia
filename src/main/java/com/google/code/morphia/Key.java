@@ -18,8 +18,7 @@ import com.mongodb.DBRef;
  * @author Jeff Schnitzer <jeff@infohazard.org> (from Objectify codebase)
  * @author Scott Hernandez (adapted to morphia/mongodb)
  */
-public class Key<T> implements Serializable, Comparable<Key<?>>
-{
+public class Key<T> implements Serializable, Comparable<Key<?>> {
 	private static final long serialVersionUID = 1L;
 	
 	/**
@@ -64,6 +63,7 @@ public class Key<T> implements Serializable, Comparable<Key<?>>
 		return new DBRef(null, kind, id);
 	}
 	
+	@SuppressWarnings("deprecation")
 	public DBRef toRef(Mapper mapr) {
 		if (kind != null) return toRef();
 		if (kindClass == null && kind == null) throw new IllegalStateException("missing kindClass; please call toRef(Mapper)");

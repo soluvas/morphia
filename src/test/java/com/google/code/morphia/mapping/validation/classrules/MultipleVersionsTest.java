@@ -18,6 +18,10 @@ import com.google.code.morphia.testutil.TestEntity;
 public class MultipleVersionsTest extends TestBase {
 	
 	public static class Fail1 extends TestEntity {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		@Version
 		long v1;
 		@Version
@@ -25,6 +29,10 @@ public class MultipleVersionsTest extends TestBase {
 	}
 
 	public static class OK1 extends TestEntity {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		@Version
 		long v1;
 	}

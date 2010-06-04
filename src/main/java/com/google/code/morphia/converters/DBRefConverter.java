@@ -10,6 +10,7 @@ import com.mongodb.DBRef;
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
  */
+@SuppressWarnings("unchecked")
 public class DBRefConverter extends TypeConverter {
 	
 	@Override

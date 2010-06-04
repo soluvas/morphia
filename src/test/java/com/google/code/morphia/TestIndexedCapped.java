@@ -29,7 +29,6 @@ import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.Indexed;
 import com.google.code.morphia.mapping.MappedClass;
-import com.google.code.morphia.mapping.MappingException;
 import com.mongodb.DBObject;
 
 /**

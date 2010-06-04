@@ -27,13 +27,21 @@ public class TestReferenceArray extends TestBase
    
     public static class A extends TestEntity
     {
-        @Reference
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+		@Reference
         B[] bs = new B[2];
     }
 
     public static class B extends TestEntity
     {
-        String foo;
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+		String foo;
     }
 
 }

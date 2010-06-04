@@ -18,6 +18,10 @@ import com.google.code.morphia.mapping.lazy.DatastoreProvider;
 @SuppressWarnings("unchecked")
 public class SerializableMapObjectReference extends AbstractReference implements ProxiedEntityReferenceMap {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private final HashMap<String, Key<?>> keyMap;
 	
 	public SerializableMapObjectReference(final Map mapToProxy, final Class referenceObjClass,

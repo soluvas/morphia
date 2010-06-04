@@ -18,11 +18,13 @@ import com.google.code.morphia.testutil.TestEntity;
 public class LazyReferenceOnArrayTest extends TestBase {
 	
 	public static class LazyOnArray extends TestEntity {
+		private static final long serialVersionUID = 1L;
 		@Reference(lazy = true)
 		R[] r;
 	}
 	
 	public static class R extends TestEntity {
+		private static final long serialVersionUID = 1L;
 	}
 	
 	@Test
