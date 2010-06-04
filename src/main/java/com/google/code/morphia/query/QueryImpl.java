@@ -3,8 +3,10 @@ package com.google.code.morphia.query;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,6 +23,7 @@ import com.google.code.morphia.mapping.Mapper;
 import com.google.code.morphia.mapping.MappingException;
 import com.google.code.morphia.mapping.Serializer;
 import com.google.code.morphia.utils.ReflectionUtils;
+import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -37,7 +40,7 @@ public class QueryImpl<T> implements Query<T> {
 	private static final Logger log = Logger.getLogger(Mapper.class.getName());
 	
 	boolean validating = true;
-	BasicDBObjectBuilder query = null;
+	Map<String, Object> query =null;
 	BasicDBObjectBuilder fields = null;
 	BasicDBObjectBuilder sort = null;
 	DatastoreImpl ds = null;
@@ -59,7 +62,7 @@ public class QueryImpl<T> implements Query<T> {
 	}
 	
 	public DBObject getQueryObject() {
-		return (query == null) ? null : query.get();
+		return (query == null) ? null : new BasicDBObject(query);
 	}
 	
 	public DBObject getFieldsObject() {
@@ -185,7 +188,7 @@ public class QueryImpl<T> implements Query<T> {
 		
 		//TODO differentiate between the key/value for maps; we will just get the mf for the field, not which part we are looking for
 		
-		if (query == null) query = BasicDBObjectBuilder.start();
+		if (query == null) query = new HashMap<String, Object>();
 		Mapper mapr = ds.getMapper();
 		Object mappedValue;
 		MappedClass mc = null;
@@ -228,11 +231,16 @@ public class QueryImpl<T> implements Query<T> {
 		}
 		
 		if (FilterOperator.EQUAL.equals(op))
-			query.add(prop, mappedValue);
-		else
-			query.push(prop).add(op.val(), mappedValue);
-		
-		return this;
+			query.put(prop, mappedValue); // no operator, prop equals value
+		else {
+			Object inner = query.get(prop); // operator within inner object
+			if (!(inner instanceof Map)) {
+				inner = new HashMap<String, Object>();
+				query.put(prop, inner);
+			}
+			((Map)inner).put(op.val(), mappedValue);
+		}
+		return this;	
 	}
 	
 	@Override
@@ -325,16 +333,16 @@ public class QueryImpl<T> implements Query<T> {
 		sort = BasicDBObjectBuilder.start();
 		String[] sorts = condition.split(",");
 		for (String s : sorts) {
-			condition = condition.trim();
+			s = s.trim();
 			int dir = 1;
 			
-			if (condition.startsWith("-"))
+			if (s.startsWith("-"))
 			{
 				dir = -1;
-				condition = condition.substring(1).trim();
+				s = s.substring(1).trim();
 			}
 			
-			sort = sort.add(condition, dir);
+			sort = sort.add(s, dir);
 		}
 		return this;
 	}
