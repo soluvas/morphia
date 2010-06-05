@@ -92,7 +92,7 @@ class EmbeddedMapper {
 		}
 	}
 	
-	void fromDBObject(final BasicDBObject dbObject, final MappedField mf, final Object entity) {
+	void fromDBObject(final DBObject dbObject, final MappedField mf, final Object entity) {
 		String name = mf.getName();
 		
 		Class fieldType = mf.getType();
@@ -118,7 +118,7 @@ class EmbeddedMapper {
 		}
 	}
 
-	private void readCollection(final BasicDBObject dbObject, final MappedField mf, final Object entity,
+	private void readCollection(final DBObject dbObject, final MappedField mf, final Object entity,
 			String name) {
 		// multiple documents in a List
 		Class newEntityType = mf.getSubType();
@@ -147,7 +147,7 @@ class EmbeddedMapper {
 		}
 	}
 
-	private void readMap(final BasicDBObject dbObject, final MappedField mf, final Object entity,
+	private void readMap(final DBObject dbObject, final MappedField mf, final Object entity,
 			String name) {
 		Map map = (Map) ReflectionUtils.newInstance(mf.getCTor(), HashMap.class);
 		

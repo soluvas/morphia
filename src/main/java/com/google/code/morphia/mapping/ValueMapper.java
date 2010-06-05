@@ -4,7 +4,7 @@
 package com.google.code.morphia.mapping;
 
 import com.google.code.morphia.converters.DefaultConverters;
-import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
 class ValueMapper
 {
@@ -15,7 +15,7 @@ class ValueMapper
 		this.converters = converters;
 	}
 
-	void fromDBObject(final BasicDBObject dbObject, final MappedField mf, final Object entity)
+	void fromDBObject(final DBObject dbObject, final MappedField mf, final Object entity)
     {
         try
         {
@@ -27,7 +27,7 @@ class ValueMapper
         }
     }
 
-    void toDBObject(final Object entity, final MappedField mf, final BasicDBObject dbObject, MapperOptions opts)
+	void toDBObject(final Object entity, final MappedField mf, final DBObject dbObject, MapperOptions opts)
     {
         try
         {
