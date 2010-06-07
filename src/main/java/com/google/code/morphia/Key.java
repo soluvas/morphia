@@ -5,6 +5,7 @@ import java.io.NotSerializableException;
 import java.io.Serializable;
 
 import com.google.code.morphia.mapping.Mapper;
+import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.DBRef;
 
 /**
@@ -60,7 +61,7 @@ public class Key<T> implements Serializable, Comparable<Key<?>> {
 	@Deprecated
 	public DBRef toRef() {
 		if (kind == null) throw new IllegalStateException("missing collect-name; please call toRef(Mapper)");
-		return new DBRef(null, kind, id);
+		return new DBRef(null, kind, ReflectionUtils.asObjectIdMaybe(id));
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -68,7 +69,7 @@ public class Key<T> implements Serializable, Comparable<Key<?>> {
 		if (kind != null) return toRef();
 		if (kindClass == null && kind == null) throw new IllegalStateException("missing kindClass; please call toRef(Mapper)");
 		kind = mapr.getCollectionName(kindClass);
-		return new DBRef(null, kind, id);
+		return new DBRef(null, kind, ReflectionUtils.asObjectIdMaybe(id));
 	}
 	
 	/**
