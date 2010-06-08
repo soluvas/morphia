@@ -25,6 +25,7 @@ import com.google.code.morphia.mapping.lazy.proxy.ProxiedEntityReferenceMap;
 import com.google.code.morphia.mapping.lazy.proxy.ProxyHelper;
 import com.google.code.morphia.utils.ReflectionUtils;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 @SuppressWarnings("unchecked")
@@ -130,7 +131,7 @@ class ReferenceMapper {
 		}
 	}
 	
-	void fromDBObject(final BasicDBObject dbObject, final MappedField mf, final Object entity) {
+	void fromDBObject(final DBObject dbObject, final MappedField mf, final Object entity) {
 		String name = mf.getName();
 		
 		Class fieldType = mf.getType();
@@ -146,7 +147,7 @@ class ReferenceMapper {
 		
 	}
 	
-	private void readSingle(final BasicDBObject dbObject, final MappedField mf,
+	private void readSingle(final DBObject dbObject, final MappedField mf,
 			final Object entity, String name, Class fieldType, Reference refAnn) {
 		Class referenceObjClass = fieldType;
 		if (dbObject.containsField(name)) {
@@ -171,7 +172,7 @@ class ReferenceMapper {
 		}
 	}
 	
-	private void readCollection(final BasicDBObject dbObject, final MappedField mf,
+	private void readCollection(final DBObject dbObject, final MappedField mf,
 			final Object entity, String name, Reference refAnn) {
 		// multiple references in a List
 		Class referenceObjClass = mf.getSubType();
@@ -287,7 +288,7 @@ class ReferenceMapper {
 		}
 	}
 	
-	private void readMap(final BasicDBObject dbObject, final MappedField mf,
+	private void readMap(final DBObject dbObject, final MappedField mf,
 			final Object entity,
 			final String name, final Reference refAnn) {
 		Class referenceObjClass = mf.getSubType();

@@ -197,7 +197,7 @@ public class Mapper {
 	}
 
 	/** coverts a DBObject back to a type-safe java object */
-	public Object fromDBObject(final Class entityClass, final BasicDBObject dbObject) {
+	public Object fromDBObject(final Class entityClass, final DBObject dbObject) {
 		if (dbObject == null) {
 			Throwable t = new Throwable();
 			logger.log(Level.SEVERE, "Somebody passed in a null dbObject; bad client!", t);
@@ -332,13 +332,13 @@ public class Mapper {
 		return dbObject;
 	}
 	
-	Object fromDb(BasicDBObject dbObject, final Object entity) {
+	Object fromDb(DBObject dbObject, final Object entity) {
 		// check the history key (a key is the namespace + id)
 		
 		if (dbObject.containsField(ID_KEY)) {
 			if (getMappedClass(entity).getIdField() != null) {
 				
-				String id = dbObject.getString(ID_KEY);
+				String id = dbObject.get(ID_KEY).toString();
 				CacheKey ck = new EntityCacheKey(entity.getClass(), id);
 				FirstLevelEntityCache entityCache = firstLevelCacheProvider.getEntityCache();
 				Object cachedInstance = entityCache.get(ck);
@@ -390,7 +390,7 @@ public class Mapper {
 		if (dbObject.containsField(ID_KEY)) {
 			if (getMappedClass(entity).getIdField() != null) {
 				
-				String id = dbObject.getString(ID_KEY);
+				String id = dbObject.get(ID_KEY).toString();
 				CacheKey ck = new EntityCacheKey(entity.getClass(), id);
 				FirstLevelEntityCache entityCache = firstLevelCacheProvider.getEntityCache();
 

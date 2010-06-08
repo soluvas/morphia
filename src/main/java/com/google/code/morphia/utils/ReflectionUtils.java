@@ -50,7 +50,7 @@ import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.mapping.Mapper;
 import com.google.code.morphia.mapping.MappingException;
-import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 /**
@@ -588,7 +588,7 @@ public class ReflectionUtils
         }
     }
 
-    public static Object createInstance(final Class entityClass, final BasicDBObject dbObject)
+	public static Object createInstance(final Class entityClass, final DBObject dbObject)
     {
         // see if there is a className value
         String className = (String) dbObject.get(Mapper.CLASS_NAME_FIELDNAME);

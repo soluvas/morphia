@@ -113,17 +113,12 @@ public class MappedClass {
 		Class<? extends Annotation>[] lifecycleAnnotations = new Class[] {PrePersist.class, PreSave.class, PostPersist.class, PreLoad.class, PostLoad.class};
 		for (Class<?> cls : lifecycleClasses) {
 			for (Method m : ReflectionUtils.getDeclaredAndInheritedMethods(cls)) {
-				Class<? extends Annotation> lifecycleType = null;
-				
 				for(Class<? extends Annotation> c : lifecycleAnnotations) {
 					if (m.isAnnotationPresent(c)) {
-						lifecycleType = c;
-						break;
+						addLifecycleEventMethod(c, m, cls.equals(clazz) ? null : cls);
 					}
 				}
-				
-				if (lifecycleType != null)
-					addLifecycleEventMethod((Class<Annotation>)lifecycleType, m, cls.equals(clazz) ? null : cls);
+
 			}
 		}
 		
@@ -158,7 +153,7 @@ public class MappedClass {
 		}
 	}
 	
-	private void addLifecycleEventMethod(Class<Annotation> lceClazz, Method m, Class<?> clazz) {
+	private void addLifecycleEventMethod(Class<? extends Annotation> lceClazz, Method m, Class<?> clazz) {
 		ClassMethodPair cm = new ClassMethodPair(clazz, m);
 		if (lifecycleMethods.containsKey(lceClazz))
 			lifecycleMethods.get(lceClazz).add(cm);
