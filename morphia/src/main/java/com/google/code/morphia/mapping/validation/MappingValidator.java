@@ -19,6 +19,7 @@ import com.google.code.morphia.annotations.Serialized;
 import com.google.code.morphia.logging.Logr;
 import com.google.code.morphia.logging.MorphiaLoggerFactory;
 import com.google.code.morphia.mapping.MappedClass;
+import com.google.code.morphia.mapping.MapperOptions;
 import com.google.code.morphia.mapping.validation.ConstraintViolation.Level;
 import com.google.code.morphia.mapping.validation.classrules.DuplicatedAttributeNames;
 import com.google.code.morphia.mapping.validation.classrules.EmbeddedAndId;
@@ -37,6 +38,7 @@ import com.google.code.morphia.mapping.validation.fieldrules.MapNotSerializable;
 import com.google.code.morphia.mapping.validation.fieldrules.MisplacedProperty;
 import com.google.code.morphia.mapping.validation.fieldrules.ReferenceToUnidentifiable;
 import com.google.code.morphia.mapping.validation.fieldrules.VersionMisuse;
+import com.google.code.morphia.utils.Assert;
 
 /**
  * @author Uwe Schaefer, (us@thomas-daily.de)
@@ -44,6 +46,12 @@ import com.google.code.morphia.mapping.validation.fieldrules.VersionMisuse;
 public class MappingValidator {
 	
 	private static final Logr logger = MorphiaLoggerFactory.get(MappingValidator.class);
+	private final MapperOptions mapperOptions;
+
+	public MappingValidator(MapperOptions mo) {
+		Assert.parameterNotNull(mo, "mo");
+		this.mapperOptions = mo;
+	}
 	
 	public void validate(List<MappedClass> classes) {
 		Set<ConstraintViolation> ve = new TreeSet<ConstraintViolation>(new Comparator<ConstraintViolation>() {
@@ -104,7 +112,7 @@ public class MappingValidator {
 		constraints.add(new LazyReferenceOnArray());
 		constraints.add(new MapKeyDifferentFromString());
 		constraints.add(new MapNotSerializable());
-		constraints.add(new VersionMisuse());
+		constraints.add(new VersionMisuse(mapperOptions));
 		//
 		constraints.add(new ContradictingFieldAnnotation(Reference.class, Serialized.class));
 		constraints.add(new ContradictingFieldAnnotation(Reference.class, Property.class));

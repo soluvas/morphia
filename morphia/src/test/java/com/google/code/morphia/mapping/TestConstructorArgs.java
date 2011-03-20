@@ -22,7 +22,6 @@ import org.bson.types.ObjectId;
 import org.junit.Test;
 
 import com.google.code.morphia.TestBase;
-import com.google.code.morphia.annotations.ConstructorArgs;
 import com.google.code.morphia.annotations.Id;
 
 /**
@@ -34,7 +33,6 @@ public class TestConstructorArgs  extends TestBase {
 	@SuppressWarnings("unused")
 	private static class Normal {
 		@Id ObjectId id = new ObjectId();
-		@ConstructorArgs("_id")
 		ArgsConstructor ac = new ArgsConstructor(new ObjectId());
 	}
 

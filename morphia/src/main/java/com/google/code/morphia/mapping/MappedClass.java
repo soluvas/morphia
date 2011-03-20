@@ -98,6 +98,7 @@ public class MappedClass {
 	/** the type we are mapping to/from */
 	private Class<?> clazz;
 	Mapper mapr;
+
 	
 	/** constructor */
 	public MappedClass(Class<?> clazz, Mapper mapr) {
@@ -256,7 +257,7 @@ public class MappedClass {
 	
 	@SuppressWarnings("deprecation")
 	public void validate() {
-		new MappingValidator().validate(this);
+		new MappingValidator(mapr.getOptions()).validate(this);
 	}
 	
 	@Override
