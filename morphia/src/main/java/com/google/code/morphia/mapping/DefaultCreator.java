@@ -41,10 +41,22 @@ public class DefaultCreator implements ObjectFactory {
 		return createInstance(c);	
 	}
 	
-	/* (non-Javadoc)
+	/**
+	 * For mapped 
+	 */
+	/**
+	 * For interface fields, log should appear like this:
+	 * 
+	 * <pre>
+	 * 14:26:00.997 [main] INFO  c.g.c.morphia.mapping.DefaultCreator - Create instance for material ( type:Choice, single:true); {} from { "className" : "com.soluvas.data.impl.ChoiceImpl" , "id" : "rayon" , "slug" : "rayon" , "name" : "Rayon" , "imageId" : "rayon_128px" , "eFlags" : 1 , "eContainerFeatureID" : 0}
+	 * 14:26:01.005 [main] DEBUG c.g.code.morphia.mapping.MappedField - found instance of ParameterizedType : org.eclipse.emf.common.util.BasicEList<org.eclipse.emf.common.notify.Adapter>
+	 * 14:26:01.010 [main] DEBUG c.g.code.morphia.mapping.MappedClass - MappedClass done: MappedClass - kind:ChoiceImpl for com.soluvas.data.impl.ChoiceImpl fields:[id ( type:String, single:true); {}, slug ( type:String, single:true); {}, name ( type:String, single:true); {}, imageId ( type:String, single:true); {}, eFlags ( type:int, single:true); {}, eAdapters ( type:BasicEList, multiple:true, subtype:interface org.eclipse.emf.common.notify.Adapter, collection:true); {}, eContainer ( type:InternalEObject, single:true); {}, eContainerFeatureID ( type:int, single:true); {}, eProperties ( type:EPropertiesHolder, single:true); {}]
+	 * </pre>
+	 *
 	 * @see com.google.code.morphia.ObjectFactory#createInstance(com.google.code.morphia.mapping.Mapper, com.google.code.morphia.mapping.MappedField, com.mongodb.DBObject)
 	 */
 	public Object createInstance(Mapper mapr, MappedField mf, DBObject dbObj) {
+		log.info("Create instance for {} from {}", mf, dbObj);
 		Class c = getClass(dbObj);
 		if (c == null)
 			c = mf.isSingleValue ? mf.getConcreteType() : mf.getSubClass();
@@ -90,8 +102,16 @@ public class DefaultCreator implements ObjectFactory {
 		return c;
 	}
 
+	/**
+	 * Return the {@link ClassLoader} to be used for loading a certain class.
+	 * @param clazz
+	 * @param object
+	 * @return
+	 */
 	protected ClassLoader getClassLoaderForClass(String clazz, DBObject object) {
-		return Thread.currentThread().getContextClassLoader();
+		// Better for OSGi, then DynamicImport-Package: * on the morphia bundle
+		return getClass().getClassLoader(); 
+		//return Thread.currentThread().getContextClassLoader();
 	}
 	
 	/* (non-Javadoc)
@@ -115,8 +135,14 @@ public class DefaultCreator implements ObjectFactory {
 		return (Set) newInstance(mf.getCTor(), HashSet.class);
 	}
 
-	
+	/**
+	 * Create an instance of "clazz". The class must already be a concrete class (e.g. ChoiceImpl), and not
+	 * an interface.
+	 * @param clazz
+	 * @return
+	 */
 	public static Object createInst(Class clazz) {
+		log.trace("Creating instance of {}", clazz);
 		try {
 			return getNoArgsConstructor(clazz).newInstance();
 		} catch (Exception e) {

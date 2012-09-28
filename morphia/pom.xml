@@ -11,9 +11,10 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.google.code.morphia</groupId>
 	<artifactId>morphia</artifactId>
-	<packaging>jar</packaging>
+	<packaging>bundle</packaging>
 	<version>0.99.1-SNAPSHOT</version>
-	<name>morphia</name>
+	<name>Morphia</name>
+	<description>Lightweight type-safe library for mapping Java objects to/from MongoDB.</description>
 
 	<dependencies>
 		<dependency>
@@ -31,4 +32,22 @@
 			<optional>true</optional>
 		</dependency>
 	</dependencies>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<version>2.3.7</version>
+				<extensions>true</extensions>
+				<configuration>
+					<instructions>
+<!-- 						<Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName> -->
+						<DynamicImport-Package>*</DynamicImport-Package>
+					</instructions>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
 </project>
