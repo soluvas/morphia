@@ -96,7 +96,7 @@ public class DefaultCreator implements ObjectFactory {
 				c = Class.forName(className, true, getClassLoaderForClass(className, dbObj));
 			} catch (ClassNotFoundException e) {
 				if (log.isWarningEnabled())
-					log.warning("Class not found defined in dbObj: " + className.getName(), e);
+					log.warning("Class not found defined in dbObj: " + className, e);
 			}
 		}
 		return c;
