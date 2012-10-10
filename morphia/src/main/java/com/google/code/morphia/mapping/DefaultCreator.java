@@ -96,7 +96,7 @@ public class DefaultCreator implements ObjectFactory {
 				c = Class.forName(className, true, getClassLoaderForClass(className, dbObj));
 			} catch (ClassNotFoundException e) {
 				if (log.isWarningEnabled())
-					log.warning("Class not found defined in dbObj: " , e);
+					log.warning("Class not found defined in dbObj: " + className.getName(), e);
 			}
 		}
 		return c;
@@ -142,7 +142,7 @@ public class DefaultCreator implements ObjectFactory {
 	 * @return
 	 */
 	public static Object createInst(Class clazz) {
-		log.trace("Creating instance of {}", clazz);
+		log.trace("Creating instance of " + clazz.getName());
 		try {
 			return getNoArgsConstructor(clazz).newInstance();
 		} catch (Exception e) {
