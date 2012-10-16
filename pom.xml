@@ -188,11 +188,44 @@
 	<modules>
 		<module>morphia</module>
 		<!--<module>no-proxy-deps-tests</module>-->
-		<module>validation</module>
+			<!--<module>validation</module>-->
 		<module>logging-slf4j</module>
 		<module>jrebel-plug</module>
 		<module>guice-plug</module>
 		<module>entityscanner-plug</module>
 	</modules>
+
+	<profiles>
+		<profile>
+			<!-- To deploy to soluvas-public, use:
+				mvn -Psoluvas -DskipTests clean install deploy -->
+			<id>soluvas</id>
+			<distributionManagement>
+				<repository>
+					<id>soluvas-public-releases</id>
+					<url>http://nexus.bippo.co.id/nexus/content/repositories/soluvas-public-releases/</url>
+				</repository>
+				<snapshotRepository>
+					<id>soluvas-public-snapshots</id>
+					<url>http://nexus.bippo.co.id/nexus/content/repositories/soluvas-public-snapshots/</url>
+				</snapshotRepository>
+			</distributionManagement>
+		</profile>
+		<profile>
+			<!-- To deploy to bippo-gk, use:
+				mvn -Pbippo-gk -DskipTests clean install deploy -->
+			<id>bippo-gk</id>
+			<distributionManagement>
+				<snapshotRepository>
+					<id>bippo-gk-snapshots</id>
+					<url>http://192.168.66.17:8080/nexus/content/repositories/snapshots/</url>
+				</snapshotRepository>
+				<repository>
+					<id>bippo-gk-releases</id>
+					<url>http://192.168.66.17:8080/nexus/content/repositories/releases/</url>
+				</repository>
+			</distributionManagement>
+		</profile>
+	</profiles>
 
 </project>
