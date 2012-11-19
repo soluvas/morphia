@@ -43,6 +43,9 @@
 				<configuration>
 					<instructions>
 <!-- 						<Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName> -->
+						<Import-Package>com.mongodb.*;version="[2.9.0,3)",
+							org.bson.*;version="[2.9.0,3)",
+							*</Import-Package>
 						<DynamicImport-Package>*</DynamicImport-Package>
 					</instructions>
 				</configuration>

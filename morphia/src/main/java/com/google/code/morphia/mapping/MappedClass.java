@@ -84,16 +84,16 @@ public class MappedClass {
 			PostLoad.class};
 	
 	/** Annotations we were interested in, and found. */
-	private Map<Class<? extends Annotation>, ArrayList<Annotation>> foundAnnotations = new HashMap<Class<? extends Annotation>, ArrayList<Annotation>>();
+	private final Map<Class<? extends Annotation>, ArrayList<Annotation>> foundAnnotations = new HashMap<Class<? extends Annotation>, ArrayList<Annotation>>();
 	
 	/** Methods which are life-cycle events */
-	private Map<Class<? extends Annotation>, List<ClassMethodPair>> lifecycleMethods = new HashMap<Class<? extends Annotation>, List<ClassMethodPair>>();
+	private final Map<Class<? extends Annotation>, List<ClassMethodPair>> lifecycleMethods = new HashMap<Class<? extends Annotation>, List<ClassMethodPair>>();
 	
 	/** a list of the fields to map */
-	private List<MappedField> persistenceFields = new ArrayList<MappedField>();
+	private final List<MappedField> persistenceFields = new ArrayList<MappedField>();
 	
 	/** the type we are mapping to/from */
-	private Class<?> clazz;
+	private final Class<?> clazz;
 	Mapper mapr;
 	
 	/** constructor */
@@ -160,6 +160,12 @@ public class MappedClass {
 		for (Field field : ReflectionUtils.getDeclaredAndInheritedFields(clazz, true)) {
 			field.setAccessible(true);
 			int fieldMods = field.getModifiers();
+			
+			// FIXME: HACK!!! Emergency support for EMF EObjects. Goal is should be possible to support @Transient
+			// without modifying the class directly.
+			if ("eContainer".equals(field.getName()) || "eFlags".equals(field.getName()) || "eContainerFeatureID".equals(field.getName()))
+				continue;
+			
 			if (field.isAnnotationPresent(Transient.class))
 				continue;
 			else if ( field.isSynthetic() && (fieldMods & Modifier.TRANSIENT) == Modifier.TRANSIENT )
