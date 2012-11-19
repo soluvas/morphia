@@ -3,6 +3,7 @@
  */
 package com.google.code.morphia.mapping;
 
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
@@ -198,7 +199,28 @@ class EmbeddedMapper implements CustomMapper{
 			if (mf.getType().isArray()) {
 				mf.setFieldValue(entity, ReflectionUtils.convertToArray(mf.getSubClass(), ReflectionUtils.iterToList(values)));
 			} else {
-				mf.setFieldValue(entity, values);
+				// Make it work with EMF EList
+				if (mf.getType().isAssignableFrom( values.getClass() )) {
+					// if the field type is standard Collection/List, then we can directly assign
+					mf.setFieldValue(entity, values);
+				} else {
+					// it's not a standard JDK list, so we use List#addAll(),
+					// but we need existing instance either from field or from getter
+					Collection currentValue = (Collection) mf.getFieldValue(entity);
+					if (currentValue == null) {
+						final String getterName = "get" + Character.toUpperCase(mf.getJavaFieldName().charAt(0)) + mf.getJavaFieldName().substring(1);
+						try {
+							final Method getter = entity.getClass().getMethod(getterName);
+							currentValue = (Collection) getter.invoke(entity);
+							if (currentValue == null)
+								throw new RuntimeException("Getter " + getter + " returns null");
+						} catch (Exception e) {
+							// no existing Collection instance? you're giving no choice!
+							throw new MappingException("If field " + mf + " is not a JDK Collection, you must provide an instance via field/getter so Morphia can call addAll()", e);
+						}
+					}
+					currentValue.addAll(values);
+				}
 			}
 		}
 	}
