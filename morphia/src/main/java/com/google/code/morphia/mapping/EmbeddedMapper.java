@@ -11,6 +11,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import com.google.code.morphia.logging.Logr;
+import com.google.code.morphia.logging.MorphiaLoggerFactory;
 import com.google.code.morphia.mapping.cache.EntityCache;
 import com.google.code.morphia.utils.IterHelper;
 import com.google.code.morphia.utils.IterHelper.MapIterCallback;
@@ -21,6 +23,8 @@ import com.mongodb.DBObject;
 
 @SuppressWarnings({"unchecked","rawtypes"})
 class EmbeddedMapper implements CustomMapper{
+	private static final Logr log = MorphiaLoggerFactory.get(EmbeddedMapper.class);
+	
 	public void toDBObject(final Object entity, final MappedField mf, final DBObject dbObject, Map<Object, DBObject> involvedObjects, Mapper mapr) {
 		String name = mf.getNameToStore();
 		
@@ -36,8 +40,14 @@ class EmbeddedMapper implements CustomMapper{
 				mapr.converters.toDBObject(entity, mf, dbObject, mapr.getOptions());
 				return;
 			}
-
-			DBObject dbObj = fieldValue == null ? null : mapr.toDBObject(fieldValue, involvedObjects);
+			
+			final DBObject dbObj;
+			if (fieldValue == null) {
+				dbObj = null;
+			} else {
+				log.trace("Mapping {} from {}", mf.getFullName(), fieldValue);
+				dbObj = mapr.toDBObject(fieldValue, involvedObjects);
+			}
 			if (dbObj != null) {
 				if (!shouldSaveClassName(fieldValue, dbObj, mf))
 					dbObj.removeField(Mapper.CLASS_NAME_FIELDNAME);
@@ -197,7 +207,7 @@ class EmbeddedMapper implements CustomMapper{
 		final Map map = mapr.getOptions().objectFactory.createMap(mf);
 		
 		DBObject dbObj = (DBObject) mf.getDbObjectValue(dbObject);
-		new IterHelper<Object, Object>().loopMap((Object)dbObj, new MapIterCallback<Object, Object>() {
+		new IterHelper<Object, Object>().loopMap(dbObj, new MapIterCallback<Object, Object>() {
 			@Override
 			public void eval(Object key, Object val) {
 				Object newEntity = null;
