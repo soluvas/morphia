@@ -96,35 +96,50 @@ class EmbeddedMapper implements CustomMapper{
 	}
 
 	private void writeMap(final MappedField mf, final DBObject dbObject, Map<Object, DBObject> involvedObjects, String name, Object fieldValue, Mapper mapr) {
-		Map<String, Object> map = (Map<String, Object>) fieldValue;
-		if (map != null) {
-			BasicDBObject values = new BasicDBObject();
+		if (fieldValue == null)
+			return;
+		
+		// HACK: support EMF EMap
+		final Map<String, Object> map;
+		if (fieldValue instanceof Map) {
+			map = (Map<String, Object>) fieldValue;
+		} else {
+			try {
+				final Method method = fieldValue.getClass().getMethod("map");
+				map = (Map<String, Object>) method.invoke(fieldValue);
+				if (map == null)
+					return;
+			} catch (Exception e) {
+				throw new MappingException("To treat " + mf + " as map, it must either typed as java.util.Map or have a map() method which returns java.util.Map.", e);
+			}
+		}
+		
+		BasicDBObject values = new BasicDBObject();
+		
+		for (Map.Entry<String, Object> entry : map.entrySet()) {
+			Object entryVal = entry.getValue();
+			Object val;
 			
-			for (Map.Entry<String, Object> entry : map.entrySet()) {
-				Object entryVal = entry.getValue();
-				Object val;
-				
-				if (entryVal == null)
-					val = null;
-				else if(mapr.converters.hasSimpleValueConverter(mf) || mapr.converters.hasSimpleValueConverter(entryVal.getClass()))
-					val = mapr.converters.encode(entryVal);
-				else {
-					if (Map.class.isAssignableFrom(entryVal.getClass()) || Collection.class.isAssignableFrom(entryVal.getClass()))
-						val = mapr.toMongoObject(entryVal, true);
-					else
-						val = mapr.toDBObject(entryVal, involvedObjects);
-				
-					if (!shouldSaveClassName(entryVal, val, mf))
-						((DBObject) val).removeField(Mapper.CLASS_NAME_FIELDNAME);
-				}
-				
-				String strKey = mapr.converters.encode(entry.getKey()).toString();
-				values.put(strKey, val);
+			if (entryVal == null)
+				val = null;
+			else if(mapr.converters.hasSimpleValueConverter(mf) || mapr.converters.hasSimpleValueConverter(entryVal.getClass()))
+				val = mapr.converters.encode(entryVal);
+			else {
+				if (Map.class.isAssignableFrom(entryVal.getClass()) || Collection.class.isAssignableFrom(entryVal.getClass()))
+					val = mapr.toMongoObject(entryVal, true);
+				else
+					val = mapr.toDBObject(entryVal, involvedObjects);
+			
+				if (!shouldSaveClassName(entryVal, val, mf))
+					((DBObject) val).removeField(Mapper.CLASS_NAME_FIELDNAME);
 			}
 			
-			if (values.size() > 0 || mapr.getOptions().storeEmpties)
-				dbObject.put(name, values);
+			String strKey = mapr.converters.encode(entry.getKey()).toString();
+			values.put(strKey, val);
 		}
+		
+		if (values.size() > 0 || mapr.getOptions().storeEmpties)
+			dbObject.put(name, values);
 	}
 	
 	public void fromDBObject(final DBObject dbObject, final MappedField mf, final Object entity, EntityCache cache, Mapper mapr) {
@@ -226,7 +241,7 @@ class EmbeddedMapper implements CustomMapper{
 	}
 	
 	private void readMap(final DBObject dbObject, final MappedField mf, final Object entity, final EntityCache cache, final Mapper mapr) {
-		final Map map = mapr.getOptions().objectFactory.createMap(mf);
+		final Map<Object, Object> map = mapr.getOptions().objectFactory.createMap(mf);
 		
 		DBObject dbObj = (DBObject) mf.getDbObjectValue(dbObject);
 		new IterHelper<Object, Object>().loopMap(dbObj, new MapIterCallback<Object, Object>() {
@@ -253,7 +268,35 @@ class EmbeddedMapper implements CustomMapper{
 		});
 		
 		if (map.size() > 0) {
-			mf.setFieldValue(entity, map);
+			// Make it work with EMF EMap
+			if (mf.getType().isAssignableFrom( Map.class ) ) {
+				// if the field type is standard Map, then we can directly assign
+				mf.setFieldValue(entity, map);
+			} else {
+				// it's not a standard JDK Map, so we use EMap#putAll()
+				// but we need existing instance either from field or from getter
+				// Note: EMap#addAll() doesn't work, probably for internal use
+				List<Map.Entry<Object, Object>> currentValue = (List<Map.Entry<Object, Object>>) mf.getFieldValue(entity);
+				if (currentValue == null) {
+					final String getterName = "get" + Character.toUpperCase(mf.getJavaFieldName().charAt(0)) + mf.getJavaFieldName().substring(1);
+					try {
+						final Method getter = entity.getClass().getMethod(getterName);
+						currentValue = (List<Map.Entry<Object, Object>>) getter.invoke(entity);
+						if (currentValue == null)
+							throw new RuntimeException("Getter " + getter + " returns null");
+					} catch (Exception e) {
+						// no existing Collection instance? you're giving no choice!
+						throw new MappingException("If field " + mf + " is not a JDK Map, you must provide an EMap instance via field/getter so Morphia can call putAll()", e);
+					}
+				}
+				try {
+					final Method putAllMethod = currentValue.getClass().getMethod("putAll", Map.class);
+					putAllMethod.invoke(currentValue, map);
+				} catch (Exception e) {
+					throw new RuntimeException("Cannot set field " + mf, e);
+				}
+			}
+			
 		}
 	}
 

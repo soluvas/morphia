@@ -114,7 +114,19 @@ public class MappedField {
 			
 			isSingleValue = false;
 			
-			isMap = Map.class.isAssignableFrom(realType);
+			if (Map.class.isAssignableFrom(realType)) {
+				isMap = true;
+			} else {
+				// HACK: Support EMap. Note that these must also support:
+				// 1. MapOfValuesConverter
+				// 2. EmbeddedMapper.writeMap()
+				isMap = false;
+				try {
+					final Method method = realType.getMethod("map");
+					isMap = Map.class.isAssignableFrom(method.getReturnType());
+				} catch (Exception e) {
+				}
+			}
 			isSet = Set.class.isAssignableFrom(realType);
 			//for debugging
 			isCollection = Collection.class.isAssignableFrom(realType);

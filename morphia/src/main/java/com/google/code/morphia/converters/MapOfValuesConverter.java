@@ -3,6 +3,7 @@
  */
 package com.google.code.morphia.converters;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,9 +36,8 @@ public class MapOfValuesConverter extends TypeConverter {
 	public Object decode(Class targetClass, Object fromDBObject, final MappedField mf) throws MappingException {
 		if (fromDBObject == null) return null;
 
-
 		final Map values = mapr.getOptions().objectFactory.createMap(mf);
-		new IterHelper<Object, Object>().loopMap((Object)fromDBObject, new MapIterCallback<Object, Object>() {
+		new IterHelper<Object, Object>().loopMap(fromDBObject, new MapIterCallback<Object, Object>() {
 			@Override
 			public void eval(Object key, Object val) {
 					Object objKey = converters.decode(mf.getMapKeyClass(), key);
@@ -52,7 +52,18 @@ public class MapOfValuesConverter extends TypeConverter {
 		if (value == null)
 			return null;
 		
-		Map<Object, Object> map = (Map<Object, Object>) value;
+		final Map<Object, Object> map;
+		if (value instanceof Map) {
+			map = (Map<Object, Object>) value;
+		} else {
+			try {
+				final Method method = value.getClass().getMethod("map");
+				map = (Map<Object, Object>) method.invoke(value);
+			} catch (Exception e) {
+				throw new MappingException("To treat " + mf + " as map, it must either typed as java.util.Map or have a map() method which returns java.util.Map.", e);
+			}
+		}
+		
 		if ((map != null) && (map.size() > 0)) {
 			Map mapForDb = new HashMap();
 			for (Map.Entry<Object, Object> entry : map.entrySet()) {
