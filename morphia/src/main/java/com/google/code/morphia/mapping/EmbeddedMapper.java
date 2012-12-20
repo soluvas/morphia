@@ -3,6 +3,8 @@
  */
 package com.google.code.morphia.mapping;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -294,6 +296,21 @@ class EmbeddedMapper implements CustomMapper{
 				try {
 					final Method putAllMethod = currentValue.getClass().getMethod("putAll", Map.class);
 					putAllMethod.invoke(currentValue, map);
+				} catch (InvocationTargetException e) {
+					// with EMap<String, EList<?>> you'd get:
+					// java.lang.ClassCastException: java.util.ArrayList cannot be cast to org.eclipse.emf.common.util.EList
+					// Special support for EMap<String, EList<?>>
+					try {
+						final Method putEListMethod = currentValue.getClass().getMethod("put", Object.class, Object.class);
+						final Class<?> basicEListClass = Class.forName("org.eclipse.emf.common.util.BasicEList");
+						final Constructor<?> eListConstructor = basicEListClass.getConstructor(Collection.class);
+						for (final Map.Entry<Object, Object> entry : map.entrySet()) {
+							final Object eList = eListConstructor.newInstance(entry.getValue());
+							putEListMethod.invoke(currentValue, entry.getKey(), eList);
+						}
+					} catch (Exception e1) {
+						throw new RuntimeException("Cannot set field " + mf, e1);
+					}
 				} catch (Exception e) {
 					throw new RuntimeException("Cannot set field " + mf, e);
 				}
