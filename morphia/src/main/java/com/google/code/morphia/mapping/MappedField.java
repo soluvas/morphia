@@ -297,7 +297,7 @@ public class MappedField {
 
 	/** returns the full name of the class plus java field name */
 	public String getFullName() {
-		return field.getDeclaringClass().getName() + "." + field.getName();
+		return field != null ? ( (field.getDeclaringClass() != null ? field.getDeclaringClass().getName() : "null") + "." + field.getName() ) : "null";
 	}
 	
 	/**
@@ -308,34 +308,34 @@ public class MappedField {
 			return Mapper.ID_KEY;
 		else if (hasAnnotation(Property.class)) {
 			Property mv = (Property) foundAnnotations.get(Property.class);
-			if (!mv.value().equals(Mapper.IGNORED_FIELDNAME))
+			if (mv != null && !Mapper.IGNORED_FIELDNAME.equals(mv.value()))
 				return mv.value();
 		} else if (hasAnnotation(Reference.class)) {
 			Reference mr = (Reference) foundAnnotations.get(Reference.class);
-			if (!mr.value().equals(Mapper.IGNORED_FIELDNAME))
+			if (mr != null && !Mapper.IGNORED_FIELDNAME.equals(mr.value()))
 				return mr.value();
 		} else if (hasAnnotation(Embedded.class)) {
 			Embedded me = (Embedded) foundAnnotations.get(Embedded.class);
-			if (!me.value().equals(Mapper.IGNORED_FIELDNAME))
+			if (me != null && !Mapper.IGNORED_FIELDNAME.equals(me.value()))
 				return me.value();
 		} else if (hasAnnotation(Serialized.class)) {
 			Serialized me = (Serialized) foundAnnotations.get(Serialized.class);
-			if (!me.value().equals(Mapper.IGNORED_FIELDNAME))
+			if (me != null && !Mapper.IGNORED_FIELDNAME.equals(me.value()))
 				return me.value();
 		} else if (hasAnnotation(Version.class)) {
 			Version me = (Version) foundAnnotations.get(Version.class);
-			if (!me.value().equals(Mapper.IGNORED_FIELDNAME))
+			if (me != null && !Mapper.IGNORED_FIELDNAME.equals(me.value()))
 				return me.value();
 		}
 		
-		return this.field.getName();
+		return this.field != null ? this.field.getName() : null;
 	}
 	
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		sb.append(getMappedFieldName()).append(" (");
-		sb.append(" type:").append(realType.getSimpleName()).append(",");
+		sb.append(" type:").append(realType != null ? realType.getSimpleName() : "null").append(",");
 		
 		if(isSingleValue())
 			sb.append(" single:true,");
@@ -362,7 +362,7 @@ public class MappedField {
 		if (sb.charAt(sb.length()-1) == ',')
 			sb.setLength(sb.length()-1);
 		
-		sb.append("); ").append(this.foundAnnotations.toString());
+		sb.append("); ").append(this.foundAnnotations != null ? this.foundAnnotations : "null");
 		return sb.toString();
 	}
 	

@@ -143,6 +143,8 @@ class EmbeddedMapper implements CustomMapper{
 	}
 	
 	public void fromDBObject(final DBObject dbObject, final MappedField mf, final Object entity, EntityCache cache, Mapper mapr) {
+		if (mf == null)
+			throw new IllegalArgumentException("mappedField is null, cannot deserialize " + dbObject);
 		try {
 			if (mf.isMap()) {
 				readMap(dbObject, mf, entity, cache, mapr);
@@ -174,7 +176,7 @@ class EmbeddedMapper implements CustomMapper{
 				}
 			}
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			throw new RuntimeException("Cannot deserialize field " + mf.getFullName() + " from " + dbObject, e);
 		}
 	}
 

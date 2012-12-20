@@ -478,7 +478,7 @@ public class Mapper {
 			dbObject.put(CLASS_NAME_FIELDNAME, entity.getClass().getName());
 
 		if (lifecycle)
-			dbObject = (DBObject) mc.callLifecycleMethods(PrePersist.class, entity, dbObject, this);
+			dbObject = mc.callLifecycleMethods(PrePersist.class, entity, dbObject, this);
 		
 		for (MappedField mf : mc.getPersistenceFields()) {
 			try {
@@ -517,7 +517,7 @@ public class Mapper {
 		
 		MappedClass mc = getMappedClass(entity);
 		
-		dbObject = (DBObject) mc.callLifecycleMethods(PreLoad.class, entity, dbObject, this);
+		dbObject = mc.callLifecycleMethods(PreLoad.class, entity, dbObject, this);
 		try {
 			for (MappedField mf : mc.getPersistenceFields()) {
 				readMappedField(dbObject, mf, entity, cache);
@@ -535,6 +535,8 @@ public class Mapper {
 	}
 	
 	private void readMappedField(DBObject dbObject, MappedField mf, Object entity, EntityCache cache) {
+		if (mf == null)
+			throw new IllegalArgumentException("mappedField is null, cannot readMappedField " + dbObject);
 		if (mf.hasAnnotation(Property.class) || mf.hasAnnotation(Serialized.class)
 				|| mf.isTypeMongoCompatible() || converters.hasSimpleValueConverter(mf))
 			opts.valueMapper.fromDBObject(dbObject, mf, entity, cache, this);
