@@ -56,7 +56,7 @@ public class DefaultCreator implements ObjectFactory {
 	 * @see com.google.code.morphia.ObjectFactory#createInstance(com.google.code.morphia.mapping.Mapper, com.google.code.morphia.mapping.MappedField, com.mongodb.DBObject)
 	 */
 	public Object createInstance(Mapper mapr, MappedField mf, DBObject dbObj) {
-		log.debug("Create instance for " + mf + " from " + dbObj);
+		log.debug("Create instance for %s from %s", mf.getFullName(), dbObj);
 		Class c = getClass(dbObj);
 		if (c == null)
 			c = mf.isSingleValue ? mf.getConcreteType() : mf.getSubClass();

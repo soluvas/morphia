@@ -334,7 +334,16 @@ public class MappedField {
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
-		sb.append(getMappedFieldName()).append(" (");
+		String mappedFieldName;
+		try {
+			mappedFieldName = getMappedFieldName();
+		} catch (Exception e) {
+			// sometimes getMappedFieldName() throws exception?
+			mappedFieldName = getFullName();
+		}
+		if (mappedFieldName != null)
+			sb.append(mappedFieldName);	// or maybe because append can't handle null?
+		sb.append(" (");
 		sb.append(" type:").append(realType != null ? realType.getSimpleName() : "null").append(",");
 		
 		if(isSingleValue())
