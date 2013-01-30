@@ -3,8 +3,6 @@
  */
 package com.google.code.morphia.mapping;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -272,50 +270,7 @@ class EmbeddedMapper implements CustomMapper{
 		});
 		
 		if (map.size() > 0) {
-			// Make it work with EMF EMap
-			if (mf.getType().isAssignableFrom( Map.class ) ) {
-				// if the field type is standard Map, then we can directly assign
-				mf.setFieldValue(entity, map);
-			} else {
-				// it's not a standard JDK Map, so we use EMap#putAll()
-				// but we need existing instance either from field or from getter
-				// Note: EMap#addAll() doesn't work, probably for internal use
-				List<Map.Entry<Object, Object>> currentValue = (List<Map.Entry<Object, Object>>) mf.getFieldValue(entity);
-				if (currentValue == null) {
-					final String getterName = "get" + Character.toUpperCase(mf.getJavaFieldName().charAt(0)) + mf.getJavaFieldName().substring(1);
-					try {
-						final Method getter = entity.getClass().getMethod(getterName);
-						currentValue = (List<Map.Entry<Object, Object>>) getter.invoke(entity);
-						if (currentValue == null)
-							throw new RuntimeException("Getter " + getter + " returns null");
-					} catch (Exception e) {
-						// no existing Collection instance? you're giving no choice!
-						throw new MappingException("If field " + mf + " is not a JDK Map, you must provide an EMap instance via field/getter so Morphia can call putAll()", e);
-					}
-				}
-				try {
-					final Method putAllMethod = currentValue.getClass().getMethod("putAll", Map.class);
-					putAllMethod.invoke(currentValue, map);
-				} catch (InvocationTargetException e) {
-					// with EMap<String, EList<?>> you'd get:
-					// java.lang.ClassCastException: java.util.ArrayList cannot be cast to org.eclipse.emf.common.util.EList
-					// Special support for EMap<String, EList<?>>
-					try {
-						final Method putEListMethod = currentValue.getClass().getMethod("put", Object.class, Object.class);
-						final Class<?> basicEListClass = Class.forName("org.eclipse.emf.common.util.BasicEList");
-						final Constructor<?> eListConstructor = basicEListClass.getConstructor(Collection.class);
-						for (final Map.Entry<Object, Object> entry : map.entrySet()) {
-							final Object eList = eListConstructor.newInstance(entry.getValue());
-							putEListMethod.invoke(currentValue, entry.getKey(), eList);
-						}
-					} catch (Exception e1) {
-						throw new RuntimeException("Cannot set field " + mf, e1);
-					}
-				} catch (Exception e) {
-					throw new RuntimeException("Cannot set field " + mf, e);
-				}
-			}
-			
+			mf.setFieldValue(entity, map);
 		}
 	}
 

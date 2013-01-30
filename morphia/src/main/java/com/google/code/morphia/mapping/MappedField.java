@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericDeclaration;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -71,10 +72,15 @@ public class MappedField {
 	
 	/** the constructor */
 	MappedField(Field f, Class<?> clazz) {
-		f.setAccessible(true);
-		field = f;
-		persistedClass = clazz;
-		discover();
+		final boolean accessible = f.isAccessible();
+		try {
+			f.setAccessible(true);
+			field = f;
+			persistedClass = clazz;
+			discover();
+		} finally {
+			field.setAccessible(accessible);
+		}
 	}
 	
 	/** the constructor */
@@ -440,21 +446,69 @@ public class MappedField {
 
 	/** Returns the value stored in the java field */
 	public Object getFieldValue(Object classInst) throws IllegalArgumentException {
+		final boolean accessible = field.isAccessible();
 		try {
 			field.setAccessible(true);
 			return field.get(classInst);
 		} catch (IllegalAccessException e) {
 			throw new RuntimeException(e);
+		} finally {
+			field.setAccessible(accessible);
 		}
 	}
 	
 	/** Sets the value for the java field */	
 	public void setFieldValue(Object classInst, Object value) throws IllegalArgumentException {
-		try {
-			field.setAccessible(true);
-			field.set(classInst, value);
-		} catch (IllegalAccessException e) {
-			throw new RuntimeException(e);
+		// HACK: Make it work with EMF EMap
+		if (isMap() && !getType().isAssignableFrom( Map.class ) ) {
+			// it's not a standard JDK Map, so we use EMap#putAll()
+			// but we need existing instance either from field or from getter
+			// Note: EMap#addAll() doesn't work, probably for internal use
+			List<Map.Entry<Object, Object>> currentValue = (List<Map.Entry<Object, Object>>) getFieldValue(classInst);
+			if (currentValue == null) {
+				final String getterName = "get" + Character.toUpperCase(getJavaFieldName().charAt(0)) + getJavaFieldName().substring(1);
+				try {
+					final Method getter = classInst.getClass().getMethod(getterName);
+					currentValue = (List<Map.Entry<Object, Object>>) getter.invoke(classInst);
+					if (currentValue == null)
+						throw new MappingException("Getter " + getter + " returns null");
+				} catch (Exception e) {
+					// no existing Collection instance? you're giving no choice!
+					throw new MappingException("If field " + this + " is not a JDK Map, you must provide an EMap instance via field/getter so Morphia can call putAll()", e);
+				}
+			}
+			try {
+				final Method putAllMethod = currentValue.getClass().getMethod("putAll", Map.class);
+				putAllMethod.invoke(currentValue, value);
+			} catch (InvocationTargetException e) {
+				// with EMap<String, EList<?>> you'd get:
+				// java.lang.ClassCastException: java.util.ArrayList cannot be cast to org.eclipse.emf.common.util.EList
+				// Special support for EMap<String, EList<?>>
+				try {
+					final Method putEListMethod = currentValue.getClass().getMethod("put", Object.class, Object.class);
+					final Class<?> basicEListClass = Class.forName("org.eclipse.emf.common.util.BasicEList");
+					final Constructor<?> eListConstructor = basicEListClass.getConstructor(Collection.class);
+					for (final Map.Entry<Object, Object> entry : ((Map<Object, Object>) value).entrySet()) {
+						final Object eList = eListConstructor.newInstance(entry.getValue());
+						putEListMethod.invoke(currentValue, entry.getKey(), eList);
+					}
+				} catch (Exception e1) {
+					throw new MappingException("Cannot set field " + this, e1);
+				}
+			} catch (Exception e) {
+				throw new MappingException("Cannot set field " + this, e);
+			}
+		} else {
+			// if the field type is standard Map, then we can directly assign
+			final boolean accessible = field.isAccessible();
+			try {
+				field.setAccessible(true);
+				field.set(classInst, value);
+			} catch (IllegalAccessException e) {
+				throw new RuntimeException(e);
+			} finally {
+				field.setAccessible(accessible);
+			}
 		}
 	}
 	
