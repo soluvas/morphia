@@ -117,7 +117,7 @@ public class MappedField {
 			if (Map.class.isAssignableFrom(realType)) {
 				isMap = true;
 			} else {
-				// HACK: Support EMap. Note that these must also support:
+				// HACK: Support EMap. Note that these classes must also provide explicit support for EMap:
 				// 1. MapOfValuesConverter
 				// 2. EmbeddedMapper.writeMap()
 				isMap = false;
