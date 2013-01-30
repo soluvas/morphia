@@ -522,6 +522,8 @@ public class Mapper {
 			for (MappedField mf : mc.getPersistenceFields()) {
 				readMappedField(dbObject, mf, entity, cache);
 			}
+		} catch (RuntimeException e) {
+			throw e;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
