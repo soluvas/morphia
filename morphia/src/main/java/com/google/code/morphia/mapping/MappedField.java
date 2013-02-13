@@ -498,8 +498,26 @@ public class MappedField {
 			} catch (Exception e) {
 				throw new MappingException("Cannot set field " + this, e);
 			}
+		} if ("org.eclipse.emf.common.util.EList".equals(getType().getName())) {
+			// HACK: make it work with EList
+			// it's not a standard JDK list, so we use List#addAll(),
+			// but we need existing instance either from field or from getter
+			Collection currentValue = (Collection) getFieldValue(classInst);
+			if (currentValue == null) {
+				final String getterName = "get" + Character.toUpperCase(getJavaFieldName().charAt(0)) + getJavaFieldName().substring(1);
+				try {
+					final Method getter = classInst.getClass().getMethod(getterName);
+					currentValue = (Collection) getter.invoke(classInst);
+					if (currentValue == null)
+						throw new MappingException("Getter " + getter + " returns null");
+				} catch (Exception e) {
+					// no existing Collection instance? you're giving no choice!
+					throw new MappingException("If field " + this.getFullName() + " is not a JDK Collection, you must provide an instance via field/getter so Morphia can call addAll()", e);
+				}
+			}
+			currentValue.addAll((Collection) value);
 		} else {
-			// if the field type is standard Map, then we can directly assign
+			// if the field type is standard Map, List, or other natively Morphia-supported value, then we can directly assign
 			final boolean accessible = field.isAccessible();
 			try {
 				field.setAccessible(true);

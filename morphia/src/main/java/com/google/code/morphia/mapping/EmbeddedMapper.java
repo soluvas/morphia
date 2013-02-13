@@ -230,7 +230,7 @@ class EmbeddedMapper implements CustomMapper{
 							final Method getter = entity.getClass().getMethod(getterName);
 							currentValue = (Collection) getter.invoke(entity);
 							if (currentValue == null)
-								throw new RuntimeException("Getter " + getter + " returns null");
+								throw new MappingException("Getter " + getter + " returns null");
 						} catch (Exception e) {
 							// no existing Collection instance? you're giving no choice!
 							throw new MappingException("If field " + mf + " is not a JDK Collection, you must provide an instance via field/getter so Morphia can call addAll()", e);
