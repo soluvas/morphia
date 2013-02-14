@@ -498,7 +498,7 @@ public class MappedField {
 			} catch (Exception e) {
 				throw new MappingException("Cannot set field " + this, e);
 			}
-		} if ("org.eclipse.emf.common.util.EList".equals(getType().getName())) {
+		} else if ("org.eclipse.emf.common.util.EList".equals(getType().getName())) {
 			// HACK: make it work with EList
 			// it's not a standard JDK list, so we use List#addAll(),
 			// but we need existing instance either from field or from getter
