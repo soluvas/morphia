@@ -487,9 +487,15 @@ public class MappedField {
 				try {
 					final Method putEListMethod = currentValue.getClass().getMethod("put", Object.class, Object.class);
 					final Class<?> basicEListClass = Class.forName("org.eclipse.emf.common.util.BasicEList");
-					final Constructor<?> eListConstructor = basicEListClass.getConstructor(Collection.class);
+					final Constructor<?> eListConstructorEmpty = basicEListClass.getConstructor();
+					final Constructor<?> eListConstructorWithCollection = basicEListClass.getConstructor(Collection.class);
 					for (final Map.Entry<Object, Object> entry : ((Map<Object, Object>) value).entrySet()) {
-						final Object eList = eListConstructor.newInstance(entry.getValue());
+						final Object eList;
+						if (entry.getValue() != null) {
+							eList = eListConstructorWithCollection.newInstance(entry.getValue());
+						} else {
+							eList = eListConstructorEmpty.newInstance();
+						}
 						putEListMethod.invoke(currentValue, entry.getKey(), eList);
 					}
 				} catch (Exception e1) {
