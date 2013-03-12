@@ -496,10 +496,16 @@ public class MappedField {
 						} else {
 							eList = eListConstructorEmpty.newInstance();
 						}
-						putEListMethod.invoke(currentValue, entry.getKey(), eList);
+						try {
+							putEListMethod.invoke(currentValue, entry.getKey(), eList);
+						} catch (Exception e1) {
+							throw new MappingException("Cannot put " + entry.getKey() + "=" +
+								eList + " in Map field " + this + ", currentValue is " + currentValue +
+								". Hint: Please check the EMap getter implementation, make sure the generic type argument matches.", e1);
+						}
 					}
 				} catch (Exception e1) {
-					throw new MappingException("Cannot set field " + this, e1);
+					throw new MappingException("Cannot set Map field " + this + " to " + value, e1);
 				}
 			} catch (Exception e) {
 				throw new MappingException("Cannot set field " + this, e);
