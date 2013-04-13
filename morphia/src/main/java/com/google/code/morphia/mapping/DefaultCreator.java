@@ -80,7 +80,7 @@ public class DefaultCreator implements ObjectFactory {
 	        	ctor.setAccessible(true);
 	            return ctor.newInstance(args);
 			} catch (Exception ex) {
-	            throw new RuntimeException(ex);
+	            throw new RuntimeException("Cannot create instance for " + mf.getFullName() + " from " + dbObj, ex);
 	        }
 		}
 	}
@@ -146,7 +146,8 @@ public class DefaultCreator implements ObjectFactory {
 		try {
 			return getNoArgsConstructor(clazz).newInstance();
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			throw new RuntimeException("Cannot create instance of " + clazz.getName() +
+					". Perhaps it is an interface (not a concrete class).", e);
 		}
 	}
 	
