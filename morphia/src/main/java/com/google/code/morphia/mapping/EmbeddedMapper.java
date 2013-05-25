@@ -46,7 +46,7 @@ class EmbeddedMapper implements CustomMapper{
 			if (fieldValue == null) {
 				dbObj = null;
 			} else {
-				log.trace("Mapping " + mf.getFullName() + " from " + fieldValue);
+				log.trace("Mapping " + mf.getDeclaringClass().getName() + "#" + mf.getFullName() + " from " + fieldValue);
 				dbObj = mapr.toDBObject(fieldValue, involvedObjects);
 			}
 			if (dbObj != null) {
