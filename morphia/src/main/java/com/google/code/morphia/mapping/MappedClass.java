@@ -163,8 +163,12 @@ public class MappedClass {
 			
 			// FIXME: HACK!!! Emergency support for EMF EObjects. Goal is should be possible to support @Transient
 			// without modifying the class directly.
-			if ("eContainer".equals(field.getName()) || "eFlags".equals(field.getName()) || "eContainerFeatureID".equals(field.getName()))
+			if ("org.eclipse.emf.ecore.impl.EObjectImpl".equals(field.getDeclaringClass().getName())) {
+				log.trace("Skipping EMF field " + field.getName());
 				continue;
+			}
+//			if ("eContainer".equals(field.getName()) || "eFlags".equals(field.getName()) || "eContainerFeatureID".equals(field.getName()))
+//				continue;
 			
 			if (field.isAnnotationPresent(Transient.class))
 				continue;
