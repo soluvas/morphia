@@ -12,7 +12,7 @@
 	<groupId>com.google.code.morphia</groupId>
 	<artifactId>morphia</artifactId>
 	<packaging>bundle</packaging>
-	<version>0.99.1-SNAPSHOT</version>
+	<version>0.99.1.soluvas2</version>
 	<name>Morphia</name>
 	<description>Lightweight type-safe library for mapping Java objects to/from MongoDB.</description>
 
